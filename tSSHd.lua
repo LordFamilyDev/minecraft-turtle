@@ -26,9 +26,9 @@ end
 
 local function getFullPath(session, path)
     if path:sub(1, 1) == "/" then
-        return fs.normalize(path)
+        return fs.combine("/", path)
     else
-        return fs.normalize(fs.combine(session.cwd, path))
+        return fs.combine(session.cwd, path)
     end
 end
 

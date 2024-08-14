@@ -25,7 +25,10 @@ print("Connecting to " .. remoteId)
 local currentDir = "/"
 
 local function receiveResponse(expectedType)
+    lib_ssh.print_debug("Waiting for response...")
     local sender, response = lib_ssh.receiveMessage(5)
+    lib_ssh.print_debug("Received response from: " .. tostring(sender))
+    lib_ssh.print_debug("Response: " .. textutils.serialize(response))
     if sender ~= remoteId then
         print("Received response from unexpected sender: " .. tostring(sender))
         return nil
