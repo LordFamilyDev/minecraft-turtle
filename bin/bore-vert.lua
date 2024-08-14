@@ -19,10 +19,11 @@ local boresPerRow = 5
 
 local tArgs = { ... }
 if #tArgs >= 1 then
-    startBoreCnt = tonumber(tArgs[1]) -1
+    numBores = tonumber(tArgs[2])
 end
 if #tArgs >= 2 then
-    numBores = tonumber(tArgs[2]) + startBoreCnt
+    startBoreCnt = tonumber(tArgs[1]) -1
+    numBores = numBores + startBoreCnt
 end
 if #tArgs >= 3 then
     maxDepth = tonumber(tArgs[3])
@@ -385,6 +386,7 @@ local row = 0
 local function nextRow()
     goTo(0, 0, 0, 0, 1, false)
     row = row + 1
+    print("Row: " .. row)
     boreX = row * 2
     boreZ = row * -1
     goTo(boreX, 0, boreZ, 0, 1, true)
@@ -393,7 +395,7 @@ end
 local function findNextBore()
     refuel()
     boreCount = boreCount + 1
-    if math.fmod(boreCount-1,boresPerRow)  == 0 then
+    if math.fmod(boreCount,boresPerRow)  == 0 then
         nextRow()
     else
         boreX = boreX + 2
