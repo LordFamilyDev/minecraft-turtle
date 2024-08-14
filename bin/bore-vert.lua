@@ -13,9 +13,9 @@ end
 local maxDepth = 0
 local numBores = 1
 local startBore = 0
-local boresPerRow = 4
+local boresPerRow = 5
 
--- args: <numHoles> <startHole> [maxDepth]
+-- args: <umHoles> <startHole> [maxDepth]
 
 local tArgs = { ... }
 if #tArgs >= 1 then
@@ -120,6 +120,9 @@ local function scanAndSuck()
     local ignoreBlock = false
     if block then
         if data.name == "minecraft:stone" then
+            ignoreBlock = true
+        end
+        if data.name == "minecraft:deepslate" then
             ignoreBlock = true
         end
         if not ignoreBlock then
@@ -389,7 +392,7 @@ end
 
 local function findNextBore()
     boreCount = boreCount + 1
-    if math.fmod(boreCount,boresPerRow)  == 0 then
+    if math.fmod(boreCount-1,boresPerRow)  == 0 then
         nextRow()
     else
         boreX = boreX + 2
@@ -400,7 +403,7 @@ end
 
 
 -- Main loop
-
+refuel()
 while boreCount < startBoreCnt do
     boreCount = boreCount + 1
     findNextBore()
