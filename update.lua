@@ -4,6 +4,8 @@
 local repo_owner = "LordFamilyDev"
 local repo_name = "minecraft-turtle"
 local branch = "main"
+local tokenFile = "token"
+local github_token = ""
 local tArgs = { ... }
 if #tArgs == 1 then
     branch = tArgs[1]
@@ -11,10 +13,25 @@ end
 
 local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s", repo_owner, repo_name, branch)
 
+fs.open(tokenFile, "r")
+github_token = fs.readAll(tokenFile)
+
+local function getURL(url)
+    local headers = {
+        Authorization = "token " .. github_token,
+        Accept = "application/vnd.github.v3+json"
+    }
+    return http.request({
+        url = url,
+        method = method or "GET",
+        headers = headers
+    })
+end
+
 -- Function to download a file
 local function downloadFile(url, path)
     print("Downloading: " .. path)
-    local response = http.get(url)
+    local response = getURL(url)
     if response then
         local content = response.readAll()
         response.close()
@@ -48,7 +65,7 @@ local function processContents(contents, base_path , recursion)
             downloadFile(item.download_url, path)
         elseif item.type == "dir" then
             -- Recursively process subdirectories
-            local response = http.get(item.url)
+            local response = getURL(item.url)
             if response then
                 local subdir_contents = textutils.unserializeJSON(response.readAll())
                 response.close()
@@ -64,7 +81,7 @@ end
 print("Starting dynamic update process...")
 print ("Fetching from: " .. api_url)
 -- Fetch repository contents
-local response, str, failResp = http.get(api_url)
+local response, str, failResp = getURL(api_url)
 if response then
     local contents = textutils.unserializeJSON(response.readAll())
     response.close()
