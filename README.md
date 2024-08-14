@@ -3,6 +3,11 @@
 `wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua`
 `wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/SCL/update.lua`
 
+to use update you need a key file:
+'token'
+with your personal access token
+'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens'
+
 
 # ComputerCraft Remote Shell System
 
