@@ -62,7 +62,7 @@ end
 
 -- Main update process
 print("Starting dynamic update process...")
-
+print ("Fetching from: " .. api_url)
 -- Fetch repository contents
 local response = http.get(api_url)
 if response then
