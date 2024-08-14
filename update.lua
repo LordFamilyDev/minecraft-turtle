@@ -38,7 +38,8 @@ end
 -- Function to process repository contents
 local function processContents(contents, base_path)
     for _, item in ipairs(contents) do
-        local path = fs.combine(base_path, item.name)
+        print("Processing: " .. item.path .. " (" .. item.type .. ")").. " (" .. item.name .. ")"
+        local path = item.path
         if item.type == "file" then
             downloadFile(item.download_url, path)
         elseif item.type == "dir" then
@@ -48,7 +49,7 @@ local function processContents(contents, base_path)
             if response then
                 local subdir_contents = textutils.unserializeJSON(response.readAll())
                 response.close()
-                processContents(subdir_contents, path)
+                -- processContents(subdir_contents, path)
             else
                 print("Failed to fetch contents of: " .. path)
             end
