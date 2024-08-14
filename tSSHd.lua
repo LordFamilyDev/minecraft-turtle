@@ -64,7 +64,8 @@ local function executeFile(sender, session, path, args)
     local ok, result = pcall(func, table.unpack(args))
     
     if ok then
-        return ""  -- Return an empty string as the final result
+        lib_ssh.sendMessage(sender, {type="execute_result", output=""})
+        return true
     else
         return nil, "Error executing file: " .. tostring(result)
     end
@@ -119,10 +120,8 @@ while true do
                 sendError(sender, "Failed to delete: " .. tostring(result))
             end
         elseif message.type == "execute" then
-            local result, err = executeFile(sender, session, message.path, message.args or {})
-            if result then
-                lib_ssh.sendMessage(sender, {type="execute_result", output=result})
-            else
+            local success, err = executeFile(sender, session, message.path, message.args or {})
+            if not success then
                 sendError(sender, err)
             end
         else
