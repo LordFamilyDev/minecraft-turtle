@@ -22,6 +22,33 @@ local function sendError(sender, message)
     lib_ssh.sendMessage(sender, {type="error", message=message})
 end
 
+local function executeFile(path, args)
+    if not fs.exists(path) then
+        return nil, "File not found: " .. path
+    end
+
+    if fs.isDir(path) then
+        return nil, "Cannot execute a directory: " .. path
+    end
+
+    local func, err = loadfile(path)
+    if not func then
+        return nil, "Error loading file: " .. err
+    end
+
+    local oldEnv = getfenv(func)
+    local newEnv = setmetatable({...=args}, {__index=oldEnv})
+    setfenv(func, newEnv)
+
+    local result = {pcall(func, table.unpack(args))}
+    if result[1] then
+        table.remove(result, 1)
+        return result
+    else
+        return nil, "Error executing file: " .. tostring(result[2])
+    end
+end
+
 while true do
     local sender, message = lib_ssh.receiveMessage(5)  -- Add a timeout
     if sender and message then
@@ -64,6 +91,25 @@ while true do
                 lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. message.dir})
             else
                 sendError(sender, "Directory not found: " .. message.dir)
+            end
+        elseif message.type == "rm" then
+            if fs.exists(message.path) then
+                fs.delete(message.path)
+                lib_ssh.print_debug("File deleted successfully")
+                lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. message.path})
+            else
+                sendError(sender, "File not found: " .. message.path)
+            end
+        elseif message.type == "execute" then
+            local path = message.path
+            if not path:match("^[./]") then
+                path = "./" .. path
+            end
+            local result, err = executeFile(path, message.args or {})
+            if result then
+                lib_ssh.sendMessage(sender, {type="execute_result", output=table.concat(result, "\n")})
+            else
+                sendError(sender, err)
             end
         else
             sendError(sender, "Unknown command type: " .. message.type)

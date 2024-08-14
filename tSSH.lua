@@ -23,12 +23,20 @@ end
 print("Connecting to " .. remoteId)
 
 local function executeRemote(command)
-    lib_ssh.sendMessage(remoteId, {type="execute", command=command})
+    local parts = {}
+    for part in command:gmatch("%S+") do
+        table.insert(parts, part)
+    end
+    local path = parts[1]
+    table.remove(parts, 1)
+    lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
     local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "result" then
+    if response and response.type == "execute_result" then
         print(response.output)
+    elseif response and response.type == "error" then
+        print("Error: " .. response.message)
     else
-        print("No response or error occurred")
+        print("No response or unexpected error occurred")
     end
 end
 
@@ -54,6 +62,18 @@ local function changeDirectory(dir)
     end
 end
 
+local function removeFile(path)
+    lib_ssh.sendMessage(remoteId, {type="rm", path=path})
+    local _, response = lib_ssh.receiveMessage(5)
+    if response and response.type == "rm_result" then
+        print(response.message)
+    elseif response and response.type == "error" then
+        print("Error: " .. response.message)
+    else
+        print("Failed to remove file")
+    end
+end
+
 while true do
     write("> ")
     local input = read()
@@ -63,6 +83,8 @@ while true do
         listFiles()
     elseif input:sub(1, 2) == "cd" then
         changeDirectory(input:sub(4))
+    elseif input:sub(1, 2) == "rm" then
+        removeFile(input:sub(4))
     else
         executeRemote(input)
     end
