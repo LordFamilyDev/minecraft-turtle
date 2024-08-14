@@ -38,7 +38,7 @@ end
 -- Function to process repository contents
 local function processContents(contents, base_path)
     for _, item in ipairs(contents) do
-        print("Processing: " .. item.path .. " (" .. item.type .. ")").. " (" .. item.name .. ")"
+        print("Processing: " .. item.path .. " (" .. item.type .. ")".. " (" .. item.name .. ")")
         local path = item.path
         if item.type == "file" then
             downloadFile(item.download_url, path)
