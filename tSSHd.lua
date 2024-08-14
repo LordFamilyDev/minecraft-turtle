@@ -22,6 +22,27 @@ local function sendError(sender, message)
     lib_ssh.sendMessage(sender, {type="error", message=message})
 end
 
+local function captureOutput(func, ...)
+    local output = {}
+    local oldPrint = print
+    print = function(...)
+        local args = {...}
+        local line = table.concat(args, "\t")
+        table.insert(output, line)
+    end
+
+    local results = {pcall(func, ...)}
+    
+    print = oldPrint
+
+    if results[1] then
+        table.remove(results, 1)
+        return true, table.concat(output, "\n"), results
+    else
+        return false, results[2]
+    end
+end
+
 local function executeFile(path, args)
     if not fs.exists(path) then
         return nil, "File not found: " .. path
@@ -40,25 +61,16 @@ local function executeFile(path, args)
     local newEnv = setmetatable({arg=args}, {__index=oldEnv})
     setfenv(func, newEnv)
 
-    local oldTerm = term.redirect(term.native())
-    local output = {}
-    local oldPrint = print
-    print = function(...)
-        local args = {...}
-        local line = table.concat(args, "\t")
-        table.insert(output, line)
-        oldPrint(...)
-    end
-
-    local ok, result = pcall(func, table.unpack(args))
+    local ok, output, results = captureOutput(func, table.unpack(args))
     
-    print = oldPrint
-    term.redirect(oldTerm)
-
     if ok then
-        return table.concat(output, "\n")
+        if #output > 0 then
+            return output
+        else
+            return table.concat(results, "\n")
+        end
     else
-        return nil, "Error executing file: " .. tostring(result)
+        return nil, "Error executing file: " .. tostring(output)
     end
 end
 
@@ -94,24 +106,28 @@ while true do
                 sendError(sender, "File not found: " .. message.path)
             end
         elseif message.type == "ls" then
-            local files = fs.list(".")
-            lib_ssh.print_debug("Sending ls result")
-            lib_ssh.sendMessage(sender, {type="ls_result", files=files})
+            local ok, output = captureOutput(fs.list, ".")
+            if ok then
+                lib_ssh.print_debug("Sending ls result")
+                lib_ssh.sendMessage(sender, {type="ls_result", files=output})
+            else
+                sendError(sender, "Error listing files: " .. output)
+            end
         elseif message.type == "cd" then
-            if fs.isDir(message.dir) then
-                shell.setDir(message.dir)
+            local ok, output = captureOutput(shell.setDir, message.dir)
+            if ok then
                 lib_ssh.print_debug("Changed directory, sending confirmation")
                 lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. message.dir})
             else
-                sendError(sender, "Directory not found: " .. message.dir)
+                sendError(sender, "Error changing directory: " .. output)
             end
         elseif message.type == "rm" then
-            if fs.exists(message.path) then
-                fs.delete(message.path)
+            local ok, output = captureOutput(fs.delete, message.path)
+            if ok then
                 lib_ssh.print_debug("File deleted successfully")
                 lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. message.path})
             else
-                sendError(sender, "File not found: " .. message.path)
+                sendError(sender, "Error deleting file: " .. output)
             end
         elseif message.type == "execute" then
             local path = message.path
