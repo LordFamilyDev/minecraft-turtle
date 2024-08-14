@@ -41,8 +41,8 @@ end
 -- Function to receive a message
 function lib_ssh.receiveMessage(timeout)
     print("Waiting for message with timeout " .. tostring(timeout))
-    local sender, message = rednet.receive("ssh_protocol", timeout)
-    if message then
+    local sender, message, protocol = rednet.receive("ssh_protocol", timeout)
+    if sender and message then
         print("Received message from " .. tostring(sender) .. ": " .. message)
         return sender, textutils.unserialize(message)
     end
