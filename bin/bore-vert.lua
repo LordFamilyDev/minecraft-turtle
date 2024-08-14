@@ -16,7 +16,7 @@ local startBore = 0
 
 local tArgs = { ... }
 if #tArgs >= 1 then
-    startBore = tonumber(tArgs[1]) -1
+    startBoreCnt = tonumber(tArgs[1]) -1
 end
 if #tArgs >= 2 then
     numBores = tonumber(tArgs[2])
@@ -383,7 +383,7 @@ end
 
 -- Main loop
 local boreCount = 0
-while boreCount < startBore do
+while boreCount < startBoreCnt do
     boreCount = boreCount + 1
     findNextBore()
 end
