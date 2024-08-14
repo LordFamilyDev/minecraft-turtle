@@ -22,6 +22,8 @@ end
 
 print("Connecting to " .. remoteId)
 
+local currentDir = "/"
+
 local function executeRemote(command)
     local parts = {}
     for part in command:gmatch("%S+") do
@@ -52,10 +54,11 @@ local function executeRemote(command)
     end
 end
 
-local function listFiles()
-    lib_ssh.sendMessage(remoteId, {type="ls"})
+local function listFiles(path)
+    lib_ssh.sendMessage(remoteId, {type="ls", path=path})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "ls_result" then
+        print("Contents of " .. response.path .. ":")
         if type(response.files) == "table" then
             for _, file in ipairs(response.files) do
                 print(file)
@@ -72,6 +75,7 @@ local function changeDirectory(dir)
     lib_ssh.sendMessage(remoteId, {type="cd", dir=dir})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "cd_result" then
+        currentDir = response.message:match("Changed to (.+)")
         print(response.message)
     else
         print("Failed to change directory")
@@ -102,19 +106,33 @@ local function makeDirectory(path)
     end
 end
 
+local function printWorkingDirectory()
+    lib_ssh.sendMessage(remoteId, {type="pwd"})
+    local _, response = lib_ssh.receiveMessage(5)
+    if response and response.type == "pwd_result" then
+        print(response.path)
+    else
+        print("Failed to get current working directory")
+    end
+end
+
 while true do
-    write("> ")
+    write(currentDir .. "> ")
     local input = read()
     if input == "exit" then
         break
     elseif input == "ls" then
-        listFiles()
+        listFiles("")
+    elseif input:sub(1, 3) == "ls " then
+        listFiles(input:sub(4))
     elseif input:sub(1, 2) == "cd" then
         changeDirectory(input:sub(4))
     elseif input:sub(1, 2) == "rm" then
         removeFileOrDirectory(input:sub(4))
     elseif input:sub(1, 5) == "mkdir" then
         makeDirectory(input:sub(7))
+    elseif input == "pwd" then
+        printWorkingDirectory()
     else
         executeRemote(input)
     end

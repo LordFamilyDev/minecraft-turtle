@@ -17,6 +17,8 @@ end
 print("SSH daemon started. Computer ID: " .. os.getComputerID())
 lib_ssh.print_debug("Waiting for connections...")
 
+local sessions = {}
+
 local function sendError(sender, message)
     lib_ssh.print_debug("Sending error to " .. sender .. ": " .. message)
     lib_ssh.sendMessage(sender, {type="error", message=message})
@@ -76,75 +78,94 @@ local function executeFile(sender, path, args)
     end
 end
 
+local function getFullPath(session, path)
+    if path:sub(1, 1) == "/" then
+        return path
+    else
+        return fs.combine(session.cwd, path)
+    end
+end
+
 while true do
     local sender, message = lib_ssh.receiveMessage(5)  -- Add a timeout
     if sender and message then
         lib_ssh.print_debug("Received message from " .. sender .. ": " .. textutils.serialize(message))
         
+        if not sessions[sender] then
+            sessions[sender] = {cwd = "/"}
+        end
+        local session = sessions[sender]
+
         if message.type == "write_file" then
-            lib_ssh.print_debug("Attempting to write file: " .. message.path)
-            local file = fs.open(message.path, "w")
+            local fullPath = getFullPath(session, message.path)
+            lib_ssh.print_debug("Attempting to write file: " .. fullPath)
+            local file = fs.open(fullPath, "w")
             if file then
                 file.write(message.content)
                 file.close()
                 lib_ssh.print_debug("File written successfully, sending confirmation")
                 lib_ssh.sendMessage(sender, {type="file_written"})
             else
-                sendError(sender, "Unable to create file: " .. message.path)
+                sendError(sender, "Unable to create file: " .. fullPath)
             end
         elseif message.type == "read_file" then
-            lib_ssh.print_debug("Attempting to read file: " .. message.path)
-            if fs.exists(message.path) and not fs.isDir(message.path) then
-                local file = fs.open(message.path, "r")
+            local fullPath = getFullPath(session, message.path)
+            lib_ssh.print_debug("Attempting to read file: " .. fullPath)
+            if fs.exists(fullPath) and not fs.isDir(fullPath) then
+                local file = fs.open(fullPath, "r")
                 if file then
                     local content = file.readAll()
                     file.close()
                     lib_ssh.print_debug("File read successfully, sending content")
                     lib_ssh.sendMessage(sender, {type="file_content", content=content})
                 else
-                    sendError(sender, "Unable to open file: " .. message.path)
+                    sendError(sender, "Unable to open file: " .. fullPath)
                 end
             else
-                sendError(sender, "File not found: " .. message.path)
+                sendError(sender, "File not found: " .. fullPath)
             end
         elseif message.type == "ls" then
-            local files = fs.list(".")
-            lib_ssh.sendMessage(sender, {type="ls_result", files=files})
+            local fullPath = getFullPath(session, message.path or "")
+            local files = fs.list(fullPath)
+            lib_ssh.sendMessage(sender, {type="ls_result", files=files, path=fullPath})
         elseif message.type == "cd" then
-            if fs.isDir(message.dir) then
-                shell.setDir(message.dir)
+            local newPath = getFullPath(session, message.dir)
+            if fs.isDir(newPath) then
+                session.cwd = newPath
                 lib_ssh.print_debug("Changed directory, sending confirmation")
-                lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. message.dir})
+                lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. newPath})
             else
-                sendError(sender, "Directory not found: " .. message.dir)
+                sendError(sender, "Directory not found: " .. newPath)
             end
         elseif message.type == "rm" then
-            if fs.exists(message.path) then
-                fs.delete(message.path)
+            local fullPath = getFullPath(session, message.path)
+            if fs.exists(fullPath) then
+                fs.delete(fullPath)
                 lib_ssh.print_debug("File or directory deleted successfully")
-                lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. message.path})
+                lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. fullPath})
             else
-                sendError(sender, "File or directory not found: " .. message.path)
+                sendError(sender, "File or directory not found: " .. fullPath)
             end
         elseif message.type == "mkdir" then
-            if not fs.exists(message.path) then
-                fs.makeDir(message.path)
+            local fullPath = getFullPath(session, message.path)
+            if not fs.exists(fullPath) then
+                fs.makeDir(fullPath)
                 lib_ssh.print_debug("Directory created successfully")
-                lib_ssh.sendMessage(sender, {type="mkdir_result", message="Created directory " .. message.path})
+                lib_ssh.sendMessage(sender, {type="mkdir_result", message="Created directory " .. fullPath})
             else
-                sendError(sender, "Directory or file already exists: " .. message.path)
+                sendError(sender, "Directory or file already exists: " .. fullPath)
             end
         elseif message.type == "execute" then
-            local path = message.path
-            if not path:match("^[./]") then
-                path = "./" .. path
-            end
-            local result, err = executeFile(sender, path, message.args or {})
+            local fullPath = getFullPath(session, message.path)
+            local result, err = executeFile(sender, fullPath, message.args or {})
             if result then
                 lib_ssh.sendMessage(sender, {type="execute_result", output=result})
             else
                 sendError(sender, err)
             end
+        elseif message.type == "pwd" then
+            lib_ssh.print_debug("Sending current working directory")
+            lib_ssh.sendMessage(sender, {type="pwd_result", path=session.cwd})
         else
             sendError(sender, "Unknown command type: " .. message.type)
         end
