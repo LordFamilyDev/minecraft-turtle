@@ -5,7 +5,7 @@ local repo_owner = "LordFamilyDev"
 local repo_name = "minecraft-turtle"
 local branch = "main"
 local tArgs = { ... }
-if #tArgs = 1 then
+if #tArgs == 1 then
     branch = tArgs[1]
 end
 

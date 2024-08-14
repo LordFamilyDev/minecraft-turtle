@@ -1,6 +1,7 @@
 # minecraft-turtle
 
-`wget https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua`
+`wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua`
+`wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/SCL/update.lua`
 
 
 # ComputerCraft Remote Shell System
