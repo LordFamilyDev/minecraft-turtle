@@ -382,14 +382,16 @@ end
 
 
 -- Main loop
-for i = 0 , startBore do
+local boreCount = 0
+while boreCount < startBore do
+    boreCount = boreCount + 1
     findNextBore()
 end
 
 print("Excavating...")
 
 turtle.select(1)
-local boreCount = 0
+
 while boreCount < numBores do
     boreCount = boreCount + 1
     print("Bore #" .. boreCount)
