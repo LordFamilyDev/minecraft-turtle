@@ -20,8 +20,8 @@ print("Using token: " .. github_token)
 
 local function getURL(url)
     local headers = {
-        Authorization = "Bearer " .. github_token,
-        X-GitHub-Api-Version = "2022-11-28"
+        "Authorization: Bearer " .. github_token,
+        "X-GitHub-Api-Version: 2022-11-28"
     }
     return http.get({
         url = url,
