@@ -8,29 +8,37 @@ local urls = {
     "https://raw.githubusercontent.com/caffeineaddiction/minecraft-turtle/main/tSCP.lua"
 }
 
--- Function to extract filename from URL and remove .lua extension
+-- Function to extract filename from URL
 local function getFilename(url)
-    local filename = url:match("^.+/(.+)$")
+    return url:match("^.+/(.+)$")
+end
+
+-- Function to get desired filename (without .lua extension)
+local function getDesiredFilename(filename)
     return filename:gsub("%.lua$", "")
 end
 
 -- Function to update a single file
 local function updateFile(url)
     local filename = getFilename(url)
-    local tempFilename = filename .. ".temp"
-    print("Updating " .. filename)
+    local desiredFilename = getDesiredFilename(filename)
+    print("Updating " .. desiredFilename)
 
-    -- Delete the file if it exists
-    if fs.exists(filename) then
-        fs.delete(filename)
+    -- Delete the file if it exists (both with and without .lua extension)
+    if fs.exists(desiredFilename) then
+        fs.delete(desiredFilename)
         print("  Deleted existing file")
     end
+    if fs.exists(filename) then
+        fs.delete(filename)
+        print("  Deleted existing .lua file")
+    end
 
-    -- Download the new file with a temporary name
-    local success, error = shell.run("wget", url, tempFilename)
+    -- Download the new file
+    local success, error = shell.run("wget", url)
     if success then
         -- Rename the file to remove the .lua extension
-        fs.move(tempFilename, filename)
+        fs.move(filename, desiredFilename)
         print("  Downloaded and renamed successfully")
     else
         print("  Failed to download: " .. tostring(error))
