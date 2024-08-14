@@ -12,13 +12,17 @@ end
 
 local maxDepth = 0
 local numBores = 1
+local startBore = 0
 
 local tArgs = { ... }
 if #tArgs >= 1 then
-    numBores = tonumber(tArgs[1])
+    startBore = tonumber(tArgs[1])
 end
 if #tArgs >= 2 then
-    maxDepth = tonumber(tArgs[2])
+    numBores = tonumber(tArgs[2])
+end
+if #tArgs >= 3 then
+    maxDepth = tonumber(tArgs[3])
 end
 
 
@@ -374,6 +378,12 @@ local function findNextBore()
     boreX = boreX + 2
     boreZ = boreZ + 1
     goTo(boreX, 0, boreZ, 0, 1, true)
+end
+
+
+-- Main loop
+for i = 1 , startBore - 1 do
+    findNextBore()
 end
 
 print("Excavating...")
