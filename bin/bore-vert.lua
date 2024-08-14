@@ -382,7 +382,7 @@ end
 
 
 -- Main loop
-for i = 0 , (startBore - 1) do
+for i = 0 , startBore do
     findNextBore()
 end
 
