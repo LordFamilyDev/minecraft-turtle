@@ -27,16 +27,33 @@ local function getFilename(path)
     return path:match("([^/\\]+)$")
 end
 
+local function joinPath(dir, file)
+    if dir == "" or dir == "." or dir == "./" then
+        return file
+    else
+        return fs.combine(dir, file)
+    end
+end
+
 local srcId, srcPath = parseAddress(args[1])
 local destId, destPath = parseAddress(args[2])
 
--- If destPath is empty (ends with ':') or './', use the source filename
-if destPath == "" or destPath == "./" then
-    destPath = getFilename(srcPath)
+-- Determine the actual destination path
+local actualDestPath
+if destId then
+    -- Remote destination
+    actualDestPath = destPath ~= "" and destPath or getFilename(srcPath)
+else
+    -- Local destination
+    if destPath == "" or destPath == "." or destPath == "./" then
+        actualDestPath = getFilename(srcPath)
+    else
+        actualDestPath = joinPath(destPath, getFilename(srcPath))
+    end
 end
 
 print("Source:", srcId and ("Remote " .. srcId .. ":" .. srcPath) or srcPath)
-print("Destination:", destId and ("Remote " .. destId .. ":" .. destPath) or destPath)
+print("Destination:", destId and ("Remote " .. destId .. ":" .. actualDestPath) or actualDestPath)
 
 local function readFile(path)
     local file = fs.open(path, "r")
@@ -66,7 +83,7 @@ if srcId then
     print("Received response from: " .. tostring(sender))
     print("Response type: " .. (response and response.type or "nil"))
     if sender == srcId and response and response.type == "file_content" then
-        local success, err = writeFile(destPath, response.content)
+        local success, err = writeFile(actualDestPath, response.content)
         if success then
             print("File transferred successfully")
         else
@@ -84,7 +101,7 @@ elseif destId then
     local content, err = readFile(srcPath)
     if content then
         print("Sending file to remote...")
-        lib_ssh.sendMessage(destId, {type="write_file", path=destPath, content=content})
+        lib_ssh.sendMessage(destId, {type="write_file", path=actualDestPath, content=content})
         local sender, response = lib_ssh.receiveMessage(10)  -- Increased timeout
         print("Received response from: " .. tostring(sender))
         print("Response type: " .. (response and response.type or "nil"))
