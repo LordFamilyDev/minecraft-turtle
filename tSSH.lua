@@ -30,13 +30,23 @@ local function executeRemote(command)
     local path = parts[1]
     table.remove(parts, 1)
     lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "execute_result" then
-        print(response.output)
-    elseif response and response.type == "error" then
-        print("Error: " .. response.message)
-    else
-        print("No response or unexpected error occurred")
+    
+    while true do
+        local _, response = lib_ssh.receiveMessage(5)
+        if response and response.type == "print" then
+            print(response.output)
+        elseif response and response.type == "execute_result" then
+            if response.output and #response.output > 0 then
+                print(response.output)
+            end
+            break
+        elseif response and response.type == "error" then
+            print("Error: " .. response.message)
+            break
+        elseif response == nil then
+            print("No response or unexpected error occurred")
+            break
+        end
     end
 end
 

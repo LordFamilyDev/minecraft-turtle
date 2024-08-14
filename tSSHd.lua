@@ -22,25 +22,30 @@ local function sendError(sender, message)
     lib_ssh.sendMessage(sender, {type="error", message=message})
 end
 
-local function captureOutput(func, ...)
-    local output = {}
-    local oldPrint = print
-    print = function(...)
-        local args = {...}
-        local line = table.concat(args, "\t")
-        table.insert(output, line)
-    end
+local originalPrint = _G.print
+local capturedOutput = {}
+local currentSender = nil
 
-    local results = {pcall(func, ...)}
-    
-    print = oldPrint
-
-    if results[1] then
-        table.remove(results, 1)
-        return true, table.concat(output, "\n"), results
-    else
-        return false, results[2]
+local function customPrint(...)
+    local args = {...}
+    local line = table.concat(args, "\t")
+    table.insert(capturedOutput, line)
+    originalPrint(...)  -- Still print to the local console for debugging
+    if currentSender then
+        lib_ssh.sendMessage(currentSender, {type="print", output=line})
     end
+end
+
+local function startSession(sender)
+    currentSender = sender
+    capturedOutput = {}
+    _G.print = customPrint
+end
+
+local function endSession()
+    _G.print = originalPrint
+    currentSender = nil
+    capturedOutput = {}
 end
 
 local function executeFile(path, args)
@@ -61,16 +66,12 @@ local function executeFile(path, args)
     local newEnv = setmetatable({arg=args}, {__index=oldEnv})
     setfenv(func, newEnv)
 
-    local ok, output, results = captureOutput(func, table.unpack(args))
+    local ok, result = pcall(func, table.unpack(args))
     
     if ok then
-        if #output > 0 then
-            return output
-        else
-            return table.concat(results, "\n")
-        end
+        return table.concat(capturedOutput, "\n")
     else
-        return nil, "Error executing file: " .. tostring(output)
+        return nil, "Error executing file: " .. tostring(result)
     end
 end
 
@@ -78,6 +79,8 @@ while true do
     local sender, message = lib_ssh.receiveMessage(5)  -- Add a timeout
     if sender and message then
         lib_ssh.print_debug("Received message from " .. sender .. ": " .. textutils.serialize(message))
+        
+        startSession(sender)
         
         if message.type == "write_file" then
             lib_ssh.print_debug("Attempting to write file: " .. message.path)
@@ -106,28 +109,23 @@ while true do
                 sendError(sender, "File not found: " .. message.path)
             end
         elseif message.type == "ls" then
-            local ok, output = captureOutput(fs.list, ".")
-            if ok then
-                lib_ssh.print_debug("Sending ls result")
-                lib_ssh.sendMessage(sender, {type="ls_result", files=output})
-            else
-                sendError(sender, "Error listing files: " .. output)
-            end
+            fs.list(".")
+            lib_ssh.sendMessage(sender, {type="ls_result", files=capturedOutput})
         elseif message.type == "cd" then
-            local ok, output = captureOutput(shell.setDir, message.dir)
-            if ok then
+            if fs.isDir(message.dir) then
+                shell.setDir(message.dir)
                 lib_ssh.print_debug("Changed directory, sending confirmation")
                 lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. message.dir})
             else
-                sendError(sender, "Error changing directory: " .. output)
+                sendError(sender, "Directory not found: " .. message.dir)
             end
         elseif message.type == "rm" then
-            local ok, output = captureOutput(fs.delete, message.path)
-            if ok then
+            if fs.exists(message.path) then
+                fs.delete(message.path)
                 lib_ssh.print_debug("File deleted successfully")
                 lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. message.path})
             else
-                sendError(sender, "Error deleting file: " .. output)
+                sendError(sender, "File not found: " .. message.path)
             end
         elseif message.type == "execute" then
             local path = message.path
@@ -143,6 +141,8 @@ while true do
         else
             sendError(sender, "Unknown command type: " .. message.type)
         end
+        
+        endSession()
     elseif sender == nil and message == nil then
         -- No message received, continue listening
     else
