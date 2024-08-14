@@ -71,11 +71,13 @@ local function listFiles(path)
     end
 end
 
+local currentDir = "/"
+
 local function changeDirectory(dir)
     lib_ssh.sendMessage(remoteId, {type="cd", dir=dir})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "cd_result" then
-        currentDir = response.message:match("Changed to (.+)")
+        currentDir = response.path
         print(response.message)
     else
         print("Failed to change directory")
@@ -110,7 +112,8 @@ local function printWorkingDirectory()
     lib_ssh.sendMessage(remoteId, {type="pwd"})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "pwd_result" then
-        print(response.path)
+        currentDir = response.path
+        print("Current working directory: " .. currentDir)
     else
         print("Failed to get current working directory")
     end

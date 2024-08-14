@@ -80,9 +80,9 @@ end
 
 local function getFullPath(session, path)
     if path:sub(1, 1) == "/" then
-        return path
+        return fs.normalize(path)
     else
-        return fs.combine(session.cwd, path)
+        return fs.normalize(fs.combine(session.cwd, path))
     end
 end
 
@@ -133,7 +133,7 @@ while true do
             if fs.isDir(newPath) then
                 session.cwd = newPath
                 lib_ssh.print_debug("Changed directory, sending confirmation")
-                lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. newPath})
+                lib_ssh.sendMessage(sender, {type="cd_result", message="Changed to " .. newPath, path=newPath})
             else
                 sendError(sender, "Directory not found: " .. newPath)
             end
