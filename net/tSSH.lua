@@ -110,15 +110,15 @@ local function executeRemote(command)
     while true do
         local response = receiveResponse()
         if not response then
+            print("No response received")
             break
         elseif response.type == "print" then
             print(response.output)
             hadOutput = true
         elseif response.type == "execute_result" then
-            if response.output and #response.output > 0 then
-                print(response.output)
-                hadOutput = true
-            end
+            break
+        elseif response.type == "error" then
+            print("Error: " .. response.message)
             break
         else
             print("Unexpected response type: " .. response.type)
