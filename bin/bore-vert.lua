@@ -10,14 +10,26 @@ if not turtle then
     return
 end
 
+local maxDepth = 0
+local numBores = 1
+local startBoreCnt = 0
+local boresPerRow = 4
+
+-- args: <numHoles> <startHole> [maxDepth]
+
 local tArgs = { ... }
-if #tArgs ~= 1 then
-    local programName = arg[0] or fs.getName(shell.getRunningProgram())
-    print("Usage: " .. programName .. " <max depth>")
-    return
+if #tArgs >= 1 then
+    numBores = tonumber(tArgs[2])
+end
+if #tArgs >= 2 then
+    startBoreCnt = tonumber(tArgs[1]) -1
+    numBores = numBores + startBoreCnt
+end
+if #tArgs >= 3 then
+    maxDepth = tonumber(tArgs[3])
 end
 
-local maxDepth = tonumber(tArgs[1])
+
 
 -- Mine in a quarry pattern until we hit something we can't dig
 -- local size = tonumber(tArgs[1])
@@ -33,7 +45,8 @@ local unloaded = 0
 local collected = 0
 
 local xPos, zPos = 0, 0
-local xDir, zDir = 0, 1
+-- start facing positive x direction
+local xDir, zDir = 1, 0
 
 local goTo -- Filled in further down
 local refuel -- Filled in further down
@@ -62,7 +75,7 @@ end
 local function returnSupplies()
     local x, y, z, xd, zd = xPos, depth, zPos, xDir, zDir
     print("Returning to surface...")
-    goTo(0, 0, 0, 0, -1, false)
+    goTo(0, 0, 0, -1, 0, false)
 
     local fuelNeeded = 2 * (x + y + z) + 1
     if not refuel(fuelNeeded) then
@@ -111,6 +124,9 @@ local function scanAndSuck()
         if data.name == "minecraft:stone" then
             ignoreBlock = true
         end
+        if data.name == "minecraft:deepslate" then
+            ignoreBlock = true
+        end
         if not ignoreBlock then
             if turtle.dig() then
                 turtle.suck()
@@ -127,10 +143,13 @@ local function sitAndSpin()
     end
 end
 
-function findItem(name)
+function findItem(name, select)
     for n = 1, 16 do
         local item = turtle.getItemDetail(n)
         if item and item.name == name then
+            if select then
+                turtle.select(n)
+            end
             return n
         end
     end
@@ -229,12 +248,12 @@ end
 
 local function turnLeft()
     turtle.turnLeft()
-    xDir, zDir = -zDir, xDir
+    xDir, zDir = zDir, -xDir
 end
 
 local function turnRight()
     turtle.turnRight()
-    xDir, zDir = zDir, -xDir
+    xDir, zDir = -zDir, xDir
 end
 
 function goTo(x, y, z, xd, zd, fill)
@@ -243,9 +262,7 @@ function goTo(x, y, z, xd, zd, fill)
             depth = depth - 1
             fillMod = math.fmod(depth, 10)
             if fill  and fillMod then
-                c = findItem("minecraft:cobblestone")
-                if c then
-                    turtle.select(c)
+                if findItem("minecraft:cobblestone", true) then
                     turtle.placeDown()
                 end
             end
@@ -332,50 +349,95 @@ if not refuel() then
     return
 end
 
+local function startBore()
+    tryDown()
+    for i = 1, 4 do
+        turtle.dig()
+        findItem("minecraft:cobblestone", true)
+        turtle.place()
+        turtle.turnRight()
+    end
+    tryDown()
+end
+
+local function bore()
+    startBore()
+    local done = false
+    while not done do
+        sitAndSpin()
+        if not tryDown() then
+            print("Nothing below me")
+            done = true
+            break
+        end
+        if maxDepth > 0 and depth > maxDepth then
+            print("Reached max depth of " .. maxDepth)
+            done = true
+            break
+        end
+    end
+    print("Returning to surface...")  
+end
+
+local boreCount = 0
+local boreX = 0 
+local boreZ = 0
+local row = 0
+
+local function nextRow()
+    row = row + 1
+    print("Row: " .. row)
+    boreX = row * 2
+    boreZ = row * -1
+    goTo(boreX, 0, boreZ, 1, 0, true)
+end
+
+local function findNextBore()
+    refuel()
+    boreCount = boreCount + 1
+    if math.fmod(boreCount,boresPerRow)  == 0 then
+        nextRow()
+    else
+        boreX = boreX + 1
+        boreZ = boreZ + 2
+        goTo(boreX, 0, boreZ, 1, 0, true)
+    end
+    print("Bore #" .. boreCount .. " at " .. boreX .. "," .. boreZ)
+end
+
+
+-- Main loop
+-- Find starting bore
+while boreCount < startBoreCnt do
+    findNextBore()
+end
+
 print("Excavating...")
 
-local reseal = false
 turtle.select(1)
-if turtle.digDown() then
-    reseal = true
-end
 
-while not turtle.detectDown() do
-   tryDown() 
-end
-
-local alternate = 0
-local done = false
-while not done do
-    sitAndSpin()
-    if not tryDown() then
-        print("Nothing below me")
-        done = true
-        break
+while boreCount < numBores do
+    print("Bore #" .. boreCount)
+    bore()
+    -- return to surface & fill
+    goTo(xPos, 0, zPos, xDir, zDir, true)
+    c = findItem("minecraft:cobblestone", true)
+    if c then
+        turtle.select(c)
+        turtle.placeDown()
     end
-    if maxDepth > 0 and depth > maxDepth then
-        print("Reached max depth of " .. maxDepth)
-        done = true
-        break
+
+    goTo(0, 0, 0, -1, 0, false)
+    unload(true)
+    if boreCount < numBores then
+        findNextBore()
     end
 end
-
-print("Returning to surface...")
 
 -- Return to where we started
-goTo(0, 0, 0, 0, -1, true)
-c = findItem("minecraft:cobblestone")
-if c then
-    turtle.select(c)
-    turtle.placeDown()
-end
-
+goTo(0, 0, 0, -1, 0, true)
 unload(false)
-goTo(0, 0, 0, 0, 1, false)
-
--- Seal the hole
-if reseal then
-    turtle.placeDown()
-end
+goTo(0, 0, 0, 1, 0, false)
 
 print("Mined " .. collected + unloaded .. " items total.")
+print("Dug " .. boreCount .. " bores.")
