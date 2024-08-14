@@ -345,6 +345,7 @@ local function startBore()
         turtle.place()
         turtle.turnRight()
     end
+    tryDown()
 end
 
 local function bore()
@@ -382,7 +383,7 @@ while boreCount < numBores do
     boreCount = boreCount + 1
     print("Bore #" .. boreCount)
     bore()
-    goto(xPos, 0, zPos, xDir, zDir, true)
+    goTo(xPos, 0, zPos, xDir, zDir, true)
     c = findItem("minecraft:cobblestone", true)
     if c then
         turtle.select(c)
