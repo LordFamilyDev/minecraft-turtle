@@ -405,7 +405,6 @@ end
 -- Main loop
 refuel()
 while boreCount < startBoreCnt do
-    boreCount = boreCount + 1
     findNextBore()
 end
 
