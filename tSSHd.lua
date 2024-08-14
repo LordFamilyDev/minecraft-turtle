@@ -37,15 +37,28 @@ local function executeFile(path, args)
     end
 
     local oldEnv = getfenv(func)
-    local newEnv = setmetatable({...=args}, {__index=oldEnv})
+    local newEnv = setmetatable({arg=args}, {__index=oldEnv})
     setfenv(func, newEnv)
 
-    local result = {pcall(func, table.unpack(args))}
-    if result[1] then
-        table.remove(result, 1)
-        return result
+    local oldTerm = term.redirect(term.native())
+    local output = {}
+    local oldPrint = print
+    print = function(...)
+        local args = {...}
+        local line = table.concat(args, "\t")
+        table.insert(output, line)
+        oldPrint(...)
+    end
+
+    local ok, result = pcall(func, table.unpack(args))
+    
+    print = oldPrint
+    term.redirect(oldTerm)
+
+    if ok then
+        return table.concat(output, "\n")
     else
-        return nil, "Error executing file: " .. tostring(result[2])
+        return nil, "Error executing file: " .. tostring(result)
     end
 end
 
@@ -107,7 +120,7 @@ while true do
             end
             local result, err = executeFile(path, message.args or {})
             if result then
-                lib_ssh.sendMessage(sender, {type="execute_result", output=table.concat(result, "\n")})
+                lib_ssh.sendMessage(sender, {type="execute_result", output=result})
             else
                 sendError(sender, err)
             end
