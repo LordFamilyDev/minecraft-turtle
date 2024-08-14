@@ -19,10 +19,10 @@ local boresPerRow = 4
 
 local tArgs = { ... }
 if #tArgs >= 1 then
-    numBores = tonumber(tArgs[2])
+    numBores = tonumber(tArgs[1])
 end
 if #tArgs >= 2 then
-    startBoreCnt = tonumber(tArgs[1]) -1
+    startBoreCnt = tonumber(tArgs[2]) -1
     numBores = numBores + startBoreCnt
 end
 if #tArgs >= 3 then
