@@ -36,7 +36,11 @@ local function downloadFile(url, path)
 end
 
 -- Function to process repository contents
-local function processContents(contents, base_path)
+local function processContents(contents, base_path , recursion)
+    if recursion > 5 then
+        print("Recursion limit reached")
+        return
+    end
     for _, item in ipairs(contents) do
         print("Processing: " .. item.path .. " (" .. item.type .. ")".. " (" .. item.name .. ")")
         local path = item.path
@@ -44,12 +48,11 @@ local function processContents(contents, base_path)
             downloadFile(item.download_url, path)
         elseif item.type == "dir" then
             -- Recursively process subdirectories
-            local subdir_url = api_url .. "&path=" .. item.path
-            local response = http.get(subdir_url)
+            local response = http.get(item.url)
             if response then
                 local subdir_contents = textutils.unserializeJSON(response.readAll())
                 response.close()
-                -- processContents(subdir_contents, path)
+                processContents(subdir_contents, path, recursion + 1)
             else
                 print("Failed to fetch contents of: " .. path)
             end
@@ -67,7 +70,7 @@ if response then
     response.close()
     
     -- Process and download files
-    processContents(contents, "")
+    processContents(contents, "", 0)
     
     print("Update process completed.")
 else
