@@ -131,10 +131,13 @@ local function sitAndSpin()
     end
 end
 
-function findItem(name)
+function findItem(name, select)
     for n = 1, 16 do
         local item = turtle.getItemDetail(n)
         if item and item.name == name then
+            if select then
+                turtle.select(n)
+            end
             return n
         end
     end
@@ -247,9 +250,7 @@ function goTo(x, y, z, xd, zd, fill)
             depth = depth - 1
             fillMod = math.fmod(depth, 10)
             if fill  and fillMod then
-                c = findItem("minecraft:cobblestone")
-                if c then
-                    turtle.select(c)
+                if findItem("minecraft:cobblestone", true) then
                     turtle.placeDown()
                 end
             end
@@ -340,7 +341,8 @@ local function startBore()
     tryDown()
     for i = 1, 4 do
         turtle.dig()
-        turtle.placeCobblestone()
+        findItem("minecraft:cobblestone", true)
+        turtle.place()
         turtle.turnRight()
     end
 end
@@ -381,7 +383,7 @@ while boreCount < numBores do
     print("Bore #" .. boreCount)
     bore()
     goto(xPos, 0, zPos, xDir, zDir, true)
-    c = findItem("minecraft:cobblestone")
+    c = findItem("minecraft:cobblestone", true)
     if c then
         turtle.select(c)
         turtle.placeDown()
