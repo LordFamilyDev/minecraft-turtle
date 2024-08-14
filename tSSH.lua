@@ -106,21 +106,27 @@ local function executeRemote(command)
     table.remove(parts, 1)
     lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
     
+    local hadOutput = false
     while true do
         local response = receiveResponse()
         if not response then
             break
         elseif response.type == "print" then
             print(response.output)
+            hadOutput = true
         elseif response.type == "execute_result" then
             if response.output and #response.output > 0 then
                 print(response.output)
+                hadOutput = true
             end
             break
         else
             print("Unexpected response type: " .. response.type)
             break
         end
+    end
+    if not hadOutput then
+        print("Command executed successfully (no output)")
     end
 end
 

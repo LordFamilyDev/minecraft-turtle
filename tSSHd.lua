@@ -48,23 +48,23 @@ local function executeFile(sender, session, path, args)
     end
 
     local oldEnv = getfenv(func)
-    local newEnv = setmetatable({arg=args}, {__index=oldEnv})
+    local newEnv = setmetatable({}, {__index = function(t, k)
+        if k == "print" then
+            return function(...)
+                local message = table.concat({...}, "\t")
+                lib_ssh.sendMessage(sender, {type="print", output=message})
+            end
+        else
+            return oldEnv[k]
+        end
+    end})
+    newEnv.arg = args
     setfenv(func, newEnv)
-
-    local oldPrint = print
-    local output = {}
-    print = function(...)
-        local message = table.concat({...}, "\t")
-        table.insert(output, message)
-        lib_ssh.sendMessage(sender, {type="print", output=message})
-    end
 
     local ok, result = pcall(func, table.unpack(args))
     
-    print = oldPrint
-
     if ok then
-        return table.concat(output, "\n")
+        return ""  -- Return an empty string as the final result
     else
         return nil, "Error executing file: " .. tostring(result)
     end
