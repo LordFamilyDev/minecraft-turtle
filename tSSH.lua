@@ -24,40 +24,31 @@ print("Connecting to " .. remoteId)
 
 local currentDir = "/"
 
-local function executeRemote(command)
-    local parts = {}
-    for part in command:gmatch("%S+") do
-        table.insert(parts, part)
+local function receiveResponse(expectedType)
+    local sender, response = lib_ssh.receiveMessage(5)
+    if sender ~= remoteId then
+        print("Received response from unexpected sender: " .. tostring(sender))
+        return nil
     end
-    local path = parts[1]
-    table.remove(parts, 1)
-    lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
-    
-    local output = {}
-    while true do
-        local _, response = lib_ssh.receiveMessage(5)
-        if response and response.type == "print" then
-            print(response.output)
-            table.insert(output, response.output)
-        elseif response and response.type == "execute_result" then
-            if response.output and #response.output > 0 and #output == 0 then
-                print(response.output)
-            end
-            break
-        elseif response and response.type == "error" then
-            print("Error: " .. response.message)
-            break
-        elseif response == nil then
-            print("No response or unexpected error occurred")
-            break
-        end
+    if not response then
+        print("No response received")
+        return nil
     end
+    if response.type == "error" then
+        print("Error: " .. response.message)
+        return nil
+    end
+    if response.type ~= expectedType then
+        print("Unexpected response type: " .. response.type)
+        return nil
+    end
+    return response
 end
 
 local function listFiles(path)
     lib_ssh.sendMessage(remoteId, {type="ls", path=path})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "ls_result" then
+    local response = receiveResponse("ls_result")
+    if response then
         print("Contents of " .. response.path .. ":")
         if type(response.files) == "table" then
             for _, file in ipairs(response.files) do
@@ -66,56 +57,40 @@ local function listFiles(path)
         else
             print("Unexpected ls result format")
         end
-    else
-        print("Failed to list files")
     end
 end
 
-local currentDir = "/"
-
 local function changeDirectory(dir)
     lib_ssh.sendMessage(remoteId, {type="cd", dir=dir})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "cd_result" then
+    local response = receiveResponse("cd_result")
+    if response then
         currentDir = response.path
         print(response.message)
-    else
-        print("Failed to change directory")
     end
 end
 
 local function removeFileOrDirectory(path)
     lib_ssh.sendMessage(remoteId, {type="rm", path=path})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "rm_result" then
+    local response = receiveResponse("rm_result")
+    if response then
         print(response.message)
-    elseif response and response.type == "error" then
-        print("Error: " .. response.message)
-    else
-        print("Failed to remove file or directory")
     end
 end
 
 local function makeDirectory(path)
     lib_ssh.sendMessage(remoteId, {type="mkdir", path=path})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "mkdir_result" then
+    local response = receiveResponse("mkdir_result")
+    if response then
         print(response.message)
-    elseif response and response.type == "error" then
-        print("Error: " .. response.message)
-    else
-        print("Failed to create directory")
     end
 end
 
 local function printWorkingDirectory()
     lib_ssh.sendMessage(remoteId, {type="pwd"})
-    local _, response = lib_ssh.receiveMessage(5)
-    if response and response.type == "pwd_result" then
+    local response = receiveResponse("pwd_result")
+    if response then
         currentDir = response.path
         print("Current working directory: " .. currentDir)
-    else
-        print("Failed to get current working directory")
     end
 end
 
@@ -137,7 +112,7 @@ while true do
     elseif input == "pwd" then
         printWorkingDirectory()
     else
-        executeRemote(input)
+        print("Unknown command: " .. input)
     end
 end
 
