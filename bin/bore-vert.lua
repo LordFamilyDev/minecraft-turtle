@@ -392,7 +392,8 @@ while boreCount < numBores do
     end
     goTo(0, 0, 0, 0, -1, false)
     unload(true)
-    findNextBore()
+    if boreCount < numBores then
+        findNextBore()
 end
 
 -- Return to where we started
