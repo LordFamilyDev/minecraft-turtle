@@ -5,7 +5,8 @@ local urls = {
     "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/lib_ssh.lua",
     "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/tSSH.lua",
     "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/tSSHd.lua",
-    "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/tSCP.lua"
+    "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/tSCP.lua",
+    "https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/boring.lua"
 }
 
 -- Function to extract filename from URL
