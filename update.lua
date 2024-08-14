@@ -4,6 +4,11 @@
 local repo_owner = "LordFamilyDev"
 local repo_name = "minecraft-turtle"
 local branch = "main"
+local tArgs = { ... }
+if #tArgs = 1 then
+    branch = tArgs[1]
+end
+
 local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s", repo_owner, repo_name, branch)
 
 -- Function to download a file
