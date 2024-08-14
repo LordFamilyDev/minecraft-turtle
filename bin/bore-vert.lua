@@ -413,7 +413,6 @@ print("Excavating...")
 turtle.select(1)
 
 while boreCount < numBores do
-    boreCount = boreCount + 1
     print("Bore #" .. boreCount)
     bore()
     goTo(xPos, 0, zPos, xDir, zDir, true)
