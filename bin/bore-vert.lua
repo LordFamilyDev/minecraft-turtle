@@ -372,7 +372,7 @@ local boreZ = 0
 
 local function findNextBore()
     boreX = boreX + 2
-    borez = boreZ + 2
+    boreZ = boreZ + 1
     goTo(boreX, 0, boreZ, 0, 1, true)
 end
 
@@ -390,6 +390,7 @@ while boreCount < numBores do
         turtle.select(c)
         turtle.placeDown()
     end
+    goTo(0, 0, 0, 0, -1, false)
     unload(true)
     findNextBore()
 end
