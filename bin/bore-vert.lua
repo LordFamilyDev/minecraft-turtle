@@ -12,10 +12,10 @@ end
 
 local maxDepth = 0
 local numBores = 1
-local startBore = 0
-local boresPerRow = 5
+local startBoreCnt = 0
+local boresPerRow = 4
 
--- args: <umHoles> <startHole> [maxDepth]
+-- args: <numHoles> <startHole> [maxDepth]
 
 local tArgs = { ... }
 if #tArgs >= 1 then
@@ -45,7 +45,8 @@ local unloaded = 0
 local collected = 0
 
 local xPos, zPos = 0, 0
-local xDir, zDir = 0, 1
+-- start facing positive x direction
+local xDir, zDir = 1, 0
 
 local goTo -- Filled in further down
 local refuel -- Filled in further down
@@ -74,7 +75,7 @@ end
 local function returnSupplies()
     local x, y, z, xd, zd = xPos, depth, zPos, xDir, zDir
     print("Returning to surface...")
-    goTo(0, 0, 0, 0, -1, false)
+    goTo(0, 0, 0, -1, 0, false)
 
     local fuelNeeded = 2 * (x + y + z) + 1
     if not refuel(fuelNeeded) then
@@ -247,12 +248,12 @@ end
 
 local function turnLeft()
     turtle.turnLeft()
-    xDir, zDir = -zDir, xDir
+    xDir, zDir = zDir, -xDir
 end
 
 local function turnRight()
     turtle.turnRight()
-    xDir, zDir = zDir, -xDir
+    xDir, zDir = -zDir, xDir
 end
 
 function goTo(x, y, z, xd, zd, fill)
@@ -384,12 +385,11 @@ local boreZ = 0
 local row = 0
 
 local function nextRow()
-    goTo(0, 0, 0, 0, 1, false)
     row = row + 1
     print("Row: " .. row)
     boreX = row * 2
     boreZ = row * -1
-    goTo(boreX, 0, boreZ, 0, 1, true)
+    goTo(boreX, 0, boreZ, 1, 0, true)
 end
 
 local function findNextBore()
@@ -398,14 +398,16 @@ local function findNextBore()
     if math.fmod(boreCount,boresPerRow)  == 0 then
         nextRow()
     else
-        boreX = boreX + 2
-        boreZ = boreZ + 1
-        goTo(boreX, 0, boreZ, 0, 1, true)
+        boreX = boreX + 1
+        boreZ = boreZ + 2
+        goTo(boreX, 0, boreZ, 1, 0, true)
     end
+    print("Bore #" .. boreCount .. " at " .. boreX .. "," .. boreZ)
 end
 
 
 -- Main loop
+-- Find starting bore
 while boreCount < startBoreCnt do
     findNextBore()
 end
@@ -417,13 +419,15 @@ turtle.select(1)
 while boreCount < numBores do
     print("Bore #" .. boreCount)
     bore()
+    -- return to surface & fill
     goTo(xPos, 0, zPos, xDir, zDir, true)
     c = findItem("minecraft:cobblestone", true)
     if c then
         turtle.select(c)
         turtle.placeDown()
     end
-    goTo(0, 0, 0, 0, -1, false)
+
+    goTo(0, 0, 0, -1, 0, false)
     unload(true)
     if boreCount < numBores then
         findNextBore()
@@ -431,9 +435,9 @@ while boreCount < numBores do
 end
 
 -- Return to where we started
-goTo(0, 0, 0, 0, -1, true)
+goTo(0, 0, 0, -1, 0, true)
 unload(false)
-goTo(0, 0, 0, 0, 1, false)
+goTo(0, 0, 0, 1, 0, false)
 
 print("Mined " .. collected + unloaded .. " items total.")
 print("Dug " .. boreCount .. " bores.")
