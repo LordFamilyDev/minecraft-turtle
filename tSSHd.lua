@@ -23,32 +23,29 @@ local function sendError(sender, message)
 end
 
 local originalPrint = _G.print
-local capturedOutput = {}
-local currentSender = nil
 
-local function customPrint(...)
-    local args = {...}
-    local line = table.concat(args, "\t")
-    table.insert(capturedOutput, line)
-    originalPrint(...)  -- Still print to the local console for debugging
-    if currentSender then
-        lib_ssh.sendMessage(currentSender, {type="print", output=line})
+local function captureOutput(sender, func, ...)
+    local capturedOutput = {}
+    local customPrint = function(...)
+        local args = {...}
+        local line = table.concat(args, "\t")
+        table.insert(capturedOutput, line)
+        lib_ssh.sendMessage(sender, {type="print", output=line})
+    end
+
+    _G.print = customPrint
+    local results = {pcall(func, ...)}
+    _G.print = originalPrint
+
+    if results[1] then
+        table.remove(results, 1)
+        return true, table.concat(capturedOutput, "\n"), results
+    else
+        return false, results[2]
     end
 end
 
-local function startSession(sender)
-    currentSender = sender
-    capturedOutput = {}
-    _G.print = customPrint
-end
-
-local function endSession()
-    _G.print = originalPrint
-    currentSender = nil
-    capturedOutput = {}
-end
-
-local function executeFile(path, args)
+local function executeFile(sender, path, args)
     if not fs.exists(path) then
         return nil, "File not found: " .. path
     end
@@ -66,12 +63,16 @@ local function executeFile(path, args)
     local newEnv = setmetatable({arg=args}, {__index=oldEnv})
     setfenv(func, newEnv)
 
-    local ok, result = pcall(func, table.unpack(args))
+    local ok, output, results = captureOutput(sender, func, table.unpack(args))
     
     if ok then
-        return table.concat(capturedOutput, "\n")
+        if #output > 0 then
+            return output
+        else
+            return table.concat(results, "\n")
+        end
     else
-        return nil, "Error executing file: " .. tostring(result)
+        return nil, "Error executing file: " .. tostring(output)
     end
 end
 
@@ -79,8 +80,6 @@ while true do
     local sender, message = lib_ssh.receiveMessage(5)  -- Add a timeout
     if sender and message then
         lib_ssh.print_debug("Received message from " .. sender .. ": " .. textutils.serialize(message))
-        
-        startSession(sender)
         
         if message.type == "write_file" then
             lib_ssh.print_debug("Attempting to write file: " .. message.path)
@@ -109,8 +108,17 @@ while true do
                 sendError(sender, "File not found: " .. message.path)
             end
         elseif message.type == "ls" then
-            fs.list(".")
-            lib_ssh.sendMessage(sender, {type="ls_result", files=capturedOutput})
+            local ok, output = captureOutput(sender, function()
+                local files = fs.list(".")
+                for _, file in ipairs(files) do
+                    print(file)
+                end
+            end)
+            if ok then
+                lib_ssh.sendMessage(sender, {type="ls_result", files=output})
+            else
+                sendError(sender, "Error listing files: " .. output)
+            end
         elseif message.type == "cd" then
             if fs.isDir(message.dir) then
                 shell.setDir(message.dir)
@@ -132,7 +140,7 @@ while true do
             if not path:match("^[./]") then
                 path = "./" .. path
             end
-            local result, err = executeFile(path, message.args or {})
+            local result, err = executeFile(sender, path, message.args or {})
             if result then
                 lib_ssh.sendMessage(sender, {type="execute_result", output=result})
             else
@@ -141,8 +149,6 @@ while true do
         else
             sendError(sender, "Unknown command type: " .. message.type)
         end
-        
-        endSession()
     elseif sender == nil and message == nil then
         -- No message received, continue listening
     else

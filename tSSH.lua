@@ -31,12 +31,14 @@ local function executeRemote(command)
     table.remove(parts, 1)
     lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
     
+    local output = {}
     while true do
         local _, response = lib_ssh.receiveMessage(5)
         if response and response.type == "print" then
             print(response.output)
+            table.insert(output, response.output)
         elseif response and response.type == "execute_result" then
-            if response.output and #response.output > 0 then
+            if response.output and #response.output > 0 and #output == 0 then
                 print(response.output)
             end
             break
@@ -54,9 +56,7 @@ local function listFiles()
     lib_ssh.sendMessage(remoteId, {type="ls"})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "ls_result" then
-        for _, file in ipairs(response.files) do
-            print(file)
-        end
+        print(response.files)
     else
         print("Failed to list files")
     end
