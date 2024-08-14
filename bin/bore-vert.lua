@@ -2,6 +2,9 @@
 --
 -- SPDX-License-Identifier: LicenseRef-CCPL
 
+-- boring vertical shafts
+-- basic code pulled from the excavate program in the ComputerCraft examples
+
 if not turtle then
     printError("Requires a Turtle")
     return
