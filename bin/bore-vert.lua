@@ -16,7 +16,7 @@ local startBore = 0
 
 local tArgs = { ... }
 if #tArgs >= 1 then
-    startBore = tonumber(tArgs[1])
+    startBore = tonumber(tArgs[1]) -1
 end
 if #tArgs >= 2 then
     numBores = tonumber(tArgs[2])
