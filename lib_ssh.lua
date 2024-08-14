@@ -2,13 +2,23 @@
 
 local lib_ssh = {}
 
+-- Global verbose flag
+lib_ssh.verbose = false
+
+-- Debug print function
+function lib_ssh.print_debug(...)
+    if lib_ssh.verbose then
+        print(...)
+    end
+end
+
 -- Function to find and use the modem
 function lib_ssh.setupModem()
     local sides = {"left", "right", "back"}
     for _, side in ipairs(sides) do
         if peripheral.getType(side) == "modem" then
             rednet.open(side)
-            print("Modem found and opened on " .. side)
+            lib_ssh.print_debug("Modem found and opened on " .. side)
             return true
         end
     end
@@ -21,32 +31,32 @@ function lib_ssh.setupModem()
             for _, side in ipairs(sides) do
                 if turtle.equipLeft() or turtle.equipRight() then
                     rednet.open(side)
-                    print("Modem equipped and opened")
+                    lib_ssh.print_debug("Modem equipped and opened")
                     return true
                 end
             end
         end
     end
     
-    print("No modem found or equipped")
+    lib_ssh.print_debug("No modem found or equipped")
     return false
 end
 
 -- Function to send a message to a specific ID
 function lib_ssh.sendMessage(id, message)
-    print("Sending message to " .. id .. ": " .. textutils.serialize(message))
+    lib_ssh.print_debug("Sending message to " .. id .. ": " .. textutils.serialize(message))
     return rednet.send(id, textutils.serialize(message), "ssh_protocol")
 end
 
 -- Function to receive a message
 function lib_ssh.receiveMessage(timeout)
-    print("Waiting for message with timeout " .. tostring(timeout))
+    lib_ssh.print_debug("Waiting for message with timeout " .. tostring(timeout))
     local sender, message, protocol = rednet.receive("ssh_protocol", timeout)
     if sender and message then
-        print("Received message from " .. tostring(sender) .. ": " .. message)
+        lib_ssh.print_debug("Received message from " .. tostring(sender) .. ": " .. message)
         return sender, textutils.unserialize(message)
     end
-    print("No message received within timeout")
+    lib_ssh.print_debug("No message received within timeout")
     return nil, nil
 end
 

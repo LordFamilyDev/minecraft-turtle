@@ -3,8 +3,13 @@
 local lib_ssh = require("lib_ssh")
 
 local args = {...}
+if args[1] == "-v" then
+    lib_ssh.verbose = true
+    table.remove(args, 1)
+end
+
 if #args < 1 then
-    print("Usage: tSSH <id>")
+    print("Usage: tSSH [-v] <id>")
     return
 end
 

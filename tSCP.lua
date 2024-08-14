@@ -3,8 +3,13 @@
 local lib_ssh = require("lib_ssh")
 
 local args = {...}
+if args[1] == "-v" then
+    lib_ssh.verbose = true
+    table.remove(args, 1)
+end
+
 if #args < 2 then
-    print("Usage: tSCP <src> <dest>")
+    print("Usage: tSCP [-v] <src> <dest>")
     print("Example: tSCP foo.lua 1: or tSCP 1:foo.lua ./")
     return
 end
@@ -52,8 +57,8 @@ else
     end
 end
 
-print("Source:", srcId and ("Remote " .. srcId .. ":" .. srcPath) or srcPath)
-print("Destination:", destId and ("Remote " .. destId .. ":" .. actualDestPath) or actualDestPath)
+lib_ssh.print_debug("Source:", srcId and ("Remote " .. srcId .. ":" .. srcPath) or srcPath)
+lib_ssh.print_debug("Destination:", destId and ("Remote " .. destId .. ":" .. actualDestPath) or actualDestPath)
 
 local function readFile(path)
     local file = fs.open(path, "r")
@@ -77,11 +82,11 @@ end
 
 if srcId then
     -- Remote to local
-    print("Requesting file from remote...")
+    lib_ssh.print_debug("Requesting file from remote...")
     lib_ssh.sendMessage(srcId, {type="read_file", path=srcPath})
     local sender, response = lib_ssh.receiveMessage(10)  -- Increased timeout
-    print("Received response from: " .. tostring(sender))
-    print("Response type: " .. (response and response.type or "nil"))
+    lib_ssh.print_debug("Received response from: " .. tostring(sender))
+    lib_ssh.print_debug("Response type: " .. (response and response.type or "nil"))
     if sender == srcId and response and response.type == "file_content" then
         local success, err = writeFile(actualDestPath, response.content)
         if success then
@@ -93,26 +98,26 @@ if srcId then
         print("Error reading remote file: " .. response.message)
     else
         print("Error: No response or unexpected response from remote")
-        print("Sender: " .. tostring(sender) .. ", Expected: " .. tostring(srcId))
-        print("Response: " .. textutils.serialize(response))
+        lib_ssh.print_debug("Sender: " .. tostring(sender) .. ", Expected: " .. tostring(srcId))
+        lib_ssh.print_debug("Response: " .. textutils.serialize(response))
     end
 elseif destId then
     -- Local to remote
     local content, err = readFile(srcPath)
     if content then
-        print("Sending file to remote...")
+        lib_ssh.print_debug("Sending file to remote...")
         lib_ssh.sendMessage(destId, {type="write_file", path=actualDestPath, content=content})
         local sender, response = lib_ssh.receiveMessage(10)  -- Increased timeout
-        print("Received response from: " .. tostring(sender))
-        print("Response type: " .. (response and response.type or "nil"))
+        lib_ssh.print_debug("Received response from: " .. tostring(sender))
+        lib_ssh.print_debug("Response type: " .. (response and response.type or "nil"))
         if sender == destId and response and response.type == "file_written" then
             print("File transferred successfully")
         elseif sender == destId and response and response.type == "error" then
             print("Error writing remote file: " .. response.message)
         else
             print("Error: No response or unexpected response from remote")
-            print("Sender: " .. tostring(sender) .. ", Expected: " .. tostring(destId))
-            print("Response: " .. textutils.serialize(response))
+            lib_ssh.print_debug("Sender: " .. tostring(sender) .. ", Expected: " .. tostring(destId))
+            lib_ssh.print_debug("Response: " .. textutils.serialize(response))
         end
     else
         print("Error reading local file: " .. err)
