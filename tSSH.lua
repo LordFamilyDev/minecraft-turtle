@@ -41,38 +41,11 @@ local function receiveResponse(expectedType)
         print("Error: " .. response.message)
         return nil
     end
-    if response.type ~= expectedType then
+    if expectedType and response.type ~= expectedType then
         print("Unexpected response type: " .. response.type)
         return nil
     end
     return response
-end
-
-local function executeRemote(command)
-    local parts = {}
-    for part in command:gmatch("%S+") do
-        table.insert(parts, part)
-    end
-    local path = parts[1]
-    table.remove(parts, 1)
-    lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
-    
-    while true do
-        local response = receiveResponse(nil)  -- Accept any response type
-        if not response then
-            break
-        elseif response.type == "print" then
-            print(response.output)
-        elseif response.type == "execute_result" then
-            if response.output and #response.output > 0 then
-                print(response.output)
-            end
-            break
-        else
-            print("Unexpected response type: " .. response.type)
-            break
-        end
-    end
 end
 
 local function listFiles(path)
@@ -121,6 +94,33 @@ local function printWorkingDirectory()
     if response then
         currentDir = response.path
         print("Current working directory: " .. currentDir)
+    end
+end
+
+local function executeRemote(command)
+    local parts = {}
+    for part in command:gmatch("%S+") do
+        table.insert(parts, part)
+    end
+    local path = parts[1]
+    table.remove(parts, 1)
+    lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
+    
+    while true do
+        local response = receiveResponse()
+        if not response then
+            break
+        elseif response.type == "print" then
+            print(response.output)
+        elseif response.type == "execute_result" then
+            if response.output and #response.output > 0 then
+                print(response.output)
+            end
+            break
+        else
+            print("Unexpected response type: " .. response.type)
+            break
+        end
     end
 end
 
