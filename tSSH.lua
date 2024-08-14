@@ -56,7 +56,13 @@ local function listFiles()
     lib_ssh.sendMessage(remoteId, {type="ls"})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "ls_result" then
-        print(response.files)
+        if type(response.files) == "table" then
+            for _, file in ipairs(response.files) do
+                print(file)
+            end
+        else
+            print("Unexpected ls result format")
+        end
     else
         print("Failed to list files")
     end

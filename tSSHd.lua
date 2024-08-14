@@ -39,7 +39,7 @@ local function captureOutput(sender, func, ...)
 
     if results[1] then
         table.remove(results, 1)
-        return true, table.concat(capturedOutput, "\n"), results
+        return true, capturedOutput, results
     else
         return false, results[2]
     end
@@ -67,7 +67,7 @@ local function executeFile(sender, path, args)
     
     if ok then
         if #output > 0 then
-            return output
+            return table.concat(output, "\n")
         else
             return table.concat(results, "\n")
         end
@@ -108,17 +108,8 @@ while true do
                 sendError(sender, "File not found: " .. message.path)
             end
         elseif message.type == "ls" then
-            local ok, output = captureOutput(sender, function()
-                local files = fs.list(".")
-                for _, file in ipairs(files) do
-                    print(file)
-                end
-            end)
-            if ok then
-                lib_ssh.sendMessage(sender, {type="ls_result", files=output})
-            else
-                sendError(sender, "Error listing files: " .. output)
-            end
+            local files = fs.list(".")
+            lib_ssh.sendMessage(sender, {type="ls_result", files=files})
         elseif message.type == "cd" then
             if fs.isDir(message.dir) then
                 shell.setDir(message.dir)
