@@ -19,7 +19,7 @@ if #tArgs >= 1 then
     startBoreCnt = tonumber(tArgs[1]) -1
 end
 if #tArgs >= 2 then
-    numBores = tonumber(tArgs[2])
+    numBores = tonumber(tArgs[2]) + startBoreCnt
 end
 if #tArgs >= 3 then
     maxDepth = tonumber(tArgs[3])
