@@ -373,6 +373,7 @@ local boreZ = 0
 local function findNextBore()
     boreX = boreX + 2
     borez = boreZ + 2
+    goTo(boreX, 0, boreZ, 0, 1, true)
 end
 
 print("Excavating...")
