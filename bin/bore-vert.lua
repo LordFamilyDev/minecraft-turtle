@@ -13,6 +13,9 @@ end
 local maxDepth = 0
 local numBores = 1
 local startBore = 0
+local boresPerRow = 4
+
+-- args: <numHoles> <startHole> [maxDepth]
 
 local tArgs = { ... }
 if #tArgs >= 1 then
@@ -371,18 +374,33 @@ local function bore()
     print("Returning to surface...")  
 end
 
+local boreCount = 0
 local boreX = 0 
 local boreZ = 0
+local row = 0
+
+local function nextRow()
+    goTo(0, 0, 0, 0, 1, false)
+    row = row + 1
+    boreX = boreX - 1
+    boreZ = boreZ + 2
+    goTo(boreX, 0, boreZ, 0, 1, true)
+end
 
 local function findNextBore()
-    boreX = boreX + 2
-    boreZ = boreZ + 1
-    goTo(boreX, 0, boreZ, 0, 1, true)
+    boreCount = boreCount + 1
+    if math.fmod(boreCount,boresPerRow)  == 0 then
+        nextRow()
+    else
+        boreX = boreX + 2
+        boreZ = boreZ + 1
+        goTo(boreX, 0, boreZ, 0, 1, true)
+    end
 end
 
 
 -- Main loop
-local boreCount = 0
+
 while boreCount < startBoreCnt do
     boreCount = boreCount + 1
     findNextBore()
