@@ -13,17 +13,18 @@ end
 
 local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s", repo_owner, repo_name, branch)
 
-fs.open(tokenFile, "r")
-github_token = fs.readAll(tokenFile)
+local f = fs.open(tokenFile, "r")
+github_token = f.readAll(tokenFile)
+
+print("Using token: " .. github_token)
 
 local function getURL(url)
     local headers = {
-        Authorization = "token " .. github_token,
-        Accept = "application/vnd.github.v3+json"
+        Authorization = "Bearer " .. github_token,
+        X-GitHub-Api-Version = "2022-11-28"
     }
-    return http.request({
+    return http.get({
         url = url,
-        method = method or "GET",
         headers = headers
     })
 end
