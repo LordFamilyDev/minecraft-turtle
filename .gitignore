@@ -1,0 +1,5 @@
+# Ignore all files or directories named _TODO
+**/_TODO
+
+# Ignore all files named _TODO.md
+**/_TODO.md
