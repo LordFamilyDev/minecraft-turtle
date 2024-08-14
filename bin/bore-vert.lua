@@ -385,12 +385,13 @@ local row = 0
 local function nextRow()
     goTo(0, 0, 0, 0, 1, false)
     row = row + 1
-    boreX = boreX - 1
-    boreZ = boreZ + 2
+    boreX = row * 2
+    boreZ = row * -1
     goTo(boreX, 0, boreZ, 0, 1, true)
 end
 
 local function findNextBore()
+    refuel()
     boreCount = boreCount + 1
     if math.fmod(boreCount-1,boresPerRow)  == 0 then
         nextRow()
@@ -403,7 +404,6 @@ end
 
 
 -- Main loop
-refuel()
 while boreCount < startBoreCnt do
     findNextBore()
 end
