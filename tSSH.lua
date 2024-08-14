@@ -48,6 +48,33 @@ local function receiveResponse(expectedType)
     return response
 end
 
+local function executeRemote(command)
+    local parts = {}
+    for part in command:gmatch("%S+") do
+        table.insert(parts, part)
+    end
+    local path = parts[1]
+    table.remove(parts, 1)
+    lib_ssh.sendMessage(remoteId, {type="execute", path=path, args=parts})
+    
+    while true do
+        local response = receiveResponse(nil)  -- Accept any response type
+        if not response then
+            break
+        elseif response.type == "print" then
+            print(response.output)
+        elseif response.type == "execute_result" then
+            if response.output and #response.output > 0 then
+                print(response.output)
+            end
+            break
+        else
+            print("Unexpected response type: " .. response.type)
+            break
+        end
+    end
+end
+
 local function listFiles(path)
     lib_ssh.sendMessage(remoteId, {type="ls", path=path})
     local response = receiveResponse("ls_result")
@@ -115,7 +142,7 @@ while true do
     elseif input == "pwd" then
         printWorkingDirectory()
     else
-        print("Unknown command: " .. input)
+        executeRemote(input)
     end
 end
 

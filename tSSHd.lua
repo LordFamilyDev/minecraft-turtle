@@ -32,6 +32,44 @@ local function getFullPath(session, path)
     end
 end
 
+local function executeFile(sender, session, path, args)
+    local fullPath = getFullPath(session, path)
+    if not fs.exists(fullPath) then
+        return nil, "File not found: " .. fullPath
+    end
+
+    if fs.isDir(fullPath) then
+        return nil, "Cannot execute a directory: " .. fullPath
+    end
+
+    local func, err = loadfile(fullPath)
+    if not func then
+        return nil, "Error loading file: " .. err
+    end
+
+    local oldEnv = getfenv(func)
+    local newEnv = setmetatable({arg=args}, {__index=oldEnv})
+    setfenv(func, newEnv)
+
+    local oldPrint = print
+    local output = {}
+    print = function(...)
+        local message = table.concat({...}, "\t")
+        table.insert(output, message)
+        lib_ssh.sendMessage(sender, {type="print", output=message})
+    end
+
+    local ok, result = pcall(func, table.unpack(args))
+    
+    print = oldPrint
+
+    if ok then
+        return table.concat(output, "\n")
+    else
+        return nil, "Error executing file: " .. tostring(result)
+    end
+end
+
 while true do
     local sender, message = lib_ssh.receiveMessage(5)  -- Add a timeout
     if sender and message then
@@ -79,6 +117,13 @@ while true do
                 lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. fullPath})
             else
                 sendError(sender, "Failed to delete: " .. tostring(result))
+            end
+        elseif message.type == "execute" then
+            local result, err = executeFile(sender, session, message.path, message.args or {})
+            if result then
+                lib_ssh.sendMessage(sender, {type="execute_result", output=result})
+            else
+                sendError(sender, err)
             end
         else
             sendError(sender, "Unknown command type: " .. message.type)
