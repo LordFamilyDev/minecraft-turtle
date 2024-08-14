@@ -5,7 +5,7 @@ local lib_ssh = require("lib_ssh")
 local args = {...}
 if #args < 2 then
     print("Usage: tSCP <src> <dest>")
-    print("Example: tSCP foo.lua 1: or tSCP foo.lua 1:bar.lua")
+    print("Example: tSCP foo.lua 1: or tSCP 1:foo.lua ./")
     return
 end
 
@@ -30,8 +30,8 @@ end
 local srcId, srcPath = parseAddress(args[1])
 local destId, destPath = parseAddress(args[2])
 
--- If destPath is empty (ends with ':'), use the source filename
-if destPath == "" then
+-- If destPath is empty (ends with ':') or './', use the source filename
+if destPath == "" or destPath == "./" then
     destPath = getFilename(srcPath)
 end
 
