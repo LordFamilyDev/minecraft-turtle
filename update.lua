@@ -74,5 +74,7 @@ if response then
     
     print("Update process completed.")
 else
-    print("Failed to fetch repository contents:" .. str)
+    print("Failed to fetch repository contents:")
+    print(str)
+    print(failResp.readAll)
 end
