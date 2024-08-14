@@ -121,10 +121,18 @@ while true do
         elseif message.type == "rm" then
             if fs.exists(message.path) then
                 fs.delete(message.path)
-                lib_ssh.print_debug("File deleted successfully")
+                lib_ssh.print_debug("File or directory deleted successfully")
                 lib_ssh.sendMessage(sender, {type="rm_result", message="Deleted " .. message.path})
             else
-                sendError(sender, "File not found: " .. message.path)
+                sendError(sender, "File or directory not found: " .. message.path)
+            end
+        elseif message.type == "mkdir" then
+            if not fs.exists(message.path) then
+                fs.makeDir(message.path)
+                lib_ssh.print_debug("Directory created successfully")
+                lib_ssh.sendMessage(sender, {type="mkdir_result", message="Created directory " .. message.path})
+            else
+                sendError(sender, "Directory or file already exists: " .. message.path)
             end
         elseif message.type == "execute" then
             local path = message.path

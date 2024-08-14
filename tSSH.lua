@@ -78,7 +78,7 @@ local function changeDirectory(dir)
     end
 end
 
-local function removeFile(path)
+local function removeFileOrDirectory(path)
     lib_ssh.sendMessage(remoteId, {type="rm", path=path})
     local _, response = lib_ssh.receiveMessage(5)
     if response and response.type == "rm_result" then
@@ -86,7 +86,19 @@ local function removeFile(path)
     elseif response and response.type == "error" then
         print("Error: " .. response.message)
     else
-        print("Failed to remove file")
+        print("Failed to remove file or directory")
+    end
+end
+
+local function makeDirectory(path)
+    lib_ssh.sendMessage(remoteId, {type="mkdir", path=path})
+    local _, response = lib_ssh.receiveMessage(5)
+    if response and response.type == "mkdir_result" then
+        print(response.message)
+    elseif response and response.type == "error" then
+        print("Error: " .. response.message)
+    else
+        print("Failed to create directory")
     end
 end
 
@@ -100,7 +112,9 @@ while true do
     elseif input:sub(1, 2) == "cd" then
         changeDirectory(input:sub(4))
     elseif input:sub(1, 2) == "rm" then
-        removeFile(input:sub(4))
+        removeFileOrDirectory(input:sub(4))
+    elseif input:sub(1, 5) == "mkdir" then
+        makeDirectory(input:sub(7))
     else
         executeRemote(input)
     end
