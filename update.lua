@@ -64,7 +64,7 @@ end
 print("Starting dynamic update process...")
 print ("Fetching from: " .. api_url)
 -- Fetch repository contents
-local status, str, response = http.get(api_url)
+local response, str, failResp = http.get(api_url)
 if response then
     local contents = textutils.unserializeJSON(response.readAll())
     response.close()
