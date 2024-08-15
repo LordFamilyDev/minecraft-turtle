@@ -191,6 +191,8 @@ local function layeredMining()
                 end
                 
                 lib_inv_mgmt.dumpNonValuableItems()
+                
+                turtle.turnRight()
             end
             
             -- Check and handle blocks in all directions
