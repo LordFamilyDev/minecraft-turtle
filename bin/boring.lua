@@ -1,84 +1,7 @@
-function refuelWithCoalOrCharcoal()
-    for slot = 1, 16 do
-        local item = turtle.getItemDetail(slot)
-        if item and (item.name == "minecraft:coal" or item.name == "minecraft:charcoal") then
-            turtle.select(slot)
-            if turtle.refuel(1) then
-                print("Refueled with " .. item.name)
-                return true
-            end
-        end
-    end
-    print("No coal or charcoal found in inventory")
-    return false
-end
+-- boring.lua
 
--- Helper function to check if a block is lava or water
-local function isFluid(blockName)
-    return blockName == "minecraft:lava" or blockName == "minecraft:water"
-end
-
--- Helper function to mine and collect loot, handling falling blocks
-local function mineAndCollectWithFallingBlocks()
-    while true do
-        if turtle.detect() then
-            turtle.dig()
-            turtle.suck()
-            -- Wait a moment for blocks to fall
-            os.sleep(0.5)
-        else
-            -- No more blocks in front, we can stop digging
-            break
-        end
-    end
-end
-
--- Helper function to check if a block is a valuable ore
-local function isValuableOre(blockName)
-    return blockName == "minecraft:iron_ore" or 
-           blockName == "minecraft:diamond_ore" or 
-           blockName == "minecraft:coal_ore" or
-           blockName == "minecraft:deepslate_iron_ore" or
-           blockName == "minecraft:deepslate_diamond_ore" or
-           blockName == "minecraft:deepslate_coal_ore"
-end
-
--- Helper function to place cobblestone
-local function placeCobble(placeFunc)
-    local cobbleSlot = 1  -- Assuming cobblestone is in slot 1
-    turtle.select(cobbleSlot)
-    if placeFunc() then
-        print("Placed cobblestone")
-        return true
-    else
-        print("Failed to place cobblestone")
-        return false
-    end
-end
-
--- Helper function to mine and collect loot
-local function mineAndCollect()
-    turtle.dig()
-    turtle.suck()
-end
-
--- Helper function to check and handle a block in a given direction
-local function checkAndHandleBlock(inspectFunc, digFunc, placeFunc, direction)
-    local success, data = inspectFunc()
-    if success then
-        print("Block " .. direction .. ": " .. data.name)
-        if isFluid(data.name) then
-            print("Replacing fluid " .. direction .. ": " .. data.name)
-            placeCobble(placeFunc)
-        elseif isValuableOre(data.name) then
-            print("Mining valuable ore " .. direction .. ": " .. data.name)
-            digFunc()
-            turtle.suck()
-        end
-    else
-        print("No block detected " .. direction .. " or unable to inspect")
-    end
-end
+-- Import the mining library
+local lib_mining = require("/lib/lib_mining")
 
 -- Helper function to return to the starting position
 local function returnToStart(distance)
@@ -100,8 +23,8 @@ local function returnToStart(distance)
         end
         
         -- Check fuel and refuel if necessary
-        if turtle.getFuelLevel() < 100 then
-            refuelWithCoalOrCharcoal()
+        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
+            lib_mining.refuel()
         end
     end
     
@@ -113,15 +36,13 @@ local function returnToStart(distance)
 end
 
 -- Main bore function
-function bore(distance)
+local function bore(distance)
     local actualDistance = 0
     for i = 1, distance do
         -- Check fuel level and refuel if needed
-        if turtle.getFuelLevel() < 100 then
-            if not refuelWithCoalOrCharcoal() then
-                print("Out of fuel. Returning to start.")
-                returnToStart(actualDistance)
-                return false
+        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
+            if not lib_mining.refuel() then
+                print("Low on fuel. Continuing, but may need to refuel soon.")
             end
         end
 
@@ -129,10 +50,30 @@ function bore(distance)
         local success, data = turtle.inspect()
         if success then
             print("Block in front: " .. data.name)
-            if isFluid(data.name) then
-                placeCobble(turtle.place)
+            if data.name == "minecraft:lava" then
+                local bucketSlot = lib_mining.findEmptyBucket()
+                if bucketSlot then
+                    turtle.select(bucketSlot)
+                    if turtle.place() then
+                        print("Collected lava in front")
+                        -- Immediately try to use the lava for fuel if needed
+                        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
+                            turtle.refuel(1)
+                            print("Refueled with collected lava")
+                        end
+                    else
+                        print("Failed to collect lava in front")
+                        lib_mining.placeCobble(turtle.place)
+                    end
+                else
+                    print("No empty bucket available to collect lava in front")
+                    lib_mining.placeCobble(turtle.place)
+                end
+            elseif data.name == "minecraft:water" then
+                lib_mining.placeCobble(turtle.place)
+            else
+                lib_mining.mineAndCollectWithFallingBlocks()
             end
-            mineAndCollectWithFallingBlocks()
         end
         
         -- Move forward
@@ -144,20 +85,16 @@ function bore(distance)
             break
         end
         
-        -- Check and handle block above
-        checkAndHandleBlock(turtle.inspectUp, turtle.digUp, turtle.placeUp, "above")
+        -- Check and handle blocks in all directions
+        lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
+        lib_mining.checkAndHandleBlock(turtle.inspectDown, turtle.placeDown, turtle.placeDown, turtle.digDown, "below")
         
-        -- Check and handle block below
-        checkAndHandleBlock(turtle.inspectDown, turtle.digDown, turtle.placeDown, "below")
-        
-        -- Check and handle block to the left
         turtle.turnLeft()
-        checkAndHandleBlock(turtle.inspect, turtle.dig, turtle.place, "to the left")
+        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the left")
         turtle.turnRight()
         
-        -- Check and handle block to the right
         turtle.turnRight()
-        checkAndHandleBlock(turtle.inspect, turtle.dig, turtle.place, "to the right")
+        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the right")
         turtle.turnLeft()
     end
     
