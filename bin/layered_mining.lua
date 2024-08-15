@@ -40,52 +40,25 @@ local function sideShaftReturn(length)
     end
     
     -- Turn to face the original direction
-    turtle.turnRight()
-    
+    turtle.turnLeft()
+    turtle.turnLeft()
     return true
 end
 
 -- Helper function to return to the starting position (0,0,0)
-local function mainShaftReturn(x, y, z)
+local function mainShaftReturn(length, height)
     -- Turn around
     turtle.turnRight()
     turtle.turnRight()
     
     -- Move back to x = 0
-    for i = 1, x do
+    for i = 1, length do
         while not turtle.forward() do
             if turtle.dig() then
                 sleep(0.5)  -- Wait for blocks to drop
                 turtle.suck()
             else
-                print("Cannot move back. Blocked at position " .. (x - i + 1))
-                return false
-            end
-        end
-        
-        -- Check fuel level and refuel if needed
-        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
-            if not lib_mining.refuel() then
-                print("Low on fuel. Continuing, but may need to refuel soon.")
-            end
-        end
-    end
-    
-    -- Turn to face -y direction
-    if y > 0 then
-        turtle.turnRight()
-    elseif y < 0 then
-        turtle.turnLeft()
-    end
-    
-    -- Move back to y = 0
-    for i = 1, math.abs(y) do
-        while not turtle.forward() do
-            if turtle.dig() then
-                sleep(0.5)  -- Wait for blocks to drop
-                turtle.suck()
-            else
-                print("Cannot move back. Blocked at y position " .. (math.abs(y) - i + 1))
+                print("Cannot move back. Blocked at position " .. (length - i + 1))
                 return false
             end
         end
@@ -99,13 +72,13 @@ local function mainShaftReturn(x, y, z)
     end
     
     -- Move down to z = 0
-    for i = 1, z do
+    for i = 1, height do
         while not turtle.down() do
             if turtle.digDown() then
                 sleep(0.5)  -- Wait for blocks to drop
                 turtle.suckDown()
             else
-                print("Cannot move down. Blocked at z position " .. (z - i + 1))
+                print("Cannot move down. Blocked at height " .. (height - i + 1))
                 return false
             end
         end
@@ -119,9 +92,8 @@ local function mainShaftReturn(x, y, z)
     end
     
     -- Turn to face +x direction
-    if y ~= 0 then
-        turtle.turnLeft()
-    end
+    turtle.turnRight()
+    turtle.turnRight()
     
     return true
 end
@@ -191,17 +163,12 @@ local function layeredMining()
                 end
                 
                 lib_inv_mgmt.dumpNonValuableItems()
-                
                 turtle.turnRight()
             end
-            
-            -- Check and handle blocks in all directions
-            lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
-            lib_mining.checkAndHandleBlock(turtle.inspectDown, turtle.placeDown, turtle.placeDown, turtle.digDown, "below")
         end
         
         -- Return to start and deposit items
-        if not mainShaftReturn(MAIN_SHAFT_LENGTH - startX + 1, 0, startZ) then
+        if not mainShaftReturn(MAIN_SHAFT_LENGTH - startX + 1, startZ) then
             print("Failed to return to start. Aborting operation.")
             return false
         end
@@ -209,7 +176,7 @@ local function layeredMining()
         lib_inv_mgmt.depositItems()
         
         -- Check if we should abort due to low fuel after completing a layer
-        if turtle.getFuelLevel() < 1000 then
+        if turtle.getFuelLevel() < turtle.getFuelLimit() / 2 then
             print("Fuel level critically low after completing a layer. Aborting operation.")
             return false
         end
