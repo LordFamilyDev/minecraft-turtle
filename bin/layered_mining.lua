@@ -13,6 +13,34 @@ local TOTAL_LAYERS = 16
 -- Starting X positions for each layer
 local START_X_POSITIONS = {1, 3, 5, 2, 4}
 
+-- Helper function to move up safely
+local function safeUp()
+    while not turtle.up() do
+        if turtle.digUp() then
+            sleep(0.5)  -- Wait for blocks to fall
+            turtle.suckUp()
+        else
+            print("Cannot move up. Unbreakable block above.")
+            return false
+        end
+    end
+    return true
+end
+
+-- Helper function to move forward safely
+local function safeForward()
+    while not turtle.forward() do
+        if turtle.dig() then
+            sleep(0.5)  -- Wait for blocks to fall
+            turtle.suck()
+        else
+            print("Cannot move forward. Unbreakable block in front.")
+            return false
+        end
+    end
+    return true
+end
+
 -- Helper function to return from a side shaft
 local function sideShaftReturn(length)
     -- Turn around
@@ -108,10 +136,16 @@ local function layeredMining()
         
         -- Move to start position
         for i = 1, startZ do
-            turtle.up()
+            if not safeUp() then
+                print("Failed to move up to layer " .. layer .. ". Aborting operation.")
+                return false
+            end
         end
         for i = 1, startX - 1 do
-            turtle.forward()
+            if not safeForward() then
+                print("Failed to move to start X position. Aborting operation.")
+                return false
+            end
         end
         
         -- Mine main shaft
@@ -125,7 +159,10 @@ local function layeredMining()
             
             -- Mine forward
             lib_mining.mineAndCollectWithFallingBlocks()
-            turtle.forward()
+            if not safeForward() then
+                print("Failed to move forward in main shaft. Aborting operation.")
+                return false
+            end
             
             -- Check if we need to mine a side shaft
             if (x - startX) % SIDE_SHAFT_INTERVAL == 0 then
@@ -134,7 +171,10 @@ local function layeredMining()
                 -- Mine side shaft
                 for y = 1, SIDE_SHAFT_LENGTH do
                     lib_mining.mineAndCollectWithFallingBlocks()
-                    turtle.forward()
+                    if not safeForward() then
+                        print("Failed to move forward in side shaft. Aborting operation.")
+                        return false
+                    end
                     
                     -- Check and handle blocks in all directions
                     lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
