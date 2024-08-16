@@ -5,9 +5,9 @@ local lib_mining = require("/lib/lib_mining")
 local lib_inv_mgmt = require("/lib/lib_inv_mgmt")
 
 -- Constants
-local MAIN_SHAFT_LENGTH = 64
+local MAIN_SHAFT_LENGTH = 32
 local SIDE_SHAFT_INTERVAL = 5
-local SIDE_SHAFT_LENGTH = 64
+local SIDE_SHAFT_LENGTH = 32
 local TOTAL_LAYERS = 16
 
 -- Starting X positions for each layer
