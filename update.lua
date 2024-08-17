@@ -54,6 +54,7 @@ local function getURL(url )
     }
     local rand = math.random(1, 1000000)
     url = url .. "&rand=" .. rand
+    print("Fetching: " .. url)
 
     return http.get({
         url = url,
