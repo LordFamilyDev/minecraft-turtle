@@ -98,7 +98,7 @@ local function processContents(contents, base_path , recursion)
         print("Processing: " .. item.path .. " (" .. item.type .. ")".. " (" .. item.name .. ")")
         local path = item.path
         if item.type == "file" then
-            downloadFile(item.download_url, path)
+            downloadFile(item.url, path)
         elseif item.type == "dir" then
             -- Recursively process subdirectories
             local response = getURL(item.url)
