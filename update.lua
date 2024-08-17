@@ -28,14 +28,14 @@ local function getToken()
             f.close()
         end
         
-        if github_token ~= "" then
+        if github_token == "" then
             print("Enter your git token:")
             github_token = io.read()
         end
         
         file = io.open(tokenFile, "w")
         if file ~= nil then
-            file.write(token)
+            file.write(github_token)
             file.close()
             print("Token saved to file.")
         else
