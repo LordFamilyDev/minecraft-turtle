@@ -52,8 +52,9 @@ local function getURL(url)
         "Authorization: Bearer " .. github_token,
         "X-GitHub-Api-Version: 2022-11-28"
     }
+    local rand = math.random(1, 1000000)
     return http.get({
-        url = url,
+        url = url .. "&rand=" .. rand,
         headers = headers
     })
 end
