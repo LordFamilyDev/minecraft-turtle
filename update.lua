@@ -7,16 +7,45 @@ local branch = "main"
 local tokenFile = "token"
 local github_token = ""
 local tArgs = { ... }
+local getToken -- Function to read the token from the file
 if #tArgs == 1 then
     branch = tArgs[1]
 end
 
 local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s", repo_owner, repo_name, branch)
 
-local f = fs.open(tokenFile, "r")
-github_token = f.readAll(tokenFile)
+local function getToken()
+    local tokenFile = ".token"
+    local f = io.open(tokenFile, "r")
+    if f then
+        github_token = f.readAll()
+        f.close()
+        return github_token
+    else
+        f = io.open("token", "r") 
+        if f then
+            github_token = f.readAll()
+            f.close()
+        end
+        
+        if github_token ~= "" then
+            print("Enter your git token:")
+            github_token = io.read()
+        end
+        
+        file = io.open(tokenFile, "w")
+        if file then
+            file:write(token)
+            file:close()
+            print("Token saved to file.")
+        else
+            print("Unable to save token to file.")
+        end
+        
+        return github_token
+    end
+end
 
-print("Using token: " .. github_token)
 
 local function getURL(url)
     local headers = {
@@ -78,6 +107,8 @@ local function processContents(contents, base_path , recursion)
     end
 end
 
+github_token = getToken()
+print("Using token: " .. github_token)
 -- Main update process
 print("Starting dynamic update process...")
 print ("Fetching from: " .. api_url)
