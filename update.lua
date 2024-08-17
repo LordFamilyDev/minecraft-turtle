@@ -16,13 +16,13 @@ local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%
 
 local function getToken()
     local tokenFile = ".token"
-    local f = io.open(tokenFile, "r")
+    local f = fs.open(tokenFile, "r")
     if f ~= nil  then
         github_token = f.readAll()
         f.close()
         return github_token
     else
-        f = io.open("token", "r") 
+        f = fs.open("token", "r") 
         if f ~= nil then
             github_token = f.readAll()
             f.close()
