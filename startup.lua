@@ -1,1 +1,1 @@
-shell.run("/bin/randomTurtle.lua")
+shell.execute("/bin/randomTurtle.lua")
