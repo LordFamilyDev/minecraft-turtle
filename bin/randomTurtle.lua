@@ -1,5 +1,5 @@
-package.path = "/lib/?.lua;;"
-move = require("move")
+
+local move = require("/lib/move.lua")
 
 move.refuel()
 
