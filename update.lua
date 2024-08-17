@@ -34,7 +34,7 @@ local function getToken()
         end
         
         file = io.open(tokenFile, "w")
-        if file then
+        if file != nil then
             file.write(token)
             file.close()
             print("Token saved to file.")
