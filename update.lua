@@ -12,7 +12,7 @@ if #tArgs == 1 then
     branch = tArgs[1]
 end
 
-local api_url = string.format("https://api.github.com/repos/%s/%s/contents", repo_owner, repo_name)
+local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s&x=%x", repo_owner, repo_name, branch, math.random(1, 1000000))
 
 local function getToken()
     local tokenFile = ".token"
@@ -47,17 +47,11 @@ local function getToken()
 end
 
 
-local function getURL(url, args)
+local function getURL(url)
     local headers = {
         "Authorization: Bearer " .. github_token,
         "X-GitHub-Api-Version: 2022-11-28"
     }
-    local rand = math.random(1, 1000000)
-    if args ~= nil then
-        url = url .. "?" .. args .. "&rand=" .. rand
-    else
-        url = url .. "?rand=" .. rand
-    end
     print("Fetching: " .. url)
 
     return http.get({
@@ -102,10 +96,10 @@ local function processContents(contents, base_path , recursion)
         print("Processing: " .. item.path .. " (" .. item.type .. ")".. " (" .. item.name .. ")")
         local path = item.path
         if item.type == "file" then
-            downloadFile(item.download_url, path)
+            downloadFile(item.download_url .. "?rand=".. math.random(1,1000) , path)
         elseif item.type == "dir" then
             -- Recursively process subdirectories
-            local response = getURL(item.url)
+            local response = getURL(item.url .. "&rand=".. math.random(1,1000))
             if response then
                 local subdir_contents = textutils.unserializeJSON(response.readAll())
                 response.close()
