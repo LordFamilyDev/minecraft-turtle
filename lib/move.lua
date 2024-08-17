@@ -108,7 +108,7 @@ function lib.turnRight()
     lib.xDir, lib.zDir = -lib.zDir, lib.xDir
 end
 
-function lib.goFroward(dig)
+function lib.goForward(dig)
     if turtle.forward() then
         lib.xPos = lib.xPos + lib.xDir
         lib.zPos = lib.zPos + lib.zDir
