@@ -2,30 +2,31 @@ local depth = 0
 local xPos,zPos = 0,0
 local xDir,zDir = 1,0
 
+local move = {}
 
-function distToHome()
+local function move.distToHome()
     return math.abs(xPos) + math.abs(zPos) + depth
 end
 
-function faceDir(x, z)
+local function move.faceDir(x, z)
     while x ~= xDir or z ~= zDir do
         turnRight()
     end
 end
 
-function getDir()
+local function move.getDir()
     return xDir, zDir
 end
 
-function getPos()
+local function move.getPos()
     return xPos, zPos
 end
 
-function getDepth()
+local function move.getDepth()
     return depth
 end
 
-function refuel()
+local function move.refuel()
     local fuelLevel = turtle.getFuelLevel()
     local fuelLimit = turtle.getFuelLimit()
 
@@ -78,7 +79,7 @@ function refuel()
 end
 
 
-function dumpTrash()
+local function move.dumpTrash()
     for slot = 1, 16 do
         turtle.select(slot)
         local item = turtle.getItemDetail()
@@ -95,17 +96,17 @@ function dumpTrash()
 end
 
 
-function turnLeft()
+local function move.turnLeft()
     turtle.turnLeft()
     xDir, zDir = zDir, -xDir
 end
 
-function turnRight()
+local function move.turnRight()
     turtle.turnRight()
     xDir, zDir = -zDir, xDir
 end
 
-function goFoward(dig)
+local function move.goFoward(dig)
     if turtle.forward() then
         xPos = xPos + xDir
         zPos = zPos + zDir
@@ -116,7 +117,7 @@ function goFoward(dig)
     return false
 end
 
-function goUp(dig)
+local function move.goUp(dig)
     if turtle.up() then
         depth = depth - 1
         return true
@@ -129,7 +130,7 @@ function goUp(dig)
     return false
 end
 
-function goDown(dig)
+local function move.goDown(dig)
     if turtle.down() then
         depth = depth + 1
         return true
@@ -141,3 +142,5 @@ function goDown(dig)
     end
     return false
 end
+
+return move
