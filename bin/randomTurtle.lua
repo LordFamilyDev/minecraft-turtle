@@ -1,4 +1,4 @@
-local move = require("/lib/move.lua")
+local move = require("/lib/move")
 
 move.refuel()
 

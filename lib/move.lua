@@ -1,34 +1,34 @@
 
-local move = {}
+local lib = {}
 
-move.depth = 0
-move.xPos,move.zPos = 0,0
-move.xDir,move.zDir = 1,0
+lib.depth = 0
+lib.xPos,lib.zPos = 0,0
+lib.xDir,lib.zDir = 1,0
 
 
-function move.distToHome()
-    return math.abs(move.xPos) + math.abs(move.zPos) + move.depth
+function lib.distToHome()
+    return math.abs(lib.xPos) + math.abs(lib.zPos) + lib.depth
 end
 
-function move.faceDir(x, z)
-    while x ~= move.xDir or z ~= move.zDir do
+function lib.faceDir(x, z)
+    while x ~= lib.xDir or z ~= lib.zDir do
         turnRight()
     end
 end
 
-function move.getDir()
-    return move.xDir, move.zDir
+function lib.getDir()
+    return lib.xDir, lib.zDir
 end
 
-function move.getPos()
-    return move.xPos, move.zPos
+function lib.getPos()
+    return lib.xPos, lib.zPos
 end
 
-function move.getdepth()
-    return move.depth
+function lib.getdepth()
+    return lib.depth
 end
 
-function move.refuel()
+function lib.refuel()
     local fuelLevel = turtle.getFuelLevel()
     local fuelLimit = turtle.getFuelLimit()
 
@@ -81,7 +81,7 @@ function move.refuel()
 end
 
 
-function move.dumpTrash()
+function lib.dumpTrash()
     for slot = 1, 16 do
         turtle.select(slot)
         local item = turtle.getItemDetail()
@@ -98,20 +98,20 @@ function move.dumpTrash()
 end
 
 
-function move.turnLeft()
+function lib.turnLeft()
     turtle.turnLeft()
-    move.xDir, move.zDir = move.zDir, -move.xDir
+    lib.xDir, lib.zDir = lib.zDir, -lib.xDir
 end
 
-function move.turnRight()
+function lib.turnRight()
     turtle.turnRight()
-    move.xDir, move.zDir = -move.zDir, move.xDir
+    lib.xDir, lib.zDir = -lib.zDir, lib.xDir
 end
 
-function move.goFoward(dig)
+function lib.goFoward(dig)
     if turtle.forward() then
-        move.xPos = move.xPos + move.xDir
-        move.zPos = move.zPos + move.zDir
+        lib.xPos = lib.xPos + lib.xDir
+        lib.zPos = lib.zPos + lib.zDir
         return true
     elseif dig and turtle.dig() then
         return turtle.forward()
@@ -119,30 +119,30 @@ function move.goFoward(dig)
     return false
 end
 
-function move.goUp(dig)
+function lib.goUp(dig)
     if turtle.up() then
-        move.depth = move.depth - 1
+        lib.depth = lib.depth - 1
         return true
     elseif dig and turtle.digUp() then
         if turtle.up() then
-            move.depth = move.depth - 1
+            lib.depth = lib.depth - 1
             return true
         end
     end
     return false
 end
 
-function move.goDown(dig)
+function lib.goDown(dig)
     if turtle.down() then
-        move.depth = move.depth + 1
+        lib.depth = lib.depth + 1
         return true
     elseif dig and turtle.digDown() then
         if turtle.down() then
-            move.depth = move.depth + 1
+            lib.depth = lib.depth + 1
             return true
         end
     end
     return false
 end
 
-return move
+return lib
