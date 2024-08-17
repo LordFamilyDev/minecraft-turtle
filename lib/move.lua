@@ -1,33 +1,34 @@
+
 local move = {}
 
-local move.depth = 0
-local move.xPos,move.zPos = 0,0
-local move.xDir,move.zDir = 1,0
+move.depth = 0
+move.xPos,move.zPos = 0,0
+move.xDir,move.zDir = 1,0
 
 
-local function move.distToHome()
+function move.distToHome()
     return math.abs(move.xPos) + math.abs(move.zPos) + move.depth
 end
 
-local function move.faceDir(x, z)
+function move.faceDir(x, z)
     while x ~= move.xDir or z ~= move.zDir do
         turnRight()
     end
 end
 
-local function move.getDir()
+function move.getDir()
     return move.xDir, move.zDir
 end
 
-local function move.getPos()
+function move.getPos()
     return move.xPos, move.zPos
 end
 
-local function move.getdepth()
+function move.getdepth()
     return move.depth
 end
 
-local function move.refuel()
+function move.refuel()
     local fuelLevel = turtle.getFuelLevel()
     local fuelLimit = turtle.getFuelLimit()
 
@@ -80,7 +81,7 @@ local function move.refuel()
 end
 
 
-local function move.dumpTrash()
+function move.dumpTrash()
     for slot = 1, 16 do
         turtle.select(slot)
         local item = turtle.getItemDetail()
@@ -97,17 +98,17 @@ local function move.dumpTrash()
 end
 
 
-local function move.turnLeft()
+function move.turnLeft()
     turtle.turnLeft()
     move.xDir, move.zDir = move.zDir, -move.xDir
 end
 
-local function move.turnRight()
+function move.turnRight()
     turtle.turnRight()
     move.xDir, move.zDir = -move.zDir, move.xDir
 end
 
-local function move.goFoward(dig)
+function move.goFoward(dig)
     if turtle.forward() then
         move.xPos = move.xPos + move.xDir
         move.zPos = move.zPos + move.zDir
@@ -118,7 +119,7 @@ local function move.goFoward(dig)
     return false
 end
 
-local function move.goUp(dig)
+function move.goUp(dig)
     if turtle.up() then
         move.depth = move.depth - 1
         return true
@@ -131,7 +132,7 @@ local function move.goUp(dig)
     return false
 end
 
-local function move.goDown(dig)
+function move.goDown(dig)
     if turtle.down() then
         move.depth = move.depth + 1
         return true
