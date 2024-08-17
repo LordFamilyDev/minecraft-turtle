@@ -33,7 +33,7 @@ local function getToken()
             github_token = io.read()
         end
         
-        file = io.open(tokenFile, "w")
+        file = fs.open(tokenFile, "w")
         if file ~= nil then
             file.write(github_token)
             file.close()
