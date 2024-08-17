@@ -9,6 +9,14 @@ with your personal access token
 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens'
 
 
+# Folders:
+all libraries should be under /lib
+lua path can be then updated by:
+`package.path = "/lib/?.lua;;"`
+then included as
+`mod = require("subfolder.modx")`
+where `.` denotes a folder level
+
 # ComputerCraft Remote Shell System
 
 This project implements a remote shell system for ComputerCraft, allowing you to securely connect to and control remote computers or turtles. The system consists of three main components: `tSSH`, `tSSHd`, and `tSCP`.

@@ -1,0 +1,1 @@
+os.run({},"/bin/randomTurtle.lua")
