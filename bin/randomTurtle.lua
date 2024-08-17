@@ -1,6 +1,10 @@
 local move = require("/lib/move")
 
 move.refuel()
+--Get us away from the spawn point
+for i = 1, 20 do
+    move.goForward(true)
+end
 
 while (true) do
     opt = math.random(1, 5)
