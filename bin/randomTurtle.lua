@@ -6,11 +6,11 @@ while (true) do
     opt = math.random(1, 5)
     move.refuel()
     if opt == 1 then
-        move.forward(true)
+        move.goForward(true)
     elseif opt == 2 then
-        move.up(true)
+        move.goUp(true)
     elseif opt == 3 then
-        move.down(true)
+        move.goDown(true)
     elseif opt == 4 then
         move.turnLeft()
     elseif opt == 5 then
