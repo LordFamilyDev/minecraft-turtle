@@ -3,7 +3,7 @@ local move = require("move")
 
 move.refuel()
 
-while true do
+while (true) do
     opt = math.random(1, 5)
     move.refuel()
     if opt == 1 then
@@ -16,5 +16,6 @@ while true do
         move.turnLeft()
     elseif opt == 5 then
         move.turnRight()
+    end
     move.dumpTrash()
 end

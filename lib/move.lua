@@ -83,11 +83,10 @@ function dumpTrash()
         turtle.select(slot)
         local item = turtle.getItemDetail()
         if item then
-            if item.name == "minecraft:cobblestone" 
+            if (item.name == "minecraft:cobblestone" 
                 or item.name == "minecraft:dirt" 
                 or item.name == "minecraft:gravel" 
-                or item.name == "minecraft:cobbled_deepslate" 
-                then
+                or item.name == "minecraft:cobbled_deepslate" ) then
                 turtle.drop()
             end
         end

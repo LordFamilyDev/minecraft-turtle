@@ -122,7 +122,7 @@ if response then
     processContents(contents, "", 0)
     
     print("Update process completed.")
-    reboot()
+    os.reboot()
 else
     print("Failed to fetch repository contents:")
     print(str)
