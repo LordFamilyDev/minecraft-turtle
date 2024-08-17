@@ -35,8 +35,8 @@ local function getToken()
         
         file = io.open(tokenFile, "w")
         if file then
-            file:write(token)
-            file:close()
+            file.write(token)
+            file.close()
             print("Token saved to file.")
         else
             print("Unable to save token to file.")
