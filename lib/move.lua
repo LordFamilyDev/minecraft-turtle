@@ -1,29 +1,30 @@
-local depth = 0
-local xPos,zPos = 0,0
-local xDir,zDir = 1,0
-
 local move = {}
 
+local move.depth = 0
+local move.xPos,move.zPos = 0,0
+local move.xDir,move.zDir = 1,0
+
+
 local function move.distToHome()
-    return math.abs(xPos) + math.abs(zPos) + depth
+    return math.abs(move.xPos) + math.abs(move.zPos) + move.depth
 end
 
 local function move.faceDir(x, z)
-    while x ~= xDir or z ~= zDir do
+    while x ~= move.xDir or z ~= move.zDir do
         turnRight()
     end
 end
 
 local function move.getDir()
-    return xDir, zDir
+    return move.xDir, move.zDir
 end
 
 local function move.getPos()
-    return xPos, zPos
+    return move.xPos, move.zPos
 end
 
-local function move.getDepth()
-    return depth
+local function move.getdepth()
+    return move.depth
 end
 
 local function move.refuel()
@@ -98,18 +99,18 @@ end
 
 local function move.turnLeft()
     turtle.turnLeft()
-    xDir, zDir = zDir, -xDir
+    move.xDir, move.zDir = move.zDir, -move.xDir
 end
 
 local function move.turnRight()
     turtle.turnRight()
-    xDir, zDir = -zDir, xDir
+    move.xDir, move.zDir = -move.zDir, move.xDir
 end
 
 local function move.goFoward(dig)
     if turtle.forward() then
-        xPos = xPos + xDir
-        zPos = zPos + zDir
+        move.xPos = move.xPos + move.xDir
+        move.zPos = move.zPos + move.zDir
         return true
     elseif dig and turtle.dig() then
         return turtle.forward()
@@ -119,11 +120,11 @@ end
 
 local function move.goUp(dig)
     if turtle.up() then
-        depth = depth - 1
+        move.depth = move.depth - 1
         return true
     elseif dig and turtle.digUp() then
         if turtle.up() then
-            depth = depth - 1
+            move.depth = move.depth - 1
             return true
         end
     end
@@ -132,11 +133,11 @@ end
 
 local function move.goDown(dig)
     if turtle.down() then
-        depth = depth + 1
+        move.depth = move.depth + 1
         return true
     elseif dig and turtle.digDown() then
         if turtle.down() then
-            depth = depth + 1
+            move.depth = move.depth + 1
             return true
         end
     end
