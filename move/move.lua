@@ -7,6 +7,23 @@ function distToHome()
     return math.abs(xPos) + math.abs(zPos) + depth
 end
 
+function faceDir(x, z)
+    while x ~= xDir or z ~= zDir do
+        turnRight()
+    end
+end
+
+function getDir()
+    return xDir, zDir
+end
+
+function getPos()
+    return xPos, zPos
+end
+
+function getDepth()
+    return depth
+end
 
 function turnLeft()
     turtle.turnLeft()
