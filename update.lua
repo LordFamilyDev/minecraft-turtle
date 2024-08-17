@@ -65,7 +65,7 @@ end
 -- Function to download a file
 local function downloadFile(url, path)
     print("Downloading: " .. path)
-    local response = getURL(url)
+    local response, str, failResp = getURL(url)
     if response then
         local content = response.readAll()
         response.close()
@@ -82,7 +82,9 @@ local function downloadFile(url, path)
         file.close()
         print("  Downloaded successfully")
     else
-        print("  Failed to download")
+        print("Failed to download: ")
+        print(str)
+        print(failResp.readAll)
     end
 end
 
