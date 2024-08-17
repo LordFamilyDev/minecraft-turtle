@@ -122,8 +122,10 @@ if response then
     processContents(contents, "", 0)
     
     print("Update process completed.")
+    reboot()
 else
     print("Failed to fetch repository contents:")
     print(str)
     print(failResp.readAll)
 end
+
