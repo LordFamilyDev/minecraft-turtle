@@ -12,7 +12,7 @@ if #tArgs == 1 then
     branch = tArgs[1]
 end
 
-local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s", repo_owner, repo_name, branch)
+local api_url = string.format("https://api.github.com/repos/%s/%s/contents", repo_owner, repo_name)
 
 local function getToken()
     local tokenFile = ".token"
@@ -47,14 +47,19 @@ local function getToken()
 end
 
 
-local function getURL(url)
+local function getURL(url , arg)
     local headers = {
         "Authorization: Bearer " .. github_token,
         "X-GitHub-Api-Version: 2022-11-28"
     }
     local rand = math.random(1, 1000000)
+    if arg ~= nil then
+        url = url .. "?" .. arg .. "&rand=" .. rand
+    else 
+        url = url .. "?rand=" .. rand
+    end
     return http.get({
-        url = url .. "&rand=" .. rand,
+        url = url,
         headers = headers
     })
 end
@@ -114,7 +119,7 @@ print("Using token: " .. github_token)
 print("Starting dynamic update process...")
 print ("Fetching from: " .. api_url)
 -- Fetch repository contents
-local response, str, failResp = getURL(api_url)
+local response, str, failResp = getURL(api_url,"ref = "..branch)
 if response then
     local contents = textutils.unserializeJSON(response.readAll())
     response.close()
