@@ -32,8 +32,37 @@ local function waitForRateLimit()
     last_request_time = getCurrentTime()
 end
 
--- Rest of the getToken function remains the same
--- ...
+local function getToken()
+    local tokenFile = ".token"
+    local f = fs.open(tokenFile, "r")
+    if f ~= nil  then
+        github_token = f.readAll()
+        f.close()
+        return github_token
+    else
+        f = fs.open("token", "r") 
+        if f ~= nil then
+            github_token = f.readAll()
+            f.close()
+        end
+        
+        if github_token == "" then
+            print("Enter your git token:")
+            github_token = io.read()
+        end
+        
+        file = fs.open(tokenFile, "w")
+        if file ~= nil then
+            file.write(github_token)
+            file.close()
+            print("Token saved to file.")
+        else
+            print("Unable to save token to file.")
+        end
+        
+        return github_token
+    end
+end
 
 local function getURL(url)
     waitForRateLimit() -- Implement rate limiting
