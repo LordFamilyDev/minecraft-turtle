@@ -1,0 +1,78 @@
+{
+  "README.md": {
+    "sha256": "dabf3e9904edceead8aa824953585631572704183da2678836934ddd5bdca9aa",
+    "size": 3768
+  },
+  "startup.lua": {
+    "sha256": "b0622e16ecdcf6c53be70bdfe74dcb2bcdc6fac767b4d11051aa18591bdded2a",
+    "size": 34
+  },
+  "code_index.json": {
+    "sha256": "a212b7694a75af105d372984715eb55afd4c8420aaf1d642469edb6555ca3c2c",
+    "size": 2298
+  },
+  "httpupdate.lua": {
+    "sha256": "9c4d4b065ac60aa5d9b9f2ca16e8704ab98e4e5361e0ed4f9f4c5d5a7eecd5bc",
+    "size": 2757
+  },
+  "update.lua": {
+    "sha256": "be8b3200ae474db876a8a5c40ffaa4e12e475f6838ad75f88a51582897c6a0c3",
+    "size": 6056
+  },
+  "lib/move.lua": {
+    "sha256": "57e8c34b5f99d585b9471eca6c6a97f2f075004c5e77de5a4239b4bc5d14fae2",
+    "size": 3396
+  },
+  "lib/lib_inv_mgmt.lua": {
+    "sha256": "e7230c1a1d59b5eb6e4c4a8b03d217a0859d4b704f606c86873d7fc289ead433",
+    "size": 1592
+  },
+  "lib/lib_mining.lua": {
+    "sha256": "45b7afdd47b49c239a6cb7811c02eb512239954bca0605d094cbcb0f779cdea0",
+    "size": 4646
+  },
+  "lib/net/tSCP.lua": {
+    "sha256": "fea1fa5749deb858bf3f2ffe57804a6aef38cf16cf2133d6efdbc440debd74d7",
+    "size": 4338
+  },
+  "lib/net/lib_ssh.lua": {
+    "sha256": "860a3137ee4e2bb8d62123436282ca93a2d51c37a7e15ec2254473ed8f080147",
+    "size": 2018
+  },
+  "lib/net/tSSHd.lua": {
+    "sha256": "3ff4160f00c3df55c95435b8caa1403c6caac4fdac2e9679720b13c704b921ab",
+    "size": 4946
+  },
+  "lib/net/tSSH.lua": {
+    "sha256": "72275d5e63325483d697e005948736a738f8b5b0c46d9a17f6d03c5252c3dff3",
+    "size": 4334
+  },
+  "bin/mine.lua": {
+    "sha256": "c4e63e602fd93d6cd0b013956afb4a595ca48817c5f26f9d567e0f5ebcfc7c1b",
+    "size": 6376
+  },
+  "bin/bore-vert_rescue.lua": {
+    "sha256": "b39bf18495060e92170d1f8257cdfde019c791d7a752261c6bad9a6d07f4a22b",
+    "size": 10396
+  },
+  "bin/layered_mining.lua": {
+    "sha256": "eb1e9ea956e1130632e709967f10eb5b8b21dd047986e7bb03c34230a0a99dea",
+    "size": 6795
+  },
+  "bin/randomTurtle.lua": {
+    "sha256": "8e26ac10c27e06a22ad6ddd6fa587afe3ff453ab61098ab2771668c2dd831dd9",
+    "size": 909
+  },
+  "bin/rescue.lua": {
+    "sha256": "087e0f15d843f3e45caa2e5182fb151e94a0f7ef5627bf12dfd1415bcc491e03",
+    "size": 27
+  },
+  "bin/bore-vert.lua": {
+    "sha256": "daa9049b2e58ec8908010b215237980047eb5f2211aad85630b17ec176efa654",
+    "size": 10394
+  },
+  "bin/boring.lua": {
+    "sha256": "b96cf06a4349a74523b73c45e78d743402c35ea52e251a0b9bab09831dd6b1e7",
+    "size": 4211
+  }
+}

@@ -3,6 +3,8 @@
 `wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua`
 `wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/SCL/update.lua`
 
+'wget run https://turtles.lordylordy.org/code/httpupdate.lua'
+
 to use update you need a key file:
 'token'
 with your personal access token
