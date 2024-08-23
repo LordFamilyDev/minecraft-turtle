@@ -4,33 +4,40 @@ local dig = false
 move.refuel()
 --Get us away from the spawn point
 for i = 1, 20 do
+    print("Onward!!!")
     move.goForward()
 end
 
 while (true) do
+    print("Dance!")
     dir = math.random(1, 5)
     dist = math.random(1, 10)
     if turtle.getFuelLevel() < 10 then
         move.refuel()
     end
-    if opt == 1 then
+    if dir == 1 then
+        print("Forward:" .. dist)
         for i = 1, dist do
             move.goForward(dig)
         end
-    elseif opt == 2 then
+    elseif dir == 2 then
+        print("Up:" .. dist)
         for i = 1, dist do
             move.goUp(dig)
         end
-    elseif opt == 3 then
+    elseif dir == 3 then
+        print("Down:" .. dist)
         for i = 1, dist do
             move.goDown(dig)
         end
-    elseif opt == 4 then
+    elseif dir == 4 then
+        print("Left")
         move.turnLeft()
         for i = 1, dist do
             move.goForward(dig)
         end
-    elseif opt == 5 then
+    elseif dir == 5 then
+        print("Right")
         move.turnRight()
         for i = 1, dist do
             move.goForward(dig)
@@ -39,5 +46,7 @@ while (true) do
     if(dig) then
         move.dumpTrash()
     end
-
+    print("Fuel remaining" .. turtle.getFuelLevel())
+    sleep(3.0)
+    
 end

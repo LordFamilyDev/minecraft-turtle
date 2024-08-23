@@ -4,16 +4,16 @@
     "size": 3768
   },
   "startup.lua": {
-    "sha256": "b0622e16ecdcf6c53be70bdfe74dcb2bcdc6fac767b4d11051aa18591bdded2a",
-    "size": 34
+    "sha256": "99c2813fa5692b0eccc0995424f4ab250420714cf8e36d3e5335898e48447e61",
+    "size": 38
   },
   "code_index.json": {
-    "sha256": "a212b7694a75af105d372984715eb55afd4c8420aaf1d642469edb6555ca3c2c",
-    "size": 2298
+    "sha256": "b1dd266c7ce92425e2e642b1fea1e4256b403449d5b8cb83b03ce9d8aa88629c",
+    "size": 2428
   },
   "httpupdate.lua": {
-    "sha256": "9c4d4b065ac60aa5d9b9f2ca16e8704ab98e4e5361e0ed4f9f4c5d5a7eecd5bc",
-    "size": 2757
+    "sha256": "f91b91f5067ad494634145f21b5ea3e8224b82ba71831a0d60c848212d5cba7e",
+    "size": 2852
   },
   "update.lua": {
     "sha256": "be8b3200ae474db876a8a5c40ffaa4e12e475f6838ad75f88a51582897c6a0c3",
@@ -60,8 +60,8 @@
     "size": 6795
   },
   "bin/randomTurtle.lua": {
-    "sha256": "8e26ac10c27e06a22ad6ddd6fa587afe3ff453ab61098ab2771668c2dd831dd9",
-    "size": 909
+    "sha256": "d335d910772b5c77f4bc0f21a77fad32d48e45f9c544ae33044cb30682bc8c3a",
+    "size": 1172
   },
   "bin/rescue.lua": {
     "sha256": "087e0f15d843f3e45caa2e5182fb151e94a0f7ef5627bf12dfd1415bcc491e03",
