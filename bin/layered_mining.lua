@@ -223,7 +223,7 @@ local function layeredMining()
         end
         
         -- Check if we should abort due to low fuel after completing a layer
-        if turtle.getFuelLevel() < turtle.getFuelLimit() / 2 then
+        if turtle.getFuelLevel() < 1000 then
             print("Fuel level critically low after completing a layer. Aborting operation.")
             return false
         end
