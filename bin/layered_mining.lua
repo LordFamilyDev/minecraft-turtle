@@ -85,32 +85,6 @@ local function sideShaftReturn(length)
     return true
 end
 
-local function digShaft(length)
-    -- Mine side shaft
-    for y = 1, length do
-        lib_mining.mineAndCollectWithFallingBlocks()
-        turtle.forward()
-        
-        -- Check and handle blocks in all directions
-        lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
-        lib_mining.checkAndHandleBlock(turtle.inspectDown, turtle.placeDown, turtle.placeDown, turtle.digDown, "below")
-        
-        turtle.turnLeft()
-        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the left")
-        turtle.turnRight()
-        
-        turtle.turnRight()
-        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the right")
-        turtle.turnLeft()
-        
-        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
-            if not lib_mining.refuel() then
-                lib_debug.print_debug("Low on fuel. Continuing, but may need to refuel soon.")
-            end
-        end
-    end
-end
-
 -- Helper function to return to the starting position (0,0,0)
 local function mainShaftReturn(length, height, startX)
     turtle.turnRight()
@@ -226,6 +200,7 @@ local function layeredMining()
                 end
                 
                 lib_inv_mgmt.dumpNonValuableItems()
+                turtle.turnRight()
             end
         end
         
