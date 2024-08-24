@@ -165,7 +165,7 @@ function lib.goTo(x,z,depth, xd, zd)
                                 _G.relativePosition.zPos,
                                 _G.relativePosition.depth,
                                 _G.relativePosition.xDir,
-                                _G.relativePosition.zDir, ))
+                                _G.relativePosition.zDir ))
     if _G.relativePosition.xPos > x then
         while _G.relativePosition.xDir ~= -1 do
             lib.turnLeft()
