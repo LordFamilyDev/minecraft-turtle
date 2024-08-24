@@ -74,7 +74,7 @@ local function sideShaftReturn(length)
 end
 
 -- Helper function to return to the starting position (0,0,0)
-local function mainShaftReturn(length, height)
+local function mainShaftReturn(length, height, startX)
     -- Turn around
     turtle.turnRight()
     turtle.turnRight()
@@ -96,6 +96,14 @@ local function mainShaftReturn(length, height)
             if not lib_mining.refuel() then
                 print("Low on fuel. Continuing, but may need to refuel soon.")
             end
+        end
+    end
+    
+    -- Move to account for the startX offset
+    for i = 1, startX - 1 do
+        if not turtle.back() then
+            print("Cannot move back to account for offset. Blocked at position " .. i)
+            return false
         end
     end
     
@@ -208,7 +216,7 @@ local function layeredMining()
         end
         
         -- Return to start and deposit items
-        if not mainShaftReturn(MAIN_SHAFT_LENGTH - startX + 1, startZ) then
+        if not mainShaftReturn(MAIN_SHAFT_LENGTH - startX + 1, startZ, startX) then
             print("Failed to return to start. Aborting operation.")
             return false
         end
@@ -224,7 +232,7 @@ local function layeredMining()
         
         -- Check if we should abort due to low fuel after completing a layer
         if turtle.getFuelLevel() < 1000 then
-            print("Fuel level critically low after completing a layer. Aborting operation.")
+            print("Fuel level critically low (below 1000) after completing a layer. Aborting operation.")
             return false
         end
     end
