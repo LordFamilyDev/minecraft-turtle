@@ -3,12 +3,15 @@ local dig = false
 
 move.refuel()
 --Get us away from the spawn point
-for i = 1, 20 do
+for i = 1, 10 do
     print("Onward!!!")
     move.goForward()
 end
 
 while (true) do
+    if move.distToHome() > 50 then
+        move.goHome()
+    end
     print("Dance!")
     dir = math.random(1, 5)
     dist = math.random(1, 10)
