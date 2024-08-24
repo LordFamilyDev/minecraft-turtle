@@ -27,19 +27,6 @@ local function checkFuel()
     return fuelLevel > fuelLimit - 1000
 end
 
-local function returnHome()
-    while move.distToHome() > 0 do
-        if move.depth > 0 then
-            move.goUp(true)
-        elseif move.depth < 0 then
-            move.goDown(true)
-        else
-            move.faceDir(-move.xPos, -move.zPos)
-            move.goForward(true)
-        end
-    end
-end
-
 local function scoopLava()
     for _ = 1, 4 do
         local success, data = turtle.inspect()
@@ -81,7 +68,7 @@ local function lavaScoop()
 
         if checkFuel() then
             print("Fuel level: " .. turtle.getFuelLevel())
-            returnHome()
+            move.goHome()
             return
         end
 
@@ -115,8 +102,7 @@ local function lavaScoop()
             break
         end
     end
-
-    returnHome()
+    move.goHome()
 end
 
 lavaScoop()
