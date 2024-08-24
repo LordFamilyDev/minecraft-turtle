@@ -213,7 +213,14 @@ local function layeredMining()
             return false
         end
         
-        lib_inv_mgmt.depositItems()
+        -- Check for chest below before depositing items
+        local hasChest, data = turtle.inspectDown()
+        if hasChest and data.name:find("chest") then
+            lib_inv_mgmt.depositItems()
+        else
+            print("No chest found below. Terminating program without dropping items.")
+            return false
+        end
         
         -- Check if we should abort due to low fuel after completing a layer
         if turtle.getFuelLevel() < turtle.getFuelLimit() / 2 then
