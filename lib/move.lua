@@ -1,31 +1,44 @@
 
 local lib = {}
 
-lib.depth = 0
-lib.xPos,lib.zPos = 0,0
-lib.xDir,lib.zDir = 1,0
+_G.relativePosition = {}
+_G.relativePosition.depth = 0
+_G.relativePosition.xPos = 0
+_G.relativePosition.zPos = 0
+_G.relativePosition.xDir = 1
+_G.relativePosition.zDir = 0
 
+pos = _G.relativePosition
+
+
+function lib.setHome()
+    _G.relativePosition.depth = 0
+    _G.relativePosition.xPos = 0
+    _G.relativePosition.zPos = 0
+    _G.relativePosition.xDir = 1
+    _G.relativePosition.zDir = 0
+end
 
 function lib.distToHome()
-    return math.abs(lib.xPos) + math.abs(lib.zPos) + lib.depth
+    return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + _G.relativePosition.depth
 end
 
 function lib.faceDir(x, z)
-    while x ~= lib.xDir or z ~= lib.zDir do
+    while x ~= _G.relativePosition.xDir or z ~= _G.relativePosition.zDir do
         turnRight()
     end
 end
 
 function lib.getDir()
-    return lib.xDir, lib.zDir
+    return _G.relativePosition.xDir, _G.relativePosition.zDir
 end
 
 function lib.getPos()
-    return lib.xPos, lib.zPos
+    return _G.relativePosition.xPos, _G.relativePosition.zPos
 end
 
 function lib.getdepth()
-    return lib.depth
+    return _G.relativePosition.depth
 end
 
 function lib.refuel()
@@ -100,18 +113,18 @@ end
 
 function lib.turnLeft()
     turtle.turnLeft()
-    lib.xDir, lib.zDir = lib.zDir, -lib.xDir
+    _G.relativePosition.xDir, _G.relativePosition.zDir = _G.relativePosition.zDir, -_G.relativePosition.xDir
 end
 
 function lib.turnRight()
     turtle.turnRight()
-    lib.xDir, lib.zDir = -lib.zDir, lib.xDir
+    _G.relativePosition.xDir, _G.relativePosition.zDir = -_G.relativePosition.zDir, _G.relativePosition.xDir
 end
 
 function lib.goForward(dig)
     if turtle.forward() then
-        lib.xPos = lib.xPos + lib.xDir
-        lib.zPos = lib.zPos + lib.zDir
+        _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
+        _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
         return true
     elseif dig and turtle.dig() then
         return turtle.forward()
@@ -121,11 +134,11 @@ end
 
 function lib.goUp(dig)
     if turtle.up() then
-        lib.depth = lib.depth - 1
+        _G.relativePosition.depth = _G.relativePosition.depth - 1
         return true
     elseif dig and turtle.digUp() then
         if turtle.up() then
-            lib.depth = lib.depth - 1
+            _G.relativePosition.depth = _G.relativePosition.depth - 1
             return true
         end
     end
@@ -134,15 +147,66 @@ end
 
 function lib.goDown(dig)
     if turtle.down() then
-        lib.depth = lib.depth + 1
+        _G.relativePosition.depth = _G.relativePosition.depth + 1
         return true
     elseif dig and turtle.digDown() then
         if turtle.down() then
-            lib.depth = lib.depth + 1
+            _G.relativePosition.depth = _G.relativePosition.depth + 1
             return true
         end
     end
     return false
+end
+
+function lib.goTo(x,z,depth, xd, zd)
+    if _G.relativePosition.xPos > x then
+        while _G.relativePosition.xDir ~= -1 do
+            lib.turnLeft()
+        end
+        while _G.relativePosition.xPos > x do
+            lib.goForward(true)
+            sleep(0.5)
+        end
+    elseif _G.relativePosition.xPos < x then
+        while _G.relativePosition.xDir ~= -1 do
+            lib.turnLeft()
+        end
+        while _G.relativePosition.xPos > x do
+            lib.goForward(true)
+            sleep(0.5)
+        end        
+    end
+    if _G.relativePosition.zPos > z then
+        while _G.relativePosition.zDir ~= -1 do
+            lib.turnLeft()
+        end
+        while _G.relativePosition.zPos > z do
+            lib.goForward(true)
+            sleep(0.5)
+        end
+    elseif _G.relativePosition.zPos < z then
+        while _G.relativePosition.zDir ~= -1 do
+            ilb.turnLeft()
+        end
+        while _G.relativePosition.zPos > z do
+            lib.goForward(true)
+            sleep(0.5)
+        end        
+    end
+    while _G.relativePosition.depth > depth do 
+        lib.goUp(true)
+    end
+    while _G.relativePosition.depth < depth do
+        lib.goDown(true)
+    end
+    while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
+        lib.turnLeft()
+    end
+end
+
+
+function lib.goHome()
+    lib.goTo(0,0,0,1,0)
 end
 
 return lib
