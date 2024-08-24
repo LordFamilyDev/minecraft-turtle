@@ -134,11 +134,11 @@ end
 
 function lib.goUp(dig)
     if turtle.up() then
-        _G.relativePosition.depth = _G.relativePosition.depth - 1
+        _G.relativePosition.depth = _G.relativePosition.depth + 1
         return true
     elseif dig and turtle.digUp() then
         if turtle.up() then
-            _G.relativePosition.depth = _G.relativePosition.depth - 1
+            _G.relativePosition.depth = _G.relativePosition.depth + 1
             return true
         end
     end
@@ -147,11 +147,11 @@ end
 
 function lib.goDown(dig)
     if turtle.down() then
-        _G.relativePosition.depth = _G.relativePosition.depth + 1
+        _G.relativePosition.depth = _G.relativePosition.depth - 1
         return true
     elseif dig and turtle.digDown() then
         if turtle.down() then
-            _G.relativePosition.depth = _G.relativePosition.depth + 1
+            _G.relativePosition.depth = _G.relativePosition.depth - 1
             return true
         end
     end
@@ -200,10 +200,10 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end        
     end
-    while _G.relativePosition.depth > depth do 
+    while _G.relativePosition.depth < depth do 
         lib.goUp(true)
     end
-    while _G.relativePosition.depth < depth do
+    while _G.relativePosition.depth > depth do
         lib.goDown(true)
     end
     while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
