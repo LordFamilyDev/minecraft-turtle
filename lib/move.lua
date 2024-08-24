@@ -1,14 +1,15 @@
 
 local lib = {}
 
-_G.relativePosition = {}
-_G.relativePosition.depth = 0
-_G.relativePosition.xPos = 0
-_G.relativePosition.zPos = 0
-_G.relativePosition.xDir = 1
-_G.relativePosition.zDir = 0
+if _G.relativePosition == nil then
+    _G.relativePosition = {}
+    _G.relativePosition.depth = 0
+    _G.relativePosition.xPos = 0
+    _G.relativePosition.zPos = 0
+    _G.relativePosition.xDir = 1
+    _G.relativePosition.zDir = 0
+end
 
-pos = _G.relativePosition
 
 
 function lib.setHome()
@@ -20,7 +21,7 @@ function lib.setHome()
 end
 
 function lib.distToHome()
-    return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + _G.relativePosition.depth
+    return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
 end
 
 function lib.faceDir(x, z)
@@ -34,7 +35,7 @@ function lib.getDir()
 end
 
 function lib.getPos()
-    return _G.relativePosition.xPos, _G.relativePosition.zPos
+    return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
 end
 
 function lib.getdepth()
@@ -182,7 +183,7 @@ function lib.goTo(x,z,depth, xd, zd)
         while _G.relativePosition.xDir ~= -1 do
             lib.turnLeft()
         end
-        while _G.relativePosition.xPos > x do
+        while _G.relativePosition.xPos < x do
             lib.goForward(true)
             sleep(0.5)
         end        
@@ -197,9 +198,9 @@ function lib.goTo(x,z,depth, xd, zd)
         end
     elseif _G.relativePosition.zPos < z then
         while _G.relativePosition.zDir ~= -1 do
-            ilb.turnLeft()
+            lib.turnLeft()
         end
-        while _G.relativePosition.zPos > z do
+        while _G.relativePosition.zPos < z do
             lib.goForward(true)
             sleep(0.5)
         end        
