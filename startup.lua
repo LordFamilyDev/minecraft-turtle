@@ -1,1 +1,0 @@
--- Sshell.run("/bin/randomTurtle.lua")
