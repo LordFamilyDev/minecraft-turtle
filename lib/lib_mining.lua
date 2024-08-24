@@ -1,6 +1,7 @@
 -- lib_mining.lua
 
 local lib = {}
+local lib_debug = require("/lib/lib_debug")
 
 -- Refuel function
 function lib.refuel()
@@ -14,7 +15,7 @@ function lib.refuel()
             if item and item.name == "minecraft:lava_bucket" then
                 turtle.select(slot)
                 if turtle.refuel(1) then
-                    print("Refueled with lava bucket")
+                    lib_debug.print_debug("Refueled with lava bucket")
                     return true
                 end
             end
@@ -28,7 +29,7 @@ function lib.refuel()
             if item and (item.name == "minecraft:coal" or item.name == "minecraft:charcoal") then
                 turtle.select(slot)
                 if turtle.refuel(1) then
-                    print("Refueled with " .. item.name)
+                    lib_debug.print_debug("Refueled with " .. item.name)
                     return true
                 end
             end
@@ -82,10 +83,10 @@ function lib.placeCobble(placeFunc)
     local cobbleSlot = 1  -- Assuming cobblestone is in slot 1
     turtle.select(cobbleSlot)
     if placeFunc() then
-        print("Placed cobblestone")
+        lib_debug.print_debug("Placed cobblestone")
         return true
     else
-        print("Failed to place cobblestone")
+        lib_debug.print_debug("Failed to place cobblestone")
         return false
     end
 end
@@ -105,31 +106,31 @@ end
 function lib.checkAndHandleBlock(inspectFunc, collectFunc, placeFunc, digFunc, direction)
     local success, data = inspectFunc()
     if success then
-        print("Block " .. direction .. ": " .. data.name)
+        lib_debug.print_debug("Block " .. direction .. ": " .. data.name)
         if data.name == "minecraft:lava" then
             local bucketSlot = lib.findEmptyBucket()
             if bucketSlot then
                 turtle.select(bucketSlot)
                 if collectFunc() then
-                    print("Collected lava " .. direction)
+                    lib_debug.print_debug("Collected lava " .. direction)
                 else
-                    print("Failed to collect lava " .. direction)
+                    lib_debug.print_debug("Failed to collect lava " .. direction)
                     lib.placeCobble(placeFunc)
                 end
             else
-                print("No empty bucket available to collect lava " .. direction)
+                lib_debug.print_debug("No empty bucket available to collect lava " .. direction)
                 lib.placeCobble(placeFunc)
             end
         elseif data.name == "minecraft:water" then
-            print("Replacing water " .. direction)
+            lib_debug.print_debug("Replacing water " .. direction)
             lib.placeCobble(placeFunc)
         elseif lib.isValuableOre(data.name) then
-            print("Mining valuable ore " .. direction .. ": " .. data.name)
+            lib_debug.print_debug("Mining valuable ore " .. direction .. ": " .. data.name)
             digFunc()
             turtle.suck()
         end
     else
-        print("No block detected " .. direction .. " or unable to inspect")
+        lib_debug.print_debug("No block detected " .. direction .. " or unable to inspect")
     end
 end
 
