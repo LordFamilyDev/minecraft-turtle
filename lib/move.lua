@@ -159,6 +159,13 @@ function lib.goDown(dig)
 end
 
 function lib.goTo(x,z,depth, xd, zd)
+    print(format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
+    print(format("      at:%d:%d:%d ; %d:%d",
+                                _G.relativePosition.xPos,
+                                _G.relativePosition.zPos,
+                                _G.relativePosition.depth,
+                                _G.relativePosition.xDir,
+                                _G.relativePosition.zDir, ))
     if _G.relativePosition.xPos > x then
         while _G.relativePosition.xDir ~= -1 do
             lib.turnLeft()
