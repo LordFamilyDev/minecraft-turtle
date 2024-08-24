@@ -60,9 +60,6 @@ local function lavaScoop()
         return
     end
 
-    local startX, startZ = move.getPos()
-    local startDepth = move.getdepth()
-
     while true do
         scoopLava()  -- Check all horizontal directions
 
