@@ -1,0 +1,61 @@
+-- tar.lua
+
+local compression = require("/lib/lib_compression")
+
+local function isDirectory(path)
+    return fs.isDir(path)
+end
+
+local function getFilesRecursively(basePath, currentPath)
+    currentPath = currentPath or ""
+    local files = {}
+    local fullPath = fs.combine(basePath, currentPath)
+    
+    for _, item in ipairs(fs.list(fullPath)) do
+        local itemPath = fs.combine(currentPath, item)
+        local fullItemPath = fs.combine(basePath, itemPath)
+        
+        if item ~= "rom" and not fs.isDir(fullItemPath) then
+            table.insert(files, itemPath)
+        elseif isDirectory(fullItemPath) then
+            for _, subItem in ipairs(getFilesRecursively(basePath, itemPath)) do
+                table.insert(files, subItem)
+            end
+        end
+    end
+    
+    return files
+end
+
+local function tar(output_file_path, target_file_path)
+    target_file_path = target_file_path or fs.getDir(shell.dir())
+    
+    if fs.exists(output_file_path) then
+        print("Output file already exists. Please choose a different name.")
+        return
+    end
+    
+    local files_to_compress
+    
+    if isDirectory(target_file_path) then
+        files_to_compress = getFilesRecursively(target_file_path)
+    else
+        files_to_compress = {fs.getName(target_file_path)}
+    end
+    
+    compression.compressFiles(target_file_path, files_to_compress, output_file_path)
+    print("Tar file created successfully: " .. output_file_path)
+end
+
+-- Command-line interface
+local args = {...}
+
+if #args < 1 then
+    print("Usage: tar <output_file_path> [target_file_path]")
+    return
+end
+
+local output_file_path = args[1]
+local target_file_path = args[2]
+
+tar(output_file_path, target_file_path)
