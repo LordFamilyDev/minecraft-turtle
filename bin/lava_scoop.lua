@@ -87,13 +87,16 @@ local function lavaScoop()
                     lib_debug.print_debug("No empty bucket available to collect lava")
                     break
                 end
+            elseif data.name ~= "minecraft:air" then
+                lib_debug.print_debug("Solid block detected below, stopping descent")
+                break
             end
         else
-            lib_debug.print_debug("Failed to inspect block below")
-            break
+            lib_debug.print_debug("No block below (air), continuing descent")
         end
 
         if not move.goDown(true) then
+            lib_debug.print_debug("Failed to move down, stopping descent")
             break
         end
     end
