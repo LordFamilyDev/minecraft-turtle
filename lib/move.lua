@@ -180,7 +180,7 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end
     elseif _G.relativePosition.xPos < x then
-        while _G.relativePosition.xDir ~= -1 do
+        while _G.relativePosition.xDir ~= 1 do
             lib.turnLeft()
         end
         while _G.relativePosition.xPos < x do
@@ -197,7 +197,7 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end
     elseif _G.relativePosition.zPos < z then
-        while _G.relativePosition.zDir ~= -1 do
+        while _G.relativePosition.zDir ~= 1 do
             lib.turnLeft()
         end
         while _G.relativePosition.zPos < z do
