@@ -87,8 +87,6 @@ local function lavaScoop()
                     lib_debug.print_debug("No empty bucket available to collect lava")
                     break
                 end
-            elseif data.name ~= "minecraft:air" then
-                break
             end
         else
             lib_debug.print_debug("Failed to inspect block below")
