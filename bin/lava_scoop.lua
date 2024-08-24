@@ -11,6 +11,16 @@ local function hasBucket()
     return false
 end
 
+local function findEmptyBucket()
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item and item.name == "minecraft:bucket" then
+            return slot
+        end
+    end
+    return nil
+end
+
 local function checkFuel()
     local fuelLevel = turtle.getFuelLevel()
     local fuelLimit = turtle.getFuelLimit()
@@ -34,7 +44,7 @@ local function scoopLava()
     for _ = 1, 4 do
         local success, data = turtle.inspect()
         if success and data.name == "minecraft:lava" then
-            local bucketSlot = move.findEmptyBucket()
+            local bucketSlot = findEmptyBucket()
             if bucketSlot then
                 turtle.select(bucketSlot)
                 if turtle.place() then
@@ -78,7 +88,7 @@ local function lavaScoop()
         local success, data = turtle.inspectDown()
         if success then
             if data.name == "minecraft:lava" then
-                local bucketSlot = move.findEmptyBucket()
+                local bucketSlot = findEmptyBucket()
                 if bucketSlot then
                     turtle.select(bucketSlot)
                     if turtle.placeDown() then
