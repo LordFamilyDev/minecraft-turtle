@@ -127,7 +127,10 @@ function lib.goForward(dig)
         _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
         return true
     elseif dig and turtle.dig() then
-        return turtle.forward()
+        if turtle.forward() then
+            _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
+            _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
+            return true
     end
     return false
 end

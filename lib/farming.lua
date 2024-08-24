@@ -7,8 +7,8 @@ function farm.waitForTree()
     isTree, treeInfo = turtle.inspect()
     while not isTree do
         isTree, treeInfo = turtle.inspect()
-        print("Sleeping for a minute")
-        sleep(60)
+        print("No Tree... Sleeping..")
+        sleep(10)
     end
 end
 
