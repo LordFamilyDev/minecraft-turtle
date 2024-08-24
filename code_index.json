@@ -4,7 +4,7 @@
     "size": 1151
   },
   "code_index.json": {
-    "sha256": "22ba212fc1eef61da8cc749876afb28ff740720dd664944e24ee5dff4ae76b08",
+    "sha256": "207f22e4dd24061e17da5a9c1d8bf4b9b07348ccc67c0802df28497c9c7b15a8",
     "size": 3452
   },
   "httpupdate.lua": {
@@ -16,8 +16,8 @@
     "size": 6056
   },
   "lib/move.lua": {
-    "sha256": "ddfc8779ea6cb419efd12bb7eaf2b2bdc09bc48722cfdc5ec490a127df2b734b",
-    "size": 6077
+    "sha256": "072b4de76d1a852d616e54baec351d66c4c6705b3e7e89bb29ce1322e554b3c9",
+    "size": 6091
   },
   "lib/lib_debug.lua": {
     "sha256": "49bfd6e43e53cafab5c08b51f0e239757fc6948c217726a848669d4306bcee8c",
