@@ -1,6 +1,23 @@
 local move = require("/lib/move")
 local dig = false
 
+local MAX_DISTANCE = 10
+local STOP = false
+
+local args = {...}
+for i = 1, #args do
+    -- if args[i] == "-n" then
+    --     lib_debug.set_verbose(true)
+    -- end
+    if args[i] == "-d" and args[i+1] then
+        MAX_DISTANCE = tonumber(args[i+1])
+    end
+    if args[i] == "-s" then
+        STOP = true
+    end
+end
+
+
 move.refuel()
 --Get us away from the spawn point
 for i = 1, 10 do
@@ -9,8 +26,11 @@ for i = 1, 10 do
 end
 
 while (true) do
-    if move.distToHome() > 50 then
+    if move.distToHome() > MAX_DISTANCE then
         move.goHome()
+        if STOP then
+            break
+        end
     end
     print("Dance!")
     dir = math.random(1, 5)
