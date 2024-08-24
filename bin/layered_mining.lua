@@ -8,7 +8,7 @@ local lib_inv_mgmt = require("/lib/lib_inv_mgmt")
 local MAIN_SHAFT_LENGTH = 64
 local SIDE_SHAFT_INTERVAL = 5
 local SIDE_SHAFT_LENGTH = 64
-local TOTAL_LAYERS = 16
+local TOTAL_LAYERS = 1
 
 -- Starting X positions for each layer
 local START_X_POSITIONS = {1, 3, 5, 2, 4}
@@ -43,6 +43,33 @@ local function sideShaftReturn(length)
     turtle.turnLeft()
     turtle.turnLeft()
     return true
+end
+
+local function digShaft(length)
+    -- Mine side shaft
+    for y = 1, length do
+        lib_mining.mineAndCollectWithFallingBlocks()
+        turtle.forward()
+        
+        -- Check and handle blocks in all directions
+        lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
+        lib_mining.checkAndHandleBlock(turtle.inspectDown, turtle.placeDown, turtle.placeDown, turtle.digDown, "below")
+        
+        turtle.turnLeft()
+        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the left")
+        turtle.turnRight()
+        
+        turtle.turnRight()
+        lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the right")
+        turtle.turnLeft()
+        
+        -- Check fuel level and refuel if needed
+        if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
+            if not lib_mining.refuel() then
+                print("Low on fuel. Continuing, but may need to refuel soon.")
+            end
+        end
+    end
 end
 
 -- Helper function to return to the starting position (0,0,0)
@@ -130,40 +157,15 @@ local function layeredMining()
             -- Check if we need to mine a side shaft
             if (x - startX) % SIDE_SHAFT_INTERVAL == 0 then
                 turtle.turnLeft()
-                
-                -- Mine side shaft
-                for y = 1, SIDE_SHAFT_LENGTH do
-                    lib_mining.mineAndCollectWithFallingBlocks()
-                    turtle.forward()
-                    
-                    -- Check and handle blocks in all directions
-                    lib_mining.checkAndHandleBlock(turtle.inspectUp, turtle.placeUp, turtle.placeUp, turtle.digUp, "above")
-                    lib_mining.checkAndHandleBlock(turtle.inspectDown, turtle.placeDown, turtle.placeDown, turtle.digDown, "below")
-                    
-                    turtle.turnLeft()
-                    lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the left")
-                    turtle.turnRight()
-                    
-                    turtle.turnRight()
-                    lib_mining.checkAndHandleBlock(turtle.inspect, turtle.place, turtle.place, turtle.dig, "to the right")
-                    turtle.turnLeft()
-                    
-                    -- Check fuel level and refuel if needed
-                    if turtle.getFuelLevel() < turtle.getFuelLimit() - 1000 then
-                        if not lib_mining.refuel() then
-                            print("Low on fuel. Continuing, but may need to refuel soon.")
-                        end
-                    end
-                end
-                
-                -- Return to main shaft
-                if not sideShaftReturn(SIDE_SHAFT_LENGTH) then
-                    print("Failed to return from side shaft. Aborting operation.")
-                    return false
-                end
+
+                digShaft(SIDE_SHAFT_LENGTH)
+                turtle.turnRight()
+                digShaft(SIDE_SHAFT_INTERVAL)
+                turtle.turnRight()
+                digShaft(SIDE_SHAFT_LENGTH)
+                turtle.turnLeft()
                 
                 lib_inv_mgmt.dumpNonValuableItems()
-                turtle.turnRight()
             end
         end
         
