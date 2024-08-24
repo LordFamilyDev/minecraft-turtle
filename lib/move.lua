@@ -131,6 +131,7 @@ function lib.goForward(dig)
             _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
             _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
             return true
+        end
     end
     return false
 end
