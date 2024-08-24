@@ -79,14 +79,14 @@ local function mainShaftReturn(length, height, startX)
     turtle.turnRight()
     turtle.turnRight()
     
-    -- Move back to x = 0
-    for i = 1, length do
+    -- Move back to x = 0, plus the offset
+    for i = 1, length + (startX - 1) do
         while not turtle.forward() do
             if turtle.dig() then
                 sleep(0.5)  -- Wait for blocks to drop
                 turtle.suck()
             else
-                print("Cannot move back. Blocked at position " .. (length - i + 1))
+                print("Cannot move back. Blocked at position " .. (length + startX - i))
                 return false
             end
         end
@@ -96,14 +96,6 @@ local function mainShaftReturn(length, height, startX)
             if not lib_mining.refuel() then
                 print("Low on fuel. Continuing, but may need to refuel soon.")
             end
-        end
-    end
-    
-    -- Move to account for the startX offset
-    for i = 1, startX - 1 do
-        if not turtle.back() then
-            print("Cannot move back to account for offset. Blocked at position " .. i)
-            return false
         end
     end
     
