@@ -1,0 +1,28 @@
+-- untar.lua
+
+local compression = require("/lib/lib_compression")
+
+local function untar(input_file_path, target_file_path)
+    target_file_path = target_file_path or fs.getDir(shell.dir())
+    
+    if not fs.exists(input_file_path) then
+        print("Input file does not exist.")
+        return
+    end
+    
+    compression.decompressFiles(input_file_path, target_file_path)
+    print("Files extracted successfully to: " .. target_file_path)
+end
+
+-- Command-line interface
+local args = {...}
+
+if #args < 1 then
+    print("Usage: untar <input_file_path> [target_file_path]")
+    return
+end
+
+local input_file_path = args[1]
+local target_file_path = args[2]
+
+untar(input_file_path, target_file_path)
