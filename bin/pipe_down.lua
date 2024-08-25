@@ -83,7 +83,12 @@ end
 
 -- Parse command line arguments
 local args = {...}
-local direction = args[1] == "up" and "up" or "down"
+local direction
+if args[1] == "up" then
+    direction = "up"
+else
+    direction = "down"
+end
 
 -- Run the main function
 constructPipe(direction)
