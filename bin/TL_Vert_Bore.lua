@@ -124,10 +124,11 @@ function stripMineMacro(distX, distY, maxDepth)
     for y = 1, distY do
         for x = 1, distX do
 
-            lib_move.macroMove(moveMacro,true,true)
             local success, depth = spinMineDown(maxDepth)
             returnToSurface(depth)
             dropUnwantedItems()
+
+            lib_move.macroMove(moveMacro,true,true)
 
             if not lib_mining.hasEmptySlot() then
                 --return to chest, deposit, and return to mining position
@@ -140,14 +141,16 @@ function stripMineMacro(distX, distY, maxDepth)
             end
         end
         
-        lib_move.memPlayback(true, true)
-        lib_move.clearMoveMemory()
+        if not y == distY then
+            lib_move.memPlayback(true, true)
+            lib_move.clearMoveMemory()
 
-        lib_move.charMove("R", true, true)
-        for dy = 1, y do
-            lib_move.macroMove(moveMacro,true,true)
+            lib_move.charMove("R", true, true)
+            for dy = 1, y do
+                lib_move.macroMove(moveMacro,true,true)
+            end
+            lib_move.charMove("L", true, true)
         end
-        lib_move.charMove("L", true, true)
     end
     lib_move.memPlayback(true, true)
     turtle.turnLeft()
