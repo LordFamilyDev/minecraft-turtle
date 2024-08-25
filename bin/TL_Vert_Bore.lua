@@ -141,16 +141,14 @@ function stripMineMacro(distX, distY, maxDepth)
             end
         end
         
-        if y < distY then
-            lib_move.memPlayback(true, true)
-            lib_move.clearMoveMemory()
+        lib_move.memPlayback(true, true)
+        lib_move.clearMoveMemory()
 
-            lib_move.charMove("R", true, true)
-            for dy = 1, y do
-                lib_move.macroMove(moveMacro,true,true)
-            end
-            lib_move.charMove("L", true, true)
+        lib_move.charMove("R", true, true)
+        for dy = 1, y do
+            lib_move.macroMove(moveMacro,true,true)
         end
+        lib_move.charMove("L", true, true)
     end
     lib_move.memPlayback(true, true)
     turtle.turnLeft()
