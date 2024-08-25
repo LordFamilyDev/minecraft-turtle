@@ -6,6 +6,7 @@ local LISTING_FILE = "code_index.json"
 local LOCAL_DIR = "/"  -- Replace with your desired local directory
 local LOCAL_LISTING_FILE = LOCAL_DIR .. "local_" .. LISTING_FILE
 local branch = "main"
+local tArgs = { ... }
 if #tArgs == 1 then
     branch = tArgs[1]
 end
