@@ -272,6 +272,8 @@ function lib.reverseMacro(moveSequence)
             revMoveSequence = revMoveSequence .. "D"
         elseif char == "D" then
             revMoveSequence = revMoveSequence .. "U"
+        elseif char == "F" then
+            revMoveSequence = revMoveSequence .. "F"
         end
     end
 
