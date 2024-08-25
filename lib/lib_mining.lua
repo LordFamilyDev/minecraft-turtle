@@ -62,20 +62,36 @@ end
 
 -- Helper function to check if a block is a valuable ore
 function lib.isValuableOre(blockName)
-    return blockName == "minecraft:iron_ore" or 
-           blockName == "minecraft:diamond_ore" or 
-           blockName == "minecraft:coal_ore" or
-           blockName == "minecraft:deepslate_iron_ore" or
-           blockName == "minecraft:deepslate_diamond_ore" or
-           blockName == "minecraft:deepslate_coal_ore" or
-           blockName == "minecraft:redstone_ore" or
-           blockName == "minecraft:deepslate_redstone_ore" or
-           blockName == "minecraft:gold_ore" or
-           blockName == "minecraft:deepslate_gold_ore" or
-           blockName == "minecraft:emerald_ore" or
-           blockName == "minecraft:deepslate_emerald_ore" or
-           blockName == "minecraft:lapis_ore" or
-           blockName == "minecraft:deepslate_lapis_ore"
+    local valuableOres = {
+        -- Overworld ores
+        "minecraft:iron_ore",
+        "minecraft:diamond_ore",
+        "minecraft:coal_ore",
+        "minecraft:redstone_ore",
+        "minecraft:gold_ore",
+        "minecraft:emerald_ore",
+        "minecraft:lapis_ore",
+        -- Deepslate variants
+        "minecraft:deepslate_iron_ore",
+        "minecraft:deepslate_diamond_ore",
+        "minecraft:deepslate_coal_ore",
+        "minecraft:deepslate_redstone_ore",
+        "minecraft:deepslate_gold_ore",
+        "minecraft:deepslate_emerald_ore",
+        "minecraft:deepslate_lapis_ore",
+        -- Nether ores
+        "minecraft:nether_quartz_ore",
+        "minecraft:nether_gold_ore",
+        "minecraft:ancient_debris"
+    }
+
+    for _, ore in ipairs(valuableOres) do
+        if blockName == ore then
+            return true
+        end
+    end
+
+    return false
 end
 
 -- Helper function to place cobblestone
