@@ -40,7 +40,7 @@ jobs:
 
     - name: Deploy to server
       run: |
-        rsync -avz --delete ./ lordylordy.org:${{ env.DEPLOY_PATH }}/
+        rsync -avvvz --delete ./ gitdeploy@lordylordy.org:${{ env.DEPLOY_PATH }}/
 
     - name: Output deployment information
       run: |
