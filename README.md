@@ -6,6 +6,7 @@ Run one of the following commands:
 wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua
 wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/SCL/update.lua
 wget run https://turtles.lordylordy.org/code/main/httpupdate.lua
+wget run https://turtles.lordylordy.org/code/SCL/httpupdate.lua SCL
 ```
 
 To use the update feature, you need a key file named `token` with your personal access token. Learn more about personal access tokens [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).

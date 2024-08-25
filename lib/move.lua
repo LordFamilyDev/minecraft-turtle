@@ -191,7 +191,7 @@ function lib.spiralOut(radius)
         lib.goForward(true)
       end
       
-      turtle.turnLeft()
+      lib.turnLeft()
       
       if side % 2 == 0 then
         steps = steps + 1
