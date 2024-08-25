@@ -13,8 +13,9 @@ lib.valuableItems = {
     "minecraft:gold_nugget",
     "minecraft:raw_gold",
     "minecraft:raw_iron",
-    "minecraft:ancient_debris",  -- Netherite scrap in case of nether mining
-    -- Add any other valuable items you want to keep
+    "minecraft:ancient_debris",
+    "minecraft:quartz",
+    "minecraft:flint",
 }
 
 -- Helper function to check if an item is valuable
