@@ -29,6 +29,7 @@ jobs:
         known_hosts: ${{ secrets.KNOWN_HOSTS }}
         config: |
             Host lordylordy.org
+                HostName lordylordy.org
                 User gitdeploy
                 IdentityFile ~/.ssh/id_ed25519
 
@@ -40,7 +41,7 @@ jobs:
 
     - name: Deploy to server
       run: |
-        rsync -avvvz --delete ./ gitdeploy@lordylordy.org:${{ env.DEPLOY_PATH }}/
+        rsync -avvvz --delete -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ gitdeploy@lordylordy.org:${{ env.DEPLOY_PATH }}/
 
     - name: Output deployment information
       run: |
