@@ -128,6 +128,10 @@ function stripMineMacro(distX, distY, maxDepth)
             returnToSurface(depth)
             dropUnwantedItems()
 
+            if x == distX then
+                break
+            end
+
             lib_move.macroMove(moveMacro,true,true)
 
             if not lib_mining.hasEmptySlot() then
@@ -139,6 +143,10 @@ function stripMineMacro(distX, distY, maxDepth)
                 turtle.turnRight()
                 lib_move.memPlayback(false,true)
             end
+        end
+
+        if y == distY then
+            break
         end
         
         lib_move.memPlayback(true, true)
