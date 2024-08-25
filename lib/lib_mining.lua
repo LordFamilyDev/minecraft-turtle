@@ -2,6 +2,7 @@
 
 local lib = {}
 local lib_debug = require("/lib/lib_debug")
+local lib_itemTypes = require("/lib/item_types")
 
 -- Refuel function
 function lib.refuel()
@@ -45,6 +46,16 @@ function lib.isFluid(blockName)
     return blockName == "minecraft:lava" or blockName == "minecraft:water"
 end
 
+-- Function to check if the turtle has any empty inventory slots
+function lib.hasEmptySlot()
+    for slot = 1, 16 do  -- Turtle has 16 inventory slots
+        if not turtle.getItemDetail(slot) then
+            return true  -- Found an empty slot
+        end
+    end
+    return false  -- No empty slots found
+end
+
 -- Helper function to mine and collect loot, handling falling blocks
 function lib.mineAndCollectWithFallingBlocks()
     while true do
@@ -60,38 +71,9 @@ function lib.mineAndCollectWithFallingBlocks()
     end
 end
 
--- Helper function to check if a block is a valuable ore
+-- Helper function to check if a block is a valuable ore (this could be removed, but I dont want to break other peoples code)
 function lib.isValuableOre(blockName)
-    local valuableOres = {
-        -- Overworld ores
-        "minecraft:iron_ore",
-        "minecraft:diamond_ore",
-        "minecraft:coal_ore",
-        "minecraft:redstone_ore",
-        "minecraft:gold_ore",
-        "minecraft:emerald_ore",
-        "minecraft:lapis_ore",
-        -- Deepslate variants
-        "minecraft:deepslate_iron_ore",
-        "minecraft:deepslate_diamond_ore",
-        "minecraft:deepslate_coal_ore",
-        "minecraft:deepslate_redstone_ore",
-        "minecraft:deepslate_gold_ore",
-        "minecraft:deepslate_emerald_ore",
-        "minecraft:deepslate_lapis_ore",
-        -- Nether ores
-        "minecraft:nether_quartz_ore",
-        "minecraft:nether_gold_ore",
-        "minecraft:ancient_debris"
-    }
-
-    for _, ore in ipairs(valuableOres) do
-        if blockName == ore then
-            return true
-        end
-    end
-
-    return false
+    return lib_itemTypes.isBlockNameInList(blockName,lib_itemTypes.keyMinerals)
 end
 
 -- Helper function to place cobblestone
