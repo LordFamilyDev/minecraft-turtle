@@ -35,7 +35,7 @@ jobs:
 
     - name: Deploy to server
       run: |
-        rsync -avz --delete ./ user@your-server.com:${{ env.DEPLOY_PATH }}/
+        rsync -avz --delete ./ gitdeploy@lordylordy.org:${{ env.DEPLOY_PATH }}/
 
     - name: Output deployment information
       run: |
