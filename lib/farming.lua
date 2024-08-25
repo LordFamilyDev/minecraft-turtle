@@ -33,6 +33,11 @@ function farm.mineTree()
 end
 
 function farm.mineLeaves()
+    while move.getdepth() < 2 do
+        move.goUp(true)
+    end
+    move.goTo(0,0,move.getdepth(),1,0)
+    
 end
 
 function farm.sweepUp(radius)
@@ -41,9 +46,9 @@ end
 function farm.fillFurnace(dir)
     woodCount = itemTypes.getWood()
     if woodCount then
-        if dir = "Down" then 
+        if dir == "Down" then 
             turtle.dropDown(woodCount/3)
-        elseif dir = "Forward" then
+        elseif dir == "Forward" then
             turtle.drop(woodCount/3)
         end
     end
