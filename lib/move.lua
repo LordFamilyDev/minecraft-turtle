@@ -183,7 +183,22 @@ function lib.goDown(dig)
 end
 
 function lib.spiralOut(radius)
+    local side = 1
+    local steps = 1
     
+    while side <= radius * 2 do
+      for i = 1, steps do
+        lib.goForward(true)
+      end
+      
+      turtle.turnLeft()
+      
+      if side % 2 == 0 then
+        steps = steps + 1
+      end
+      
+      side = side + 1
+    end
 end
 
 function lib.goTo(x,z,depth, xd, zd)

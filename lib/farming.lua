@@ -36,8 +36,11 @@ function farm.mineLeaves()
     while move.getdepth() < 2 do
         move.goUp(true)
     end
-    move.goTo(0,0,move.getdepth(),1,0)
-    
+    while move.getdepth() > 2 do
+        move.goTo(0,0,move.getdepth(),1,0)
+        move.spiralOut(10)
+        move.goDown(true)
+    end
 end
 
 function farm.sweepUp(radius)

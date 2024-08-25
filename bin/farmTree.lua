@@ -24,6 +24,7 @@ while true do
     f.mineTree()
     print("Get the leaves")
     f.mineLeaves()
+    
     print("Feed the furnace")
     m.goTo(0,0,2,1,0) --above the furnace
     f.fillFurnace("Down")
