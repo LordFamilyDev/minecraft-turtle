@@ -311,6 +311,7 @@ end
 --Valid move chars: F,R,L,U,D
 --Note: I considered adding dig and place here, but think there should be a different library for structure macros
 function lib.macroMove(moveSequence, memFlag, digFlag)
+    print(moveSequence)
     for i = 1, #moveSequence do
         local char = moveSequence:sub(i, i)
         lib.refuel()

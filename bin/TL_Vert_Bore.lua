@@ -11,7 +11,7 @@ function dropUnwantedItems()
         local item = turtle.getItemDetail()
         if item then
             if lib_itemTypes.isBlockNameInList(item.name,lib_itemTypes.unwantedItems) then
-                turtle.drop()
+                turtle.dropDown()
             end
         end
     end
@@ -61,7 +61,6 @@ function spinMineDown(maxDepth)
 
     local depth = 0
     while depth < maxDepth do
-        lib_move.refuel()
         spinAndDigMinerals()
 
         if turtle.detectDown() then
@@ -92,7 +91,6 @@ end
 -- Function to return to the original Z level
 function returnToSurface(depth)
     for i = 1, depth do
-        lib_move.refuel()
         if not turtle.up() then
             print("Cannot move up, something is blocking the way.")
             break
@@ -111,6 +109,9 @@ function stripMineMacro(distX, distY, maxDepth)
         distY = 30
         print("max grid clamped to 30")
     end
+
+    --TODO: could loop refueling here
+    lib_move.refuel()
 
     local moveMacro = "FFRFL"
     lib_move.clearMoveMemory()

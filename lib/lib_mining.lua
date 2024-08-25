@@ -49,7 +49,7 @@ end
 -- Function to check if the turtle has any empty inventory slots
 function lib.hasEmptySlot()
     for slot = 1, 16 do  -- Turtle has 16 inventory slots
-        if turtle.getItemCount(slot) == 0 then
+        if not turtle.getItemDetail(slot) then
             return true  -- Found an empty slot
         end
     end
