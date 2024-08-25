@@ -263,7 +263,7 @@ end
 function lib.reverseMacro(moveSequence)
     local revMoveSequence = ""
     for i = #moveSequence, 1, -1 do
-        local char = myString:sub(i, i)
+        local char = moveSequence:sub(i, i)
         if char == "R" then
             revMoveSequence = revMoveSequence .. "L"
         elseif char == "L" then
@@ -274,35 +274,36 @@ function lib.reverseMacro(moveSequence)
             revMoveSequence = revMoveSequence .. "U"
         end
     end
+
+    return revMoveSequence
 end
 
 --Valid move chars: F,R,L,U,D
 function lib.charMove(moveChar, memFlag, digFlag)
-    if char == "F" then
+    if moveChar == "F" then
         if not lib.goForward(digFlag) then
             return false
         end
-    elseif char == "U" then
+    elseif moveChar == "U" then
         if not lib.goUp(digFlag) then
             return false
         end
-    elseif char == "D" then
+    elseif moveChar == "D" then
         if not lib.goDown(digFlag) then
             return false
         end
-    elseif char == "R" then
+    elseif moveChar == "R" then
         lib.turnRight()
-    elseif char == "L" then
+    elseif moveChar == "L" then
         lib.turnLeft()
     else
-        print("Unrecognized command: " .. char)
+        print("Unrecognized command: " .. moveChar)
         return false
     end
 
-    if(memFlag)
-    {
+    if memFlag then
         lib.moveMemory = lib.moveMemory .. moveChar
-    }
+    end
 end
 
 --Takes a sequency of chars eg: "FFRFUDR" and performs the motion sequence (returns mid motion if any move fails)
@@ -311,7 +312,7 @@ end
 --Note: I considered adding dig and place here, but think there should be a different library for structure macros
 function lib.macroMove(moveSequence, memFlag, digFlag)
     for i = 1, #moveSequence do
-        local char = sequence:sub(i, i)
+        local char = moveSequence:sub(i, i)
         lib.refuel()
         if not lib.charMove(char, memFlag, digFlag) then
             print("Move macro failed at: " .. i)
