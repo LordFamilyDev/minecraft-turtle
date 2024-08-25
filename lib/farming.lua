@@ -64,7 +64,16 @@ function farm.dumpCharcoal()
 end
 
 function farm.dumpOther()
-    for slot = 1
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            if not itemTypes.isItemInList(item.name, itemTypes.saplingTypes) then
+                turtle.select(slot)
+                local count = turtle.getItemCount()
+                turtle.dropDown(count)
+            end
+        end
+    end
 end
 
 

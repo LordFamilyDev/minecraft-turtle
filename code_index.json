@@ -4,7 +4,7 @@
     "size": 1151
   },
   "code_index.json": {
-    "sha256": "b5cf8b2f66d09ae0b27a749f2cd89de18d8caf5497643a1c382f3a3248de1983",
+    "sha256": "e2ca8656bad48619b745287c8b03b1d2bb9bd06752e707fd17c4f913b004ae95",
     "size": 3712
   },
   "httpupdate.lua": {
@@ -24,24 +24,24 @@
     "size": 444
   },
   "lib/lib_inv_mgmt.lua": {
-    "sha256": "5b5737f345fa8716579a1ab3e2b28334753e1796da89cad756f6233f7e4c37d9",
-    "size": 1905
+    "sha256": "b7e0a0b0e5cdf806d6b8c8539aaf6b884beb17da38fbd80b254ec7e0bd412eac",
+    "size": 2187
   },
   "lib/utils.lua": {
     "sha256": "519e67f82c385e77dddceeef000213916845975ec1100181007165d32fcf714e",
     "size": 129
   },
   "lib/farming.lua": {
-    "sha256": "5546108b31c5961a7fdda30d1e631f6905d03a6f9cfcd4519177cf06518407d2",
-    "size": 680
+    "sha256": "0c957c702b876b4cd8098d6fff6b65cc0c162d3cafeab090fddb192c0c175564",
+    "size": 1657
   },
   "lib/lib_compression.lua": {
     "sha256": "e8114b4a384109a31fe9d7ec3f784349f653bb0541d39516f123fecfd9776aaa",
     "size": 3478
   },
   "lib/item_types.lua": {
-    "sha256": "8d35b68b04b1eaf80c1c8207c80a24490f4a11b6c60ce7ce8c04da90e5d572aa",
-    "size": 2035
+    "sha256": "b3a13e14fd96ae7337bbf52c69bad7a5d6af5a73e294647a1251f49e81834e12",
+    "size": 2507
   },
   "lib/lib_mining.lua": {
     "sha256": "624f7f09174b307e1a6293c095b594e309a24b766e69176d1915bed5bb804d76",
@@ -92,8 +92,8 @@
     "size": 10396
   },
   "bin/farmTree.lua": {
-    "sha256": "604accf132f4c0d7b6cc1f7a929efbae9b44baaeb624e374ddefd31210cdee1d",
-    "size": 296
+    "sha256": "cd4c05c0236e9e345523314002fb795a7125bf825ae0dce334268c9db63aa715",
+    "size": 891
   },
   "bin/layered_mining.lua": {
     "sha256": "3f4d0f3dd8996f78591116678d59bc830e482d1add6266867626f73f25ed06b5",

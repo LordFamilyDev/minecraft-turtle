@@ -24,7 +24,7 @@ while true do
     f.mineTree()
     print("Get the leaves")
     f.mineLeaves()
-    print("Going Home")
+    print("Feed the furnace")
     m.goTo(0,0,2,1,0) --above the furnace
     f.fillFurnace("Down")
     if f.isTree() then
@@ -44,9 +44,9 @@ while true do
     f.dumpCharcoal()
     m.goto(-2,2,0,1,0)
     f.dumpOther()
-    
     print("Sweep up")
     f.sweepUp()
+    print("Going Home")
     m.goHome()
     sleep(0.5)
 end
