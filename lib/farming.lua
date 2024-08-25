@@ -1,14 +1,14 @@
 local move = require("/lib/move")
+local itemTypes = require("/lib/item_types")
 
 local farm = {}
 
+
 function farm.waitForTree()
-    isTree = false
-    isTree, treeInfo = turtle.inspect()
-    while not isTree do
-        isTree, treeInfo = turtle.inspect()
+    while not itemTypes.isTreeFwd() do
         print("No Tree... Sleeping..")
         sleep(10)
+        move.turnRight()
     end
 end
 
@@ -19,14 +19,13 @@ function farm.mineTree()
     sleep(0.5)
     turtle.suckDown()
     local blockUp, info = turtle.inspectUp()
-    while blockUp and 
-        (info.name == "minecraft:oak_log" or
-        info.name == "minecraft:oak_leaves")  do
-        blockUp, info = turtle.inspectUp()
+    while itemTypes.isTreeUp() do
         move.goUp(true)
         sleep(0.5)
-        end
+    end
 end
 
+function farm.mineLeaves()
+end
 
 return farm
