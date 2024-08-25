@@ -112,13 +112,13 @@ function stripMineMacro(distX, distY, maxDepth)
         print("max grid clamped to 30")
     end
 
-    moveMacro = "FFRFL"
+    local moveMacro = "FFRFL"
     lib_move.clearMoveMemory()
 
     for y = 1, distY do
         for x = 1, distX do
             local success, depth = spinMineDown(maxDepth)
-            returntoSurface(depth)
+            returnToSurface(depth)
             dropUnwantedItems()
 
             lib_move.macroMove(moveMacro,true,true)
@@ -163,10 +163,10 @@ local arg3 = tonumber(args[3])
 
 -- Check if all arguments were provided and are valid integers
 if arg1 and arg2 and arg3 then
-    fuelEstimate = arg1 * arg2 * 2 * arg3
+    local fuelEstimate = arg1 * arg2 * 2 * arg3
     print("Rough fuel use estimate: " .. fuelEstimate)
     print("Rough time estimate: " .. "TODO")
-    processArguments(arg1, arg2, arg3)
+    stripMineMacro(arg1, arg2, arg3)
 else
     print("Please provide arguments: x, y, maxDepth, where x and y are approximately 1/3 of target mining distance in each direction")
 end
