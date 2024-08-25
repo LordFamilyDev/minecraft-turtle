@@ -2,6 +2,7 @@
 
 local lib = {}
 local lib_debug = require("/lib/lib_debug")
+local lib_itemTypes = require("/lib/item_types")
 
 -- Refuel function
 function lib.refuel()
@@ -45,6 +46,16 @@ function lib.isFluid(blockName)
     return blockName == "minecraft:lava" or blockName == "minecraft:water"
 end
 
+-- Function to check if the turtle has any empty inventory slots
+function lib.hasEmptySlot()
+    for slot = 1, 16 do  -- Turtle has 16 inventory slots
+        if turtle.getItemCount(slot) == 0 then
+            return true  -- Found an empty slot
+        end
+    end
+    return false  -- No empty slots found
+end
+
 -- Helper function to mine and collect loot, handling falling blocks
 function lib.mineAndCollectWithFallingBlocks()
     while true do
@@ -60,22 +71,9 @@ function lib.mineAndCollectWithFallingBlocks()
     end
 end
 
--- Helper function to check if a block is a valuable ore
+-- Helper function to check if a block is a valuable ore (this could be removed, but I dont want to break other peoples code)
 function lib.isValuableOre(blockName)
-    return blockName == "minecraft:iron_ore" or 
-           blockName == "minecraft:diamond_ore" or 
-           blockName == "minecraft:coal_ore" or
-           blockName == "minecraft:deepslate_iron_ore" or
-           blockName == "minecraft:deepslate_diamond_ore" or
-           blockName == "minecraft:deepslate_coal_ore" or
-           blockName == "minecraft:redstone_ore" or
-           blockName == "minecraft:deepslate_redstone_ore" or
-           blockName == "minecraft:gold_ore" or
-           blockName == "minecraft:deepslate_gold_ore" or
-           blockName == "minecraft:emerald_ore" or
-           blockName == "minecraft:deepslate_emerald_ore" or
-           blockName == "minecraft:lapis_ore" or
-           blockName == "minecraft:deepslate_lapis_ore"
+    return lib_itemTypes.isBlockNameInList(blockName,lib_itemTypes.keyMinerals)
 end
 
 -- Helper function to place cobblestone

@@ -24,9 +24,51 @@ lib.treeBlocks = {
 "minecraft:flowering_azalea_leaves"
 }
 
+-- List of key minerals to look for
+lib.keyMinerals = {
+    "minecraft:diamond_ore",
+    "minecraft:iron_ore",
+    "minecraft:coal_ore",
+    "minecraft:gold_ore",
+    "minecraft:emerald_ore",
+    "minecraft:lapis_ore",
+    "minecraft:redstone_ore",
+    "minecraft:deepslate_diamond_ore",
+    "minecraft:deepslate_iron_ore",
+    "minecraft:deepslate_coal_ore",
+    "minecraft:deepslate_gold_ore",
+    "minecraft:deepslate_emerald_ore",
+    "minecraft:deepslate_lapis_ore",
+    "minecraft:deepslate_redstone_ore"
+}
+
+-- Global list of unwanted items
+lib.unwantedItems = {
+    "minecraft:cobblestone",
+    --"minecraft:granite",
+    "minecraft:cobbled_deepslate"
+}
+
+--List of items not to mine (this list should be much longer, but im lazy)
+lib.noMine = {
+    "minecraft:chest",
+    "minecraft:barrel",
+    "minecraft:furnace"
+}
+
 function lib.isItemInList(itemInfo, list)
     for _, itemType in ipairs(list) do
         if itemInfo:find(itemType) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Sry not sure if exactly the same as yours (idk how to overload in lua)
+function lib.isBlockNameInList(blockName,list)
+    for _, mineral in ipairs(list) do
+        if blockName == mineral then
             return true
         end
     end
