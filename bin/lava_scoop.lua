@@ -103,4 +103,35 @@ local function lavaScoop()
     move.goHome()
 end
 
-lavaScoop()
+local function findLavaAndScoop()
+    if not hasBucket() then
+        error("No bucket found in inventory")
+    end
+
+    -- Move forward until lava is detected underneath
+    while true do
+        local success, data = turtle.inspectDown()
+        if success and data.name == "minecraft:lava" then
+            lib_debug.print_debug("Lava detected underneath, starting lava scoop operation")
+            break
+        end
+
+        if not move.goForward(true) then
+            lib_debug.print_debug("Path blocked, cannot continue forward")
+            move.goHome()
+            return
+        end
+
+        if checkFuel() then
+            print("Fuel level too high: " .. turtle.getFuelLevel())
+            move.goHome()
+            return
+        end
+    end
+
+    -- Start lava scooping operation
+    lavaScoop()
+end
+
+-- Run the main function
+findLavaAndScoop()
