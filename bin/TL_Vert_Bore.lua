@@ -60,7 +60,7 @@ function spinMineDown(maxDepth)
     end
 
     local depth = 0
-    while depth < maxDepth do
+    while depth <= maxDepth do
         spinAndDigMinerals()
 
         if turtle.detectDown() then
