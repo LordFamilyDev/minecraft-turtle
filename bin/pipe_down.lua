@@ -43,6 +43,14 @@ local function pipeDown()
             break
         end
 
+        -- Check fuel and refuel if necessary
+        if turtle.getFuelLevel() < 100 then
+            if not move.refuel() then
+                lib_debug.print_debug("Failed to refuel and fuel level low, returning home")
+                break
+            end
+        end
+
         -- Dig down if there's a block
         if not move.goDown(true) then
             lib_debug.print_debug("Failed to move down, stopping descent")
@@ -52,12 +60,6 @@ local function pipeDown()
         -- Place cobblestone walls
         if not placeCobblestoneWalls() then
             lib_debug.print_debug("Failed to place cobblestone walls, returning home")
-            break
-        end
-
-        -- Check fuel level
-        if move.getFuelLevel() < 100 then
-            lib_debug.print_debug("Low fuel, returning home")
             break
         end
     end
