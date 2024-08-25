@@ -1,5 +1,4 @@
 -- lib_inv_mgmt.lua
-
 local lib = {}
 
 -- List of valuable items to keep
@@ -54,5 +53,30 @@ function lib.depositItems()
     turtle.turnRight()
     turtle.turnRight()
 end
+
+function lib.selectItem(itemToFind)
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item and item.name ==  itemToFind then
+            turtle.select(slot)
+            return turtle.getItemCount()
+        end
+    end
+    return false
+end
+
+function lib.selectItemFromList(list)
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            if lib.isSapling(item.name) then
+                turtle.select(slot)
+                return true
+            end
+        end
+    end
+    return false
+end
+
 
 return lib
