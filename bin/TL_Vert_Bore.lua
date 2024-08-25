@@ -168,6 +168,7 @@ if arg1 and arg2 and arg3 then
     print("Rough fuel use estimate: " .. fuelEstimate)
     print("Rough time estimate: " .. "TODO")
     stripMineMacro(arg1, arg2, arg3)
+    --lib_move.moveMacro("FRFRFRFR")
 else
     print("Please provide arguments: x, y, maxDepth, where x and y are approximately 1/3 of target mining distance in each direction")
 end

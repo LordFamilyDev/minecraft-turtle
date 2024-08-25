@@ -304,6 +304,8 @@ function lib.charMove(moveChar, memFlag, digFlag)
     if memFlag then
         lib.moveMemory = lib.moveMemory .. moveChar
     end
+
+    return true
 end
 
 --Takes a sequency of chars eg: "FFRFUDR" and performs the motion sequence (returns mid motion if any move fails)
@@ -314,7 +316,6 @@ function lib.macroMove(moveSequence, memFlag, digFlag)
     print(moveSequence)
     for i = 1, #moveSequence do
         local char = moveSequence:sub(i, i)
-        lib.refuel()
         if not lib.charMove(char, memFlag, digFlag) then
             print("Move macro failed at: " .. i)
             return false
