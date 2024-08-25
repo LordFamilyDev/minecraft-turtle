@@ -11,6 +11,14 @@ local function findCobblestone()
     return nil
 end
 
+local function shouldPlaceCobblestone(blockName)
+    return blockName == "minecraft:air" or 
+           blockName == "minecraft:water" or 
+           blockName == "minecraft:lava" or 
+           blockName == "minecraft:flowing_water" or 
+           blockName == "minecraft:flowing_lava"
+end
+
 local function placeCobblestoneWalls()
     local cobblestoneSlot = findCobblestone()
     if not cobblestoneSlot then
@@ -22,7 +30,7 @@ local function placeCobblestoneWalls()
 
     for _ = 1, 4 do
         local success, data = turtle.inspect()
-        if not success or data.name == "minecraft:air" then
+        if not success or shouldPlaceCobblestone(data.name) then
             if not turtle.place() then
                 lib_debug.print_debug("Failed to place cobblestone")
                 return false
