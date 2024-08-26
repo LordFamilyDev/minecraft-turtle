@@ -56,11 +56,12 @@ function oakFarm()
 end
 
 function megaSpruce()
-    
+
     m.setHome()
     --turtle facing left sapling with chest under the turtle
     while true do
         while not f.isTree() do
+            print("waiting for tree")
             sleep(30)
         end
 
@@ -68,8 +69,12 @@ function megaSpruce()
         --spiral up then clear cut down (in case turtle gets stuck makes easier to rescue)
         height = 0
         m.goForward(true)
-        while itemTypes.isTreeUp() do
-            m.macroMove("UUFDR", false, true)
+        local treeBlockAboveFlag = true
+        while treeBlockAboveFlag do
+            m.macroMove("UU", false, true)
+            treeBlockAboveFlag = itemTypes.isTreeUp()
+            m.macroMove("FDR", false, true)
+            
             height = height + 1
         end
         m.turnRight()
@@ -99,6 +104,7 @@ function megaSpruce()
         turtle.back()
         turtle.down()
 
+        print("Waiting for leaves to fall")
         sleep(180) --wait for leaves to fall
 
         --sweep area
