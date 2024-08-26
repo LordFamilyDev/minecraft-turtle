@@ -184,7 +184,7 @@ local arg3 = tonumber(args[3])
 -- Check if all arguments were provided and are valid integers
 if arg1 and arg2 and arg3 then
     local fuelEstimate = arg1 * arg2 * 2 * arg3
-    local timeEstimate = (arg1 * arg2 * arg3) / 25
+    local timeEstimate = (arg1 * arg2 * arg3) / 20
     print("Rough fuel use estimate: " .. fuelEstimate)
     print("Rough time estimate (minutes): " .. timeEstimate)
     stripMineMacro(arg1, arg2, arg3)
