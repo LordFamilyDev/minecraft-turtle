@@ -56,7 +56,8 @@ lib.keyMinerals = {
     "minecraft:deepslate_redstone_ore",
     "minecraft:nether_quartz_ore",
     "minecraft:nether_gold_ore",
-    "minecraft:ancient_debris"
+    "minecraft:ancient_debris",
+    "minecraft:glowstone"
 }
 
 lib.valuableOres = {
@@ -79,7 +80,9 @@ lib.valuableOres = {
     -- Nether ores
     "minecraft:nether_quartz_ore",
     "minecraft:nether_gold_ore",
-    "minecraft:ancient_debris"
+    "minecraft:ancient_debris",
+    "minecraft:glowstone",
+    "minecraft:glowstone_dust"
 }
 
 -- Global list of unwanted items
