@@ -127,14 +127,33 @@ function lib.goForward(dig)
         _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
         _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
         return true
-    elseif dig and turtle.dig() then
-        if turtle.forward() then
-            _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
-            _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
-            return true
+    elseif not dig then
+        return false
+    end
+
+    --dig enabled and want to move forward, dig until shit stops falling if possible
+    while not turtle.forward() do
+        -- Attempt to dig the block in front of the turtle
+        if turtle.detect() then
+            if not turtle.dig() then
+                print("Undiggable block")
+                return false
+            end
+            -- Check if a gravity block (like sand or gravel) falls after digging
+            while turtle.detect() do
+                turtle.dig()  -- Keep digging until no more blocks are in front
+                sleep(0.5)    -- Give the falling block a moment to settle
+            end
+        else
+            -- If the turtle can't move forward and there's nothing to dig, return false
+            return false
         end
     end
-    return false
+
+    --successful move forward
+    _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
+    _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
+    return true
 end
 
 function lib.goUp(dig)
@@ -161,6 +180,10 @@ function lib.goDown(dig)
         end
     end
     return false
+end
+
+function lib.spiralOut(radius)
+    
 end
 
 function lib.goTo(x,z,depth, xd, zd)
@@ -219,6 +242,92 @@ end
 
 function lib.goHome()
     lib.goTo(0,0,0,1,0)
+end
+
+lib.moveMemory = ""
+
+function lib.clearMoveMemory()
+    lib.moveMemory = ""
+end
+
+function lib.memPlayback(revFlag, digFlag)
+    if revFlag then
+        lib.turnRight()
+        lib.turnRight()
+
+        lib.macroMove(lib.reverseMacro(lib.moveMemory),digFlag)
+
+        lib.turnRight()
+        lib.turnRight()
+    else
+        lib.macroMove(lib.moveMemory,digFlag)
+    end
+end
+
+function lib.reverseMacro(moveSequence)
+    local revMoveSequence = ""
+    for i = #moveSequence, 1, -1 do
+        local char = moveSequence:sub(i, i)
+        if char == "R" then
+            revMoveSequence = revMoveSequence .. "L"
+        elseif char == "L" then
+            revMoveSequence = revMoveSequence .. "R"
+        elseif char == "U" then
+            revMoveSequence = revMoveSequence .. "D"
+        elseif char == "D" then
+            revMoveSequence = revMoveSequence .. "U"
+        elseif char == "F" then
+            revMoveSequence = revMoveSequence .. "F"
+        end
+    end
+
+    return revMoveSequence
+end
+
+--Valid move chars: F,R,L,U,D
+function lib.charMove(moveChar, memFlag, digFlag)
+    if moveChar == "F" then
+        if not lib.goForward(digFlag) then
+            return false
+        end
+    elseif moveChar == "U" then
+        if not lib.goUp(digFlag) then
+            return false
+        end
+    elseif moveChar == "D" then
+        if not lib.goDown(digFlag) then
+            return false
+        end
+    elseif moveChar == "R" then
+        lib.turnRight()
+    elseif moveChar == "L" then
+        lib.turnLeft()
+    else
+        print("Unrecognized command: " .. moveChar)
+        return false
+    end
+
+    if memFlag then
+        lib.moveMemory = lib.moveMemory .. moveChar
+    end
+
+    return true
+end
+
+--Takes a sequency of chars eg: "FFRFUDR" and performs the motion sequence (returns mid motion if any move fails)
+--Returns true if sequence completed
+--Valid move chars: F,R,L,U,D
+--Note: I considered adding dig and place here, but think there should be a different library for structure macros
+function lib.macroMove(moveSequence, memFlag, digFlag)
+    print(moveSequence)
+    for i = 1, #moveSequence do
+        local char = moveSequence:sub(i, i)
+        if not lib.charMove(char, memFlag, digFlag) then
+            print("Move macro failed at: " .. i)
+            return false
+        end
+    end
+    return true
 end
 
 return lib

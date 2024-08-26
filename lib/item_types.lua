@@ -24,9 +24,115 @@ lib.treeBlocks = {
 "minecraft:flowering_azalea_leaves"
 }
 
-function lib.isItemInList(itemInfo, list)
+-- List of all Minecraft sapling types
+lib.saplingTypes = {
+    "minecraft:oak_sapling",
+    "minecraft:spruce_sapling",
+    "minecraft:birch_sapling",
+    "minecraft:jungle_sapling",
+    "minecraft:acacia_sapling",
+    "minecraft:dark_oak_sapling",
+    "minecraft:mangrove_propagule",  -- Note: Technically a propagule, but functions as a sapling
+    "minecraft:cherry_sapling",
+    "minecraft:azalea",              -- Note: Functions as a sapling for azalea trees
+    "minecraft:flowering_azalea"     -- Note: Can also grow into an azalea tree
+}
+
+-- List of key minerals to look for
+lib.keyMinerals = {
+    "minecraft:diamond_ore",
+    "minecraft:iron_ore",
+    "minecraft:coal_ore",
+    "minecraft:gold_ore",
+    "minecraft:emerald_ore",
+    "minecraft:lapis_ore",
+    "minecraft:redstone_ore",
+    "minecraft:deepslate_diamond_ore",
+    "minecraft:deepslate_iron_ore",
+    "minecraft:deepslate_coal_ore",
+    "minecraft:deepslate_gold_ore",
+    "minecraft:deepslate_emerald_ore",
+    "minecraft:deepslate_lapis_ore",
+    "minecraft:deepslate_redstone_ore",
+    "minecraft:nether_quartz_ore",
+    "minecraft:nether_gold_ore",
+    "minecraft:ancient_debris"
+}
+
+lib.valuableOres = {
+    -- Overworld ores
+    "minecraft:iron_ore",
+    "minecraft:diamond_ore",
+    "minecraft:coal_ore",
+    "minecraft:redstone_ore",
+    "minecraft:gold_ore",
+    "minecraft:emerald_ore",
+    "minecraft:lapis_ore",
+    -- Deepslate variants
+    "minecraft:deepslate_iron_ore",
+    "minecraft:deepslate_diamond_ore",
+    "minecraft:deepslate_coal_ore",
+    "minecraft:deepslate_redstone_ore",
+    "minecraft:deepslate_gold_ore",
+    "minecraft:deepslate_emerald_ore",
+    "minecraft:deepslate_lapis_ore",
+    -- Nether ores
+    "minecraft:nether_quartz_ore",
+    "minecraft:nether_gold_ore",
+    "minecraft:ancient_debris"
+}
+
+-- Global list of unwanted items
+lib.unwantedItems = {
+    "minecraft:cobblestone",
+    --"minecraft:granite",
+    "minecraft:cobbled_deepslate"
+}
+
+--List of items not to mine (this list should be much longer, but im lazy)
+lib.noMine = {
+    "minecraft:chest",
+    "minecraft:barrel",
+    "minecraft:furnace"
+}
+
+function lib.isItemInList(blockName, list)
     for _, itemType in ipairs(list) do
-        if itemInfo:find(itemType) then
+        if blockName:find(itemType) then
+            return true
+        end
+    end
+    return false
+end
+
+function lib.selectItem(itemToFind)
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item and item.name ==  itemToFind then
+            turtle.select(slot)
+            return turtle.getItemCount()
+        end
+    end
+    return false
+end
+
+function lib.selectItemFromList(list)
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            if lib.isItemInList(item.name, list) then
+                turtle.select(slot)
+                return turtle.getItemCount()
+            end
+        end
+    end
+    return false
+end
+
+-- Sry not sure if exactly the same as yours (idk how to overload in lua)
+function lib.isBlockNameInList(blockName,list)
+    for _, mineral in ipairs(list) do
+        if blockName == mineral then
             return true
         end
     end
@@ -50,6 +156,18 @@ end
 function lib.isTreeDown()
     x, info = turtle.inspectUp()
     return x and lib.isTree(info.name)
+end
+
+function lib.getWood()
+    return lib.selectItemFromList(lib.treeBlocks)
+end
+
+function lib.isSapling(item)
+    return lib.isItemInList(item, lib.saplingTypes)
+end
+
+function lib.selectSapling()
+    return lib.selectItemFromList(lib.saplingTypes)
 end
 
 return lib
