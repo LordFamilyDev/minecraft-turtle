@@ -43,7 +43,27 @@ function farm.mineLeaves()
     end
 end
 
+--assumes you are 1 above ground level (above the sapling)
 function farm.sweepUp(radius)
+    move.setHome()
+    local currentRad = 1
+    while currentRad <= radius do
+        move.turnLeft()
+        move.goForward(false)
+        turtle.suckDown()
+        move.turnRight()
+
+        for i = 1, 4 do
+            while move.maxDimToHome() <= currentRad do
+                move.goForward(false)
+                turtle.suckDown()
+            end
+            move.goBackwards(false)
+            move.turnRight()
+        end
+        currentRad = currentRad + 1
+    end
+    move.goHome()
 end
 
 function farm.fillFurnace(dir)

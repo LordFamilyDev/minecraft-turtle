@@ -27,6 +27,17 @@ function lib.distToHome()
     return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
 end
 
+function lib.maxDimToHome()
+    local val = math.abs(_G.relativePosition.xPos)
+    if math.abs(_G.relativePosition.zPos) > val then
+        val = math.abs(_G.relativePosition.zPos)
+    end
+    if math.abs(_G.relativePosition.depth) > val then
+        val = math.abs(_G.relativePosition.depth)
+    end
+    return val
+end
+
 function lib.faceDir(x, z)
     while x ~= _G.relativePosition.xDir or z ~= _G.relativePosition.zDir do
         turnRight()
@@ -218,6 +229,24 @@ end
 function lib.turnRight()
     turtle.turnRight()
     _G.relativePosition.xDir, _G.relativePosition.zDir = -_G.relativePosition.zDir, _G.relativePosition.xDir
+end
+
+function lib.goBackwards(dig)
+    if turtle.back() then
+        _G.relativePosition.xPos = _G.relativePosition.xPos - _G.relativePosition.xDir
+        _G.relativePosition.zPos = _G.relativePosition.zPos - _G.relativePosition.zDir
+        return true
+    elseif not dig then
+        return false
+    end
+
+    lib.turnRight()
+    lib.turnRight()
+    local moveResult = lib.goForward(dig)
+    lib.turnRight()
+    lib.turnRight()
+
+    return moveResult
 end
 
 function lib.goForward(dig)

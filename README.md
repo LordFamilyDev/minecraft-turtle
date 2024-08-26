@@ -1,12 +1,21 @@
 # minecraft-turtle
 
 ## Quick Start
+'''
+wget run https://turtles.lordylordy.org/code/main/update.lua
+-m          pulls from main repo
+-b <branch>  pulls from a published branch
+-w <user>   pulls from that users WIP folder
+-u <url>
+'''
+
+## Depreciated methods
 Run one of the following commands:
 ```
 wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/main/update.lua
 wget run https://raw.githubusercontent.com/LordFamilyDev/minecraft-turtle/SCL/update.lua
 wget run https://turtles.lordylordy.org/code/main/httpupdate.lua
-wget run https://turtles.lordylordy.org/code/SCL/httpupdate.lua SCL
+wget run https://turtles.lordylordy.org/wip/SCL/update.lua -w SCL
 ```
 
 To use the update feature, you need a key file named `token` with your personal access token. Learn more about personal access tokens [here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens).

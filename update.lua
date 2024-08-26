@@ -1,198 +1,200 @@
--- dynamic_update.lua (with local .git file for hash storage)
-
-local repo_owner = "LordFamilyDev"
-local repo_name = "minecraft-turtle"
-local branch = "main"
-local tokenFile = "token"
-local github_token = ""
-local tArgs = { ... }
-local getToken -- Function to read the token from the file
-if #tArgs == 1 then
-    branch = tArgs[1]
-end
-
-local api_url = string.format("https://api.github.com/repos/%s/%s/contents?ref=%s&x=%x", repo_owner, repo_name, branch, math.random(1, 1000000))
-
--- Rate limiting
-local last_request_time = 0
-local request_interval = 1 -- Minimum time between requests in seconds
-
--- Function to get the current time
-local function getCurrentTime()
-    return os.epoch("utc") / 1000 -- Convert milliseconds to seconds
-end
-
--- Function to wait for rate limit
-local function waitForRateLimit()
-    local current_time = getCurrentTime()
-    local time_since_last_request = current_time - last_request_time
-    if time_since_last_request < request_interval then
-        sleep(request_interval - time_since_last_request)
+-- Function to perform an HTTP GET request with JSON header and error handling
+local function http_get_json(url)
+    local response, error = http.get(url, {["Accept"] = "application/json"})
+    if error then
+        return nil, "Network error: " .. tostring(error)
+    elseif not response then
+        return nil, "Failed to connect to the server"
+    elseif response.getResponseCode() ~= 200 then
+        local err_msg = "HTTP error " .. response.getResponseCode()
+        response.close()
+        return nil, err_msg
     end
-    last_request_time = getCurrentTime()
+    return response
 end
 
-local function getToken()
-    local tokenFile = ".token"
-    local f = fs.open(tokenFile, "r")
-    if f ~= nil  then
-        github_token = f.readAll()
-        f.close()
-        return github_token
-    else
-        f = fs.open("token", "r") 
-        if f ~= nil then
-            github_token = f.readAll()
-            f.close()
-        end
-        
-        if github_token == "" then
-            print("Enter your git token:")
-            github_token = io.read()
-        end
-        
-        file = fs.open(tokenFile, "w")
-        if file ~= nil then
-            file.write(github_token)
-            file.close()
-            print("Token saved to file.")
-        else
-            print("Unable to save token to file.")
-        end
-        
-        return github_token
-    end
-end
-
-local function getURL(url)
-    waitForRateLimit() -- Implement rate limiting
-    local headers = {
-        "Authorization: Bearer " .. github_token,
-        "X-GitHub-Api-Version: 2022-11-28"
-    }
-    print("Fetching: " .. url)
-
-    return http.get({
-        url = url,
-        headers = headers
-    })
-end
-
--- Function to load the .git file
-local function loadGitFile()
-    if fs.exists(".git") then
-        local file = fs.open(".git", "r")
+-- Function to load the update info
+local function load_update_info()
+    local update_info_path = ".updateInfo.json"
+    if fs.exists(update_info_path) then
+        local file = fs.open(update_info_path, "r")
         local content = file.readAll()
         file.close()
-        return textutils.unserializeJSON(content) or {}
+        return textutils.unserializeJSON(content)
+    end
+    return nil
+end
+
+-- Function to save the update info
+local function save_update_info(info)
+    local update_info_path = ".updateInfo.json"
+    local file = fs.open(update_info_path, "w")
+    file.write(textutils.serializeJSON(info))
+    file.close()
+end
+
+-- Function to prompt user for URL
+local function prompt_for_url()
+    print("Usage:")
+    print("URL is stored in: .updateInfo.json")
+    print("if file is present, update will pull from last source used")
+    print("-m : resets to main branch")
+    print("-b <branch> : switches to branch")
+    print("-w <user> : switches to users wip folder")
+    print("-u <custom URL> : switches to custom url")
+
+
+    print("Please enter the URL for the JSON data:")
+    return read()
+end
+
+-- Function to parse command-line arguments
+local function parse_args(args)
+    local url = nil
+    local i = 1
+    while i <= #args do
+        if args[i] == "-m" then
+            url = "https://turtles.lordylordy.org/code/main/"
+        elseif args[i] == "-b" and i < #args then
+            local branch = args[i + 1]
+            url = "https://turtles.lordylordy.org/code/" .. branch .. "/"
+            i = i + 1
+        elseif args[i] == "-w" and i < #args then
+            local user = args[i + 1]
+            url = "https://turtles.lordylordy.org/wip/" .. user .. "/"
+            i = i + 1
+        elseif args[i] == "-u" and i < #args then
+            url = args[i + 1]
+            i = i + 1
+        end
+        i = i + 1
+    end
+    return url
+end
+
+-- Function to download a file
+local function download_file(url, path)
+    local response, error = http_get_json(url)
+    if response then
+        local content = response.readAll()
+        response.close()
+        local file = fs.open(path, "w")
+        file.write(content)
+        file.close()
+        print("Downloaded: " .. path)
+        return true
+    else
+        print("Failed to download " .. path .. ": " .. error)
+        return false
+    end
+end
+
+-- Function to load the existing .listing.json file
+local function load_listing(path)
+    if fs.exists(path) then
+        local file = fs.open(path, "r")
+        local content = file.readAll()
+        file.close()
+        return textutils.unserializeJSON(content)
     end
     return {}
 end
 
--- Function to save the .git file
-local function saveGitFile(gitData)
-    local file = fs.open(".git", "w")
-    file.write(textutils.serializeJSON(gitData))
+-- Function to save the .listing.json file
+local function save_listing(path, listing)
+    local file = fs.open(path, "w")
+    file.write(textutils.serializeJSON(listing))
     file.close()
 end
 
--- Modified downloadFile function to use .git file for hash comparison
-local function downloadFile(url, path, sha, gitData)
-    print("Checking: " .. path)
-    local current_hash = gitData[path]
-    
-    if current_hash == sha then
-        print("  File unchanged, skipping download")
-        return false
-    end
-    
-    print("Downloading: " .. path)
-    local response, str, failResp = getURL(url)
-    if response then
-        local content = response.readAll()
-        response.close()
-        
-        -- Ensure the directory exists
-        local dir = fs.getDir(path)
-        if dir ~= "" and not fs.exists(dir) then
-            fs.makeDir(dir)
-        end
-        
-        -- Write the file
-        local file = fs.open(path, "w")
-        file.write(content)
-        file.close()
-        print("  Downloaded successfully")
-        
-        -- Update gitData
-        gitData[path] = sha
-        return true
-    else
-        print("Failed to download: ")
-        print(str)
-        print(failResp.readAll)
-        return false
-    end
+-- Function to check if a file needs updating
+local function needs_update(old_info, new_info)
+    return old_info == nil or
+           old_info.mod_time ~= new_info.mod_time or
+           old_info.size ~= new_info.size
 end
 
--- Modified processContents function
-local function processContents(contents, base_path, recursion, gitData)
-    if recursion > 5 then
-        print("Recursion limit reached")
-        return false
-    end
-    local changes_made = false
-    for _, item in ipairs(contents) do
-        print("Processing: " .. item.path .. " (" .. item.type .. ")".. " (" .. item.name .. ")")
-        local path = item.path
-        if item.type == "file" then
-            local file_changed = downloadFile(item.download_url .. "?rand=".. math.random(1,1000), path, item.sha, gitData)
-            changes_made = changes_made or file_changed
-        elseif item.type == "dir" then
-            -- Recursively process subdirectories
-            waitForRateLimit() -- Implement rate limiting
-            local response = getURL(item.url .. "&rand=".. math.random(1,1000))
-            if response then
-                local subdir_contents = textutils.unserializeJSON(response.readAll())
-                response.close()
-                local subdir_changes = processContents(subdir_contents, path, recursion + 1, gitData)
-                changes_made = changes_made or subdir_changes
-            else
-                print("Failed to fetch contents of: " .. path)
+-- Function to recursively process directory
+local function process_directory(base_url, dir_path, files)
+    local listing_path = fs.combine(dir_path, ".listing.json")
+    local existing_listing = load_listing(listing_path)
+    local updated_listing = {}
+    
+    for _, file in ipairs(files) do
+        local full_path = fs.combine(dir_path, file.name)
+        if file.is_dir then
+            if not fs.exists(full_path) then
+                print("Creating directory: " .. full_path)
+                fs.makeDir(full_path)
             end
+            -- Recursively process subdirectory
+            local sub_url = base_url .. file.name .. "/"
+            local sub_response, sub_error = http_get_json(sub_url)
+            if sub_response then
+                local sub_data = sub_response.readAll()
+                sub_response.close()
+                local sub_files = textutils.unserializeJSON(sub_data)
+                if sub_files then
+                    process_directory(sub_url, full_path, sub_files)
+                else
+                    print("Failed to parse JSON for subdirectory " .. full_path)
+                end
+            else
+                print("Failed to fetch subdirectory " .. full_path .. ": " .. sub_error)
+            end
+        elseif needs_update(existing_listing[file.name], file) then
+            local success = download_file(base_url .. file.name, full_path)
+            if success then
+                updated_listing[file.name] = file
+            end
+        else
+            print("Skip file: " .. full_path)
+            updated_listing[file.name] = existing_listing[file.name]
         end
     end
-    return changes_made
+    
+    save_listing(listing_path, updated_listing)
+    print("Updated dir: " .. dir_path)
 end
 
--- Main update process
-print("Starting dynamic update process...")
-github_token = getToken()
-print("Using token: " .. github_token)
-print("Fetching from: " .. api_url)
+-- Main function
+local function main(args)
+    -- Parse command-line arguments
+    local arg_url = parse_args(args)
 
--- Load existing .git file
-local gitData = loadGitFile()
-
--- Fetch repository contents
-local response, str, failResp = getURL(api_url)
-if response then
-    local contents = textutils.unserializeJSON(response.readAll())
-    response.close()
-    
-    -- Process and download files
-    local changes_made = processContents(contents, "", 0, gitData)
-    
-    -- Save updated .git file
-    if changes_made then
-        saveGitFile(gitData)
-        print("Update process completed. Changes were made.")
-        os.reboot()
-    else
-        print("Update process completed. No changes were necessary.")
+    -- Load or prompt for the JSON URL
+    local update_info = load_update_info()
+    if arg_url then
+        update_info = {json_url = arg_url}
+        save_update_info(update_info)
+    elseif not update_info or not update_info.json_url then
+        local json_url = prompt_for_url()
+        update_info = {json_url = json_url}
+        save_update_info(update_info)
     end
-else
-    print("Failed to fetch repository contents:")
-    print(str)
-    print(failResp.readAll)
+
+    print("Fetching JSON data from " .. update_info.json_url .. "...")
+    local response, error = http_get_json(update_info.json_url)
+    
+    if not response then
+        print("Failed to fetch JSON data: " .. error)
+        return
+    end
+
+    local data = response.readAll()
+    response.close()
+
+    local files = textutils.unserializeJSON(data)
+    if not files then
+        print("Failed to parse JSON data")
+        return
+    end
+
+    print("Processing files and directories...")
+    process_directory(update_info.json_url, "", files)
+
+    print("File update process completed!")
 end
+
+-- Run the main function with command-line arguments
+main({...})
