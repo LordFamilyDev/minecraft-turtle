@@ -260,6 +260,7 @@ function lib.goForward(dig)
 end
 
 function lib.goUp(dig)
+
     if turtle.up() then
         _G.relativePosition.depth = _G.relativePosition.depth + 1
         return true
@@ -267,17 +268,33 @@ function lib.goUp(dig)
         return false
     end
 
+    --dig enabled and want to move up, dig until shit stops falling if possible
     -- Check the lists
     if not lib.canDig("up") then
         return
     end
-    if turtle.digUp() then
-        if turtle.up() then
-            _G.relativePosition.depth = _G.relativePosition.depth + 1
-            return true
+
+    while not turtle.up() do
+        -- Attempt to dig the block above the turtle
+        if turtle.detectUp() then
+            if not turtle.digUp() then
+                print("Undiggable block")
+                return false
+            end
+            -- Check if a gravity block (like sand or gravel) falls after digging
+            while turtle.detectUp() do
+                turtle.digUp()  -- Keep digging until no more blocks are in front
+                sleep(0.5)    -- Give the falling block a moment to settle
+            end
+        else
+            -- If the turtle can't move up and there's nothing to dig, return false
+            return false
         end
     end
-    return false
+
+    --successful move up
+    _G.relativePosition.depth = _G.relativePosition.depth + 1
+    return true
 end
 
 function lib.goDown(dig)
@@ -389,12 +406,12 @@ function lib.memPlayback(revFlag, digFlag)
         lib.turnRight()
         lib.turnRight()
 
-        lib.macroMove(lib.reverseMacro(lib.moveMemory),digFlag)
+        lib.macroMove(lib.reverseMacro(lib.moveMemory),false,digFlag)
 
         lib.turnRight()
         lib.turnRight()
     else
-        lib.macroMove(lib.moveMemory,digFlag)
+        lib.macroMove(lib.moveMemory,false,digFlag)
     end
 end
 
