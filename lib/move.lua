@@ -1,3 +1,5 @@
+itemTypes = require("/lib/item_types")
+
 
 local lib = {}
 
@@ -10,8 +12,6 @@ if _G.relativePosition == nil then
     _G.relativePosition.zDir = 0
 end
 
-
-
 function lib.setHome()
     _G.relativePosition.depth = 0
     _G.relativePosition.xPos = 0
@@ -19,6 +19,9 @@ function lib.setHome()
     _G.relativePosition.xDir = 1
     _G.relativePosition.zDir = 0
 end
+
+lib.whitelist = {}
+lib.blacklist = {}
 
 function lib.distToHome()
     return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
@@ -41,6 +44,99 @@ end
 function lib.getdepth()
     return _G.relativePosition.depth
 end
+
+function lib.addWhitelist(whiteListItem)
+    if type(whiteListItem) == "string" then
+        table.insert(lib.whitelist, whiteListItem)
+    elseif type(whiteListItem) == "table" then
+        for _, item in ipairs(whiteListItem) do
+            table.insert(lib.whitelist, item)
+        end
+    else
+        error("Invalid input: must be a string or a table")
+    end
+end
+
+function lib.clrWhitelist()
+    lib.whitelist = {}
+end
+
+function lib.addBlacklist(blackListItem)
+    if type(blackListItem) == "string" then
+        table.insert(lib.blacklist, blackListItem)
+    elseif type(blackListItem) == "table" then
+        for _, item in ipairs(blackListItem) do
+            table.insert(lib.blacklist, item)
+        end
+    else
+        error("Invalid input: must be a string or a table")
+    end
+end
+
+function lib.clrBlacklist()
+    lib.blacklist = {}
+end
+
+
+function lib.isWhitelist(direction)
+    -- If the whitelist is empty, return true
+    if #lib.whitelist == 0 then
+        return true
+    end
+
+    local success, data
+    
+    if direction == "up" then
+        success, data = turtle.inspectUp()
+    elseif direction == "down" then
+        success, data = turtle.inspectDown()
+    else
+        success, data = turtle.inspect()
+    end
+    
+    if not success then
+        return true
+    end
+    
+    return itemTypes.isItemInList(data.name, lib.whitelist)
+end
+
+function lib.isBlacklist(direction)
+    if #lib.blacklist == 0 then
+        return false
+    end
+
+    local success, data
+
+    if direction == "up" then
+        success, data = turtle.inspectUp()
+    elseif direction == "down" then
+        success, data = turtle.inspectDown()
+    else
+        success, data = turtle.inspect()
+    end
+    
+    if not success then
+        return false
+    end
+    
+    return itemTypes.isItemInList(data.name, lib.blacklist)
+end
+
+function lib.canDig(dir)
+    -- Check if the block is blacklisted
+    if lib.isBlacklist(dir) then
+        return false
+    end
+
+    -- Check if the block is whitelisted
+    if lib.isWhitelist(dir) then
+        return true
+    end
+
+    return false
+end
+
 
 function lib.refuel()
     local fuelLevel = turtle.getFuelLevel()
@@ -112,6 +208,8 @@ function lib.dumpTrash()
 end
 
 
+
+
 function lib.turnLeft()
     turtle.turnLeft()
     _G.relativePosition.xDir, _G.relativePosition.zDir = _G.relativePosition.zDir, -_G.relativePosition.xDir
@@ -131,7 +229,12 @@ function lib.goForward(dig)
         return false
     end
 
-    --dig enabled and want to move forward, dig until shit stops falling if possible
+    --dig enabled and want to move forward,
+    -- Check the lists
+    if not lib.canDig("forward") then
+        return
+    end
+    --dig until shit stops falling if possible
     while not turtle.forward() do
         -- Attempt to dig the block in front of the turtle
         if turtle.detect() then
@@ -160,7 +263,15 @@ function lib.goUp(dig)
     if turtle.up() then
         _G.relativePosition.depth = _G.relativePosition.depth + 1
         return true
-    elseif dig and turtle.digUp() then
+    elseif not dig then
+        return false
+    end
+
+    -- Check the lists
+    if not lib.canDig("up") then
+        return
+    end
+    if turtle.digUp() then
         if turtle.up() then
             _G.relativePosition.depth = _G.relativePosition.depth + 1
             return true
@@ -173,7 +284,15 @@ function lib.goDown(dig)
     if turtle.down() then
         _G.relativePosition.depth = _G.relativePosition.depth - 1
         return true
-    elseif dig and turtle.digDown() then
+    elseif not dig then
+        return false
+    end
+
+    -- Check the lists
+    if not lib.canDig("down") then
+        return
+    end
+    if turtle.digDown() then
         if turtle.down() then
             _G.relativePosition.depth = _G.relativePosition.depth - 1
             return true
