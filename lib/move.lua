@@ -133,6 +133,24 @@ function lib.turnRight()
     _G.relativePosition.xDir, _G.relativePosition.zDir = -_G.relativePosition.zDir, _G.relativePosition.xDir
 end
 
+function lib.goBackwards(dig)
+    if turtle.back() then
+        _G.relativePosition.xPos = _G.relativePosition.xPos - _G.relativePosition.xDir
+        _G.relativePosition.zPos = _G.relativePosition.zPos - _G.relativePosition.zDir
+        return true
+    elseif not dig then
+        return false
+    end
+
+    lib.turnRight()
+    lib.turnRight()
+    local moveResult = lib.goForward(dig)
+    lib.turnRight()
+    lib.turnRight()
+
+    return moveResult
+end
+
 function lib.goForward(dig)
     if turtle.forward() then
         _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
