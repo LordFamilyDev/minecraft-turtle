@@ -1,6 +1,7 @@
 local lib_mining = require("/lib/lib_mining")
 local lib_itemTypes = require("/lib/item_types")
 local lib_move = require("/lib/move")
+local lib_farming = require("/lib/farming")
 
 -- Capture arguments passed to the script
 local args = {...}
@@ -17,9 +18,12 @@ if arg1 then
         while true do
             lib_move.macroMove("UFDRRFRR",false,true)
         end
+    elseif arg1 == 3 then
+        lib_farming.sweepUp(4)
     end
 else
     print("Please provide valid arguments:")
     print("1: horizontal move loop test")
     print("2: vertical move loop test")
+    print("3: spiral sweep test")
 end
