@@ -87,6 +87,7 @@ function megaSpruce()
         for i = 1, height do
             m.macroMove("DFL", false, true)
         end
+        
         for i = 1, 4 do
             m.goForward(true)
             turtle.digUp()

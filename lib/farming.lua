@@ -37,7 +37,6 @@ function farm.mineLeaves()
         move.goUp(true)
     end
     move.goTo(0,0,move.getdepth(),1,0)
-    
 end
 
 --assumes you are 1 above ground level (above the sapling)
