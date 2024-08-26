@@ -67,16 +67,22 @@ function megaSpruce()
 
         --dig tree trunk
         --spiral up then clear cut down (in case turtle gets stuck makes easier to rescue)
-        height = 0
+        local height = 0
         m.goForward(true)
         local treeBlockAboveFlag = true
         while treeBlockAboveFlag do
             m.macroMove("UU", false, true)
             treeBlockAboveFlag = itemTypes.isTreeUp()
             m.macroMove("FDR", false, true)
-            
             height = height + 1
         end
+
+        --one more loop to clear any remaining wood
+        for i = 1, 4 do
+            m.macroMove("UUFDR", false, true)
+            height = height + 1
+        end
+
         m.turnRight()
         for i = 1, height do
             m.macroMove("DFL", false, true)
