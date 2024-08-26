@@ -78,7 +78,7 @@ function spinMineDown(maxDepth)
         end
 
         -- Move down and increase depth counter
-        if turtle.down() then
+        if lib_move.goDown(true) then
             depth = depth + 1
         else
             print("Cannot move down, something is blocking the way.")
@@ -91,7 +91,7 @@ end
 -- Function to return to the original Z level
 function returnToSurface(depth)
     for i = 1, depth do
-        if not turtle.up() then
+        if not lib_move.goUp(true) then
             print("Cannot move up, something is blocking the way.")
             break
         end
@@ -126,6 +126,8 @@ function stripMineMacro(distX, distY, maxDepth)
 
             local success, depth = spinMineDown(maxDepth)
             returnToSurface(depth)
+
+            local openSpaceFlag = lib_mining.hasEmptySlot()
             dropUnwantedItems()
 
             if x == distX then
@@ -134,7 +136,7 @@ function stripMineMacro(distX, distY, maxDepth)
 
             lib_move.macroMove(moveMacro,true,true)
 
-            if not lib_mining.hasEmptySlot() then
+            if not openSpaceFlag then
                 --return to chest, deposit, and return to mining position
                 lib_move.memPlayback(true, true)
                 --chest on left
@@ -184,7 +186,7 @@ local arg3 = tonumber(args[3])
 -- Check if all arguments were provided and are valid integers
 if arg1 and arg2 and arg3 then
     local fuelEstimate = arg1 * arg2 * 2 * arg3
-    local timeEstimate = (arg1 * arg2 * arg3) / 20
+    local timeEstimate = (arg1 * arg2 * arg3) / 22
     print("Rough fuel use estimate: " .. fuelEstimate)
     print("Rough time estimate (minutes): " .. timeEstimate)
     stripMineMacro(arg1, arg2, arg3)
