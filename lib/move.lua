@@ -24,6 +24,17 @@ function lib.distToHome()
     return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
 end
 
+function lib.maxDimToHome()
+    local val = math.abs(_G.relativePosition.xPos)
+    if math.abs(_G.relativePosition.zPos) > val then
+        val = math.abs(_G.relativePosition.zPos)
+    end
+    if math.abs(_G.relativePosition.depth) > val then
+        val = math.abs(_G.relativePosition.depth)
+    end
+    return val
+end
+
 function lib.faceDir(x, z)
     while x ~= _G.relativePosition.xDir or z ~= _G.relativePosition.zDir do
         turnRight()
