@@ -184,8 +184,9 @@ local arg3 = tonumber(args[3])
 -- Check if all arguments were provided and are valid integers
 if arg1 and arg2 and arg3 then
     local fuelEstimate = arg1 * arg2 * 2 * arg3
+    local timeEstimate = (arg1 * arg2 * arg3) / 25
     print("Rough fuel use estimate: " .. fuelEstimate)
-    print("Rough time estimate: " .. "TODO")
+    print("Rough time estimate (minutes): " .. timeEstimate)
     stripMineMacro(arg1, arg2, arg3)
     print("actual fuel usage: " .. (fuelBefore - turtle.getFuelLevel()))
     --lib_move.moveMacro("FRFRFRFR")
