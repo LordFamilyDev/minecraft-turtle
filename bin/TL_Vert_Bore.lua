@@ -170,6 +170,7 @@ function stripMineMacro(distX, distY, maxDepth)
     depositItems()
     turtle.turnRight()
     lib_move.clearMoveMemory()
+    
 end
 
 -- Capture arguments passed to the script
