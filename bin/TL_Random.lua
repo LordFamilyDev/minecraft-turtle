@@ -19,7 +19,9 @@ if arg1 then
             lib_move.macroMove("UFDRRFRR",false,true)
         end
     elseif arg1 == 3 then
+        turtle.up()
         lib_farming.sweepUp(4)
+        turtle.down()
     end
 else
     print("Please provide valid arguments:")

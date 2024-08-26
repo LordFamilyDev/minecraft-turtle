@@ -51,7 +51,7 @@ function farm.sweepUp(radius)
         move.turnRight()
 
         for i = 1, 4 do
-            while lib.maxDimToHome() <= currentRad do
+            while move.maxDimToHome() <= currentRad do
                 move.goForward(false)
                 turtle.suckDown()
             end
