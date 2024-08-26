@@ -152,6 +152,11 @@ function stripMineMacro(distX, distY, maxDepth)
         lib_move.memPlayback(true, true)
         lib_move.clearMoveMemory()
 
+        --deposit items since next to chest
+        turtle.turnLeft()
+        depositItems()
+        turtle.turnRight()
+
         lib_move.charMove("R", true, true)
         for dy = 1, y do
             lib_move.macroMove(moveMacro,true,true)
