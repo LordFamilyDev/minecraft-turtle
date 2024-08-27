@@ -89,7 +89,9 @@ lib.valuableOres = {
 lib.unwantedItems = {
     "minecraft:cobblestone",
     --"minecraft:granite",
-    "minecraft:cobbled_deepslate"
+    "minecraft:cobbled_deepslate",
+    "minecraft:netherrack",
+    "minecraft:blackstone"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)
