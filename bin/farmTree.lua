@@ -56,25 +56,41 @@ function oakFarm()
 end
 
 function megaSpruce()
+
     m.setHome()
     --turtle facing left sapling with chest under the turtle
+    --turtle must be on south side of saplings (based on mega spruce spawn logic)
     while true do
         while not f.isTree() do
+            print("waiting for tree")
             sleep(30)
         end
 
         --dig tree trunk
         --spiral up then clear cut down (in case turtle gets stuck makes easier to rescue)
-        height = 0
+        local height = 0
         m.goForward(true)
-        while itemTypes.isTreeUp() do
+        local moarTreeFlag = true
+        while moarTreeFlag do
+            m.goUp(true)
+            moarTreeFlag = turtle.digUp()
+            m.goForward(true)
+            turtle.digUp()
+            m.turnRight()
+            height = height + 1
+        end
+
+        --one more loop to clear any remaining wood
+        for i = 1, 4 do
             m.macroMove("UUFDR", false, true)
             height = height + 1
         end
+
         m.turnRight()
         for i = 1, height do
             m.macroMove("DFL", false, true)
         end
+        
         for i = 1, 4 do
             m.goForward(true)
             turtle.digUp()
@@ -82,9 +98,19 @@ function megaSpruce()
         end
         m.goHome()
 
+        print("Waiting for leaves to fall")
+        sleep(180) --wait for leaves to fall
+
+        --sweep area
+        m.goUp(false)
+        m.goForward(false)
+        f.sweepUp(5)
+        m.goBackwards(false)
+        m.goDown(false)
+
         --plant saplings
-        m.goUp(true)
-        m.goForward(true)
+        m.goUp(false)
+        m.goForward(false)
         for i = 1, 4 do
             if itemTypes.selectSapling() then
                 turtle.placeDown()
@@ -95,16 +121,8 @@ function megaSpruce()
             m.macroMove("FR",false,true)
         end
 
-        turtle.back()
-        turtle.down()
-
-        sleep(180) --wait for leaves to fall
-
-        --sweep area
-        turtle.up()
-        f.sweepUp(4)
-
-        turtle.down()
+        m.goBackwards(false)
+        m.goDown(false)
 
         f.dumpOther()
     end

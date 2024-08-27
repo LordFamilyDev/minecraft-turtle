@@ -23,6 +23,7 @@ if arg1 then
         lib_farming.sweepUp(4)
         turtle.down()
     end
+    
 else
     print("Please provide valid arguments:")
     print("1: horizontal move loop test")
