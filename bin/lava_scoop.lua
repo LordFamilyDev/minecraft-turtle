@@ -103,35 +103,55 @@ local function lavaScoop()
     move.goHome()
 end
 
-local function findLavaAndScoop()
+local function findLavaAndScoop(iterations)
     if not hasBucket() then
         error("No bucket found in inventory")
     end
+    move.setHome()
 
-    -- Move forward until lava is detected underneath
-    while true do
-        local success, data = turtle.inspectDown()
-        if success and data.name == "minecraft:lava" then
-            lib_debug.print_debug("Lava detected underneath, starting lava scoop operation")
-            break
+    for i = 1, iterations do
+        -- Move forward until lava is detected underneath
+        while true do
+            local success, data = turtle.inspectDown()
+            --lava state level 0 means source, but level 2 makes sure scooping happens ever step rather than every two due to forward scooping
+            if success and data.name == "minecraft:lava" and data.state.level <= 2 then
+                lib_debug.print_debug("Lava detected underneath, starting lava scoop operation")
+                break
+            end
+
+            if not move.goForward(true) then
+                lib_debug.print_debug("Path blocked, cannot continue forward")
+                move.goHome()
+                return
+            end
+
+            if move.distToHome()>30 then
+                print("Lava search too far max dist 30")
+                move.goHome()
+                return
+            end
+
+            if checkFuel() then
+                print("Fuel level too high: " .. turtle.getFuelLevel())
+                move.goHome()
+                return
+            end
         end
 
-        if not move.goForward(true) then
-            lib_debug.print_debug("Path blocked, cannot continue forward")
-            move.goHome()
-            return
-        end
-
-        if checkFuel() then
-            print("Fuel level too high: " .. turtle.getFuelLevel())
-            move.goHome()
-            return
-        end
+        -- Start lava scooping operation
+        lavaScoop()
+        print("Fuel level: " .. turtle.getFuelLevel())
     end
-
-    -- Start lava scooping operation
-    lavaScoop()
 end
 
 -- Run the main function
-findLavaAndScoop()
+
+-- Capture arguments passed to the script
+local args = {...}
+
+local iterations = tonumber(args[1])
+if iterations == nil then
+    iterations = 1
+end
+
+findLavaAndScoop(iterations)
