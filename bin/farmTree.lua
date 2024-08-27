@@ -1,6 +1,7 @@
 m = require("/lib/move")
 f = require("/lib/farming")
 local itemTypes = require("/lib/item_types")
+local lib_debug = require("/lib/lib_debug")
 
 
 function oakFarm()
@@ -56,13 +57,12 @@ function oakFarm()
 end
 
 function megaSpruce()
-
-    m.setHome()
     --turtle facing left sapling with chest under the turtle
     --turtle must be on south side of saplings (based on mega spruce spawn logic)
     while true do
+        m.setHome()
         while not f.isTree() do
-            print("waiting for tree")
+            lib_debug.print_debug("waiting for tree")
             sleep(30)
         end
 
@@ -98,7 +98,7 @@ function megaSpruce()
         end
         m.goHome()
 
-        print("Waiting for leaves to fall")
+        lib_debug.print_debug("Waiting for leaves to fall")
         sleep(180) --wait for leaves to fall
 
         --sweep area

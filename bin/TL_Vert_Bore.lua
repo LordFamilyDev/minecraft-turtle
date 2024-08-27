@@ -1,6 +1,7 @@
 local lib_mining = require("/lib/lib_mining")
 local lib_itemTypes = require("/lib/item_types")
 local lib_move = require("/lib/move")
+local lib_debug = require("/lib/lib_debug")
 
 local loadingRadius = 90
 
@@ -24,7 +25,7 @@ function spinAndDigMinerals()
         local success, block = turtle.inspect()
         if success and lib_itemTypes.isBlockNameInList(block.name,lib_itemTypes.valuableOres) then
             turtle.dig()
-            print("Found and dug " .. block.name)
+            lib_debug.print_debug("Found and dug " .. block.name)
         end
         turtle.turnRight()
     end
@@ -40,16 +41,16 @@ function depositItems()
         -- If there are items in the slot, try to drop them into the chest
         if itemCount > 0 then
             if not turtle.drop() then
-                print ("Chest is full. Could not deposit all items." )
+                lib_debug.print_debug ("Chest is full. Could not deposit all items." )
                 return false
             else
-                print ("debug depositted")
+                lib_debug.print_debug ("debug depositted")
             end
         end
     end
 
     -- If all items were deposited successfully
-    print("Deposit Successful.")
+    lib_debug.print_debug("Deposit Successful.")
     return true
 end
 
@@ -81,7 +82,7 @@ function spinMineDown(maxDepth)
         if lib_move.goDown(true) then
             depth = depth + 1
         else
-            print("Cannot move down, something is blocking the way.")
+            lib_debug.print_debug("Cannot move down, something is blocking the way.")
             return false, depth
         end
     end
@@ -92,11 +93,11 @@ end
 function returnToSurface(depth)
     for i = 1, depth do
         if not lib_move.goUp(true) then
-            print("Cannot move up, something is blocking the way.")
+            lib_debug.print_debug("Cannot move up, something is blocking the way.")
             break
         end
     end
-    print("depth: " .. depth)
+    lib_debug.print_debug("depth: " .. depth)
 end
 
 function stripMineMacro(distX, distY, maxDepth)
