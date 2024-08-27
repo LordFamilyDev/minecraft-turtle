@@ -22,7 +22,7 @@ end
 function spinAndDigMinerals()
     for i = 1, 4 do
         local success, block = turtle.inspect()
-        if success and lib_itemTypes.isBlockNameInList(block.name,lib_itemTypes.keyMinerals) then
+        if success and lib_itemTypes.isBlockNameInList(block.name,lib_itemTypes.valuableOres) then
             turtle.dig()
             print("Found and dug " .. block.name)
         end
