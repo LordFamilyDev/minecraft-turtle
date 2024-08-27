@@ -1,6 +1,7 @@
 --layout:
 --computer with wired modem on back
 --cable to block modem (take default modem and craft it to make it a block) with chests around it
+--have one chest near the computer that will be your clientChest (use the name given when turning on its modem when initializing system)
 --bump Tom if this doesn't make sense and I will fix this explanation
 
 
