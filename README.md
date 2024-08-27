@@ -1,13 +1,13 @@
 # minecraft-turtle
 
 ## Quick Start
-'''
+```
 wget run https://turtles.lordylordy.org/code/main/update.lua -m
 -m          pulls from main repo
 -b <branch>  pulls from a published branch
 -w <user>   pulls from that users WIP folder
 -u <url>    pulls from a caddy fileserve with root at url
-'''
+```
 
 ## Update Process
 ### Intended Workflow:
