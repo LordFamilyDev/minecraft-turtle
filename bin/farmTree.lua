@@ -56,11 +56,10 @@ function oakFarm()
 end
 
 function megaSpruce()
-
-    m.setHome()
     --turtle facing left sapling with chest under the turtle
     --turtle must be on south side of saplings (based on mega spruce spawn logic)
     while true do
+        m.setHome()
         while not f.isTree() do
             print("waiting for tree")
             sleep(30)
