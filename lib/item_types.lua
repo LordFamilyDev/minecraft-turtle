@@ -96,12 +96,14 @@ lib.unwantedItems = {
 lib.noMine = {
     "minecraft:chest",
     "minecraft:barrel",
-    "minecraft:furnace"
+    "minecraft:furnace",
+    "bed",
+    "torch"
 }
 
 function lib.isItemInList(blockName, list)
-    for _, itemType in ipairs(list) do
-        if blockName:find(itemType) then
+    for _, str in ipairs(list) do
+        if blockName:find(str) then
             return true
         end
     end

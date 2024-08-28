@@ -1,5 +1,6 @@
 itemTypes = require("/lib/item_types")
-
+lib_debug = require("/lib/lib_debug")
+lib_debug.set_verbose(false)
 
 local lib = {}
 
@@ -20,6 +21,17 @@ function lib.setHome()
     _G.relativePosition.zDir = 0
 end
 
+function lib.setPos(x,z,d,xd,zd)
+    _G.relativePosition.depth = d
+    _G.relativePosition.xPos = x
+    _G.relativePosition.zPos = z
+    if xd~= nil and zd ~= nil then
+        _G.relativePosition.xDir = xd
+        _G.relativePosition.zDir = zd
+    end
+end
+
+
 function lib.getDirRight(x, z)
     return -z, x
 end
@@ -29,8 +41,8 @@ function lib.getDirLeft(x, z)
 end
 
 lib.whitelist = {}
-lib.blacklist = {}
-lib.tether = 0
+lib.blacklist = itemTypes.noMine
+lib.tether = 34
 
 function lib.distToHome()
     return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
@@ -47,6 +59,13 @@ function lib.maxDimToHome()
     return val
 end
 
+function lib.setTether(t)
+    lib.tether = t
+end
+
+function lib.getTether()
+    return lib.tether
+end
 
 function lib.getDir()
     return _G.relativePosition.xDir, _G.relativePosition.zDir
@@ -175,7 +194,7 @@ function lib.canDig(dir)
 end
 
 function lib.overTether()
-    if lib.tether and lib.distToHome() > lib.tether then
+    if lib.tether > 0 and lib.distToHome() > lib.tether then
         print("Tether reached")
         return true
     end
@@ -490,8 +509,15 @@ end
 
 
 -- Directions from the turtle's perspective
-local allDirections = 
-    {
+local allDirectionsFU = {
+        {1,0,0}, --forward
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+local allDirectionsFD = {
         {1,0,0}, --forward
         {0,0,1}, --up
         {0,0,-1}, --down
@@ -500,27 +526,42 @@ local allDirections =
         {-1,0,0} --back
     }
 
+local BIG_NUMBER = 1000000
 -- Helper function to calculate Manhattan distance
-local function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
-    return math.abs(x1 - x2) + math.abs(z1 - z2) + math.abs(d1 - d2)
+function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
+    return ( math.abs((x1 - x2)) + math.abs((z1 - z2)) + math.abs((d1 - d2)) )
 end
 
-local function lib.getIndex(x, z, d)
+function lib.getIndex(x, z, d)
     return x .. "," .. z .. " ," .. d
 end
 
+function lib.invert(xD, zD, dD)
+    return -xD, -zD, -dD
+end
+
 -- get Neighbor Scores
-local BIG_NUMBER = 1000000
-local function lib.getNeighborScores(currentPos, goal, obstacles)
+function lib.isInTable(tbl, item)
+    for _, value in ipairs(tbl) do
+        if value == item then
+            return true
+        end
+    end
+    return false
+end
+
+function lib.getNeighborScores(currentPos, goal, obstacles, visited, allDirections)
     local neighborScores = {}
     local x, z, d = unpack(currentPos)
     local xT, zT, dT = unpack(goal)
-    for d in allDirections do
-        local xD, zD, dD = unpack(d) 
+    for i = 1, #allDirections do
+        local xD, zD, dD = unpack(allDirections[i]) 
         local xN, zN, dN = x + xD, z + zD, d + dD
         local index = lib.getIndex(xN, zN, dN)
         score = BIG_NUMBER
-        if obstacles[index] then
+        if obstacles[index] ~= nil then
+            score = BIG_NUMBER
+        elseif visited[index] ~= nil then
             score = BIG_NUMBER
         else
             score = lib.manhattanDistance(xN, zN, dN, xT, zT, dT)
@@ -530,7 +571,7 @@ local function lib.getNeighborScores(currentPos, goal, obstacles)
     return neighborScores
 end
 
-local function lib.getLowestScore(scores)
+function lib.getLowestScore(scores)
     local lowest = scores[1]
     local index = 1
     for i = 2, #scores do
@@ -539,69 +580,119 @@ local function lib.getLowestScore(scores)
             lowest = scores[i]
         end
     end
-    return lowest, index
+    return lowest, index, lowest[7] == BIG_NUMBER
 end
 
 
-local function lib.step(xD, zD, dD, digFlag)
-    if xD == 1 then
-        return lib.goForward(digFlag)
-    elseif xD == -1 then
-        return lib.goBackwards(digFlag)
-    elseif zD == 1 then
-        return lib.goRight(digFlag, true)
-    elseif zD == -1 then
-        return lib.goLeft(digFlag, true)
-    elseif dD == 1 then
-        return lib.goUp(digFlag)
-    elseif dD == -1 then
-        return lib.goDown(digFlag)
+function lib.step(xD, zD, dD, digFlag)
+    if turtle.getFuelLevel() == 0 then
+        error("Out of Fuel")
     end
+    local err = false
+    if xD == 1 then
+        err = lib.goForward(digFlag)
+    elseif xD == -1 then
+        err = lib.goBackwards(digFlag)
+    elseif zD == 1 then
+        err = lib.goRight(digFlag, true)
+    elseif zD == -1 then
+        err = lib.goLeft(digFlag, true)
+    elseif dD == 1 then
+        err = lib.goUp(digFlag)
+    elseif dD == -1 then
+        err = lib.goDown(digFlag)
+    end
+    lib_debug.print_debug("Stepping"..xD.." "..zD.." "..dD .. " ::".. tostring(err))
+    return err
 end
 
-local function lib.pathTo(x, z, d, digFlag)
+-- Finds path to xzd coordinates based on relative position
+
+function lib.pathTo(x, z, d, digFlag, dirPref)
     local path = {}
     local obstacles = {}
+    local visited = {}
     local start = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
     local goal = {x, z, d}
     local current = start
     local pathIndex = 1
 
-    while current ~= goal do
-        local neighborScores = lib.getNeighborScores(current, goal, obstacles)
+    local dirPref = allDirectionsFU
+    if dirPref ~= nil then
+        if dirPref == "D" then
+            dirPref = allDirectionsFD
+        elseif dirPref == "U" then
+            dirPref = allDirectionsFU
+        end
+    end
+
+
+
+    local currentIndex = lib.getIndex(current[1],current[2],current[3])
+    local goalIndex = lib.getIndex(goal[1],goal[2],goal[3])
+    visited[currentIndex] = true
+    while not (currentIndex == goalIndex) do
+        -- read()
+        
+        local neighborScores = lib.getNeighborScores(current, goal, obstacles, visited, dirPref)
+
+        -- for i = 1, #neighborScores do
+        --     print("N:",unpack(neighborScores[i]))
+        -- end 
+        -- read()
+        lib_debug.print_debug("current:" .. currentIndex .. "goal:" .. goalIndex)
 
         while #neighborScores > 0 do
-            local n, scoreIndex = lib.getLowestScore(neighborScores)
-            local xN, zN, dN, xD, zD, dD, s = unpack(n)
-            if s == BIG_NUMBER then
-                print("!!!No path found!!!")
-                return false
+            local n, scoreIndex, deadend = lib.getLowestScore(neighborScores)
+            lib_debug.print_debug("next:",unpack(n),scoreIndex,deadend)
+            
+            if deadend then
+                if #path == 0 then
+                    print("!!!No path found!!!")
+                    return false
+                else
+                    lib_debug.print_debug("backtracking:")
+                    obstacles[currentIndex] = true
+                    n = path[1]
+                    table.remove(path, 1)
+                    local xN, zN, dN, xD, zD, dD, s = unpack(n)
+                    -- no need to chech other neighbor scores
+                    if lib.step(xD, zD, dD, true) then -- if we are backtracking...dig through shit in our way
+                        current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
+                        break
+                    else
+                        print("Turtle stuck")
+                        return false
+                    end
+                end
             end
-            local nextIndex = lib.getIndex(xN, zN, dN)
 
-            if nextIndex == path[1] then -- see if we are moving backwards
-                table.insert(obstacles, nextIndex)
-                table.remove(path, 1)
-                lib.step(xD, zD, dD, true) -- if we are backtracking...dig through shit in our way
+            local xN, zN, dN, xD, zD, dD, s = unpack(n)
+            local nextIndex = lib.getIndex(xN, zN, dN)
+            lib_debug.print_debug("trying:" .. nextIndex .. "Score" .. s )
+                
+            if lib.step(xD, zD, dD, digFlag) then
+                -- if sucess add to path and find the next step
+                xP, zP, dP = lib.invert(xD, zD, dD)
+                table.insert(path, 1, {current[1],current[2],current[3],xP,zP,dP,0} )
+                current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
+                currentIndex = lib.getIndex(current[1],current[2],current[3])
+                visited[currentIndex] = true
                 break
             else
-                if lib.step(xD, xD, dD, digFlag) then
-                    -- if sucess add to path and find the next step
-                    table.insert(path, 1, nextIndex)
-                    break
-                else
-                    -- else add to obstacles and try next lowest score
-                    table.insert(obstacles, nextIndex)
-                    table.remove(neighborScores, scoreIndex)
-                end
-            end 
+                -- else add to obstacles and try next lowest score
+                lib_debug.print_debug("Adding to obstacles"..nextIndex)
+                obstacles[nextIndex] = true
+                table.remove(neighborScores, scoreIndex)
+            end
         end
         if #neighborScores == 0 then
             print("!!!No path found!!!")
+            return false
         end
     end
     print("We Got Home!!!!!")
-
+    return true
 end
 
 
