@@ -525,6 +525,22 @@ local allDirectionsFD = {
         {0,-1,0}, --left
         {-1,0,0} --back
     }
+local allDirectionsUDF = {
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+local allDirectionsDUF = {
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
 
 local BIG_NUMBER = 1000000
 -- Helper function to calculate Manhattan distance
@@ -619,10 +635,14 @@ function lib.pathTo(x, z, d, digFlag, dirPref)
 
     local dirPref = allDirectionsFU
     if dirPref ~= nil then
-        if dirPref == "D" then
+        if dirPref == "FD" then
             dirPref = allDirectionsFD
-        elseif dirPref == "U" then
+        elseif dirPref == "FU" then
             dirPref = allDirectionsFU
+        elseif dirPref == "UDF" then
+            dirPref = allDirectionsUDF
+        elseif dirPref == "DUF" then
+            dirPref = allDirectionsDUF
         end
     end
 
