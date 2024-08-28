@@ -457,6 +457,15 @@ function lib.goTo(x,z,depth, xd, zd)
                                 _G.relativePosition.depth,
                                 _G.relativePosition.xDir,
                                 _G.relativePosition.zDir ))
+    
+    --Fix depth first in case dug into bedrock (usually up means freedom)
+    while _G.relativePosition.depth < depth do 
+        lib.goUp(true)
+    end
+    while _G.relativePosition.depth > depth do
+        lib.goDown(true)
+    end
+
     if _G.relativePosition.xPos > x then
         while _G.relativePosition.xDir ~= -1 do
             lib.turnLeft()
@@ -474,6 +483,7 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end        
     end
+
     if _G.relativePosition.zPos > z then
         while _G.relativePosition.zDir ~= -1 do
             lib.turnLeft()
@@ -491,12 +501,7 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end        
     end
-    while _G.relativePosition.depth < depth do 
-        lib.goUp(true)
-    end
-    while _G.relativePosition.depth > depth do
-        lib.goDown(true)
-    end
+    
     while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
         lib.turnLeft()
     end
