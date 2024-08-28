@@ -185,6 +185,10 @@ local arg1 = tonumber(args[1])
 local arg2 = tonumber(args[2])
 local arg3 = tonumber(args[3])
 
+--TODO: check bucket in inventory
+--TODO: check if chest to left
+--give warning prints if these are not met
+
 -- Check if all arguments were provided and are valid integers
 if arg1 and arg2 and arg3 then
     local fuelEstimate = arg1 * arg2 * 2 * arg3

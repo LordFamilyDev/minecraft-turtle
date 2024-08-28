@@ -1,6 +1,7 @@
 --layout:
 --computer with wired modem on back
 --cable to block modem (take default modem and craft it to make it a block) with chests around it
+--have one chest near the computer that will be your clientChest (use the name given when turning on its modem when initializing system)
 --bump Tom if this doesn't make sense and I will fix this explanation
 
 
@@ -66,7 +67,7 @@ function initializeStorage()
     local storageIndexCounter = 1
     for _, name in ipairs(peripheral.getNames()) do
         if peripheral.getType(name) == "minecraft:chest" then
-            print(name)
+            --print(name)
             if name == savedClientChestName then
                 userChest = peripheral.wrap(name)
             elseif name == "left" or name == "right" or name == "top" or name == "bottom" then
@@ -87,36 +88,49 @@ function initializeStorage()
     end
 end
 
-function transferMaterial(source, destination, blockName, amount)
+function transferMaterial(source, destination, partialBlockName, amount)
 
     -- Iterate through all slots in the source chest
+    --print(source.list())
     for slot, item in pairs(source.list()) do
         -- Check if the item is stone
-        if item.name == blockName then
+        --if item.name == blockName then
+        if item.name:find(partialBlockName) then
             -- Attempt to transfer the stone to the destination chest
             local transferred = source.pushItems(peripheral.getName(destination), slot,amount)
             return transferred
+        elseif item.name:find("book") or item.name:find("potion") then
+            local itemDetail = source.getItemDetail(slot)
+            if itemDetail and textutils.serialize(itemDetail):find(partialBlockName) then
+                local transferred = source.pushItems(peripheral.getName(destination), slot,amount)
+                return transferred
+            end
         end
     end
     return 0
 end
 
-function requestMaterial(blockName, amount)
+function requestMaterial(partialBlockName, amount)
     local transferredCount = 0
-    for i = 1, #storageChests do
-        local transferred = transferMaterial(storageChests[i],userChest,blockName,amount)
-        transferredCount = transferredCount - transferred
+    local chestIndex = 1
+    while chestIndex <= #storageChests do
+        local transferred = transferMaterial(storageChests[chestIndex],userChest,partialBlockName,amount)
+        transferredCount = transferredCount + transferred
         if transferredCount >= amount then
+            print(transferredCount .. " found")
             return true
+        elseif transferred == 0 then
+            chestIndex = chestIndex + 1
+        else
+            --I think this gives the chest a chance to update slots, calling too fast on same chest seems to break it
+            sleep(0.01)
         end
     end
+    print(transferredCount .. " found")
     return false
 end
 
 function clearUserStorage()
-    print(userChest)
-    print(#storageChests)
-
     -- Iterate through all slots in the user chest
     for slot, item in pairs(userChest.list()) do
         -- Try to move the item to one of the storage chests
@@ -143,7 +157,7 @@ initializeStorage()
 
 if args[1] == nil or args[1] == "help" then
     print("usage:")
-    print("get [blockName] [quantity]")
+    print("get [partial or complete blockName] [quantity]")
     print("clear")
     print("initialize [clientChestName]")
 elseif args[1] == "get" then
@@ -153,7 +167,7 @@ elseif args[1] == "get" then
     if args[3] == nil then
         args[3] = 1
     end
-    requestMaterial(ensureMinecraftPrefix(args[2]), tonumber(args[3]))
+    requestMaterial(args[2], tonumber(args[3]))
 elseif args[1] == "clear" then
     if userChest == nil then
         print("initialize storage system before using")

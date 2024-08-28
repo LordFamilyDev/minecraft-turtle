@@ -91,7 +91,8 @@ lib.unwantedItems = {
     --"minecraft:granite",
     "minecraft:cobbled_deepslate",
     "minecraft:netherrack",
-    "minecraft:blackstone"
+    "minecraft:blackstone",
+    "minecraft:magma_block"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)
