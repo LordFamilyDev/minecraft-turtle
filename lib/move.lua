@@ -154,6 +154,8 @@ function lib.isWhitelist(direction)
         return true
     end
     
+    print("Checking: "..data.name)
+
     return itemTypes.isItemInList(data.name, lib.whitelist)
 end
 
@@ -182,6 +184,7 @@ end
 function lib.canDig(dir)
     -- Check if the block is blacklisted
     if lib.isBlacklist(dir) then
+        print("Block Blacklisted")
         return false
     end
 
@@ -190,6 +193,7 @@ function lib.canDig(dir)
         return true
     end
 
+    print("Block Not Whitelisted")
     return false
 end
 
@@ -286,6 +290,7 @@ end
 
 function lib.goForward(dig)
     if lib.overTether() then
+        print("Past My Tether.")
         return false
     end
     if turtle.forward() then
@@ -430,25 +435,6 @@ function lib.goDown(dig)
     return false
 end
 
-function lib.spiralOut(radius)
-    local side = 1
-    local steps = 1
-    
-    while side <= radius * 2 do
-      for i = 1, steps do
-        lib.goForward(true)
-      end
-      
-      lib.turnLeft()
-      
-      if side % 2 == 0 then
-        steps = steps + 1
-      end
-      
-      side = side + 1
-    end
-end
-
 function lib.goTo(x,z,depth, xd, zd)
     print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
     print(string.format("      at:%d:%d:%d ; %d:%d",
@@ -547,6 +533,13 @@ local allDirectionsDUF = {
         {-1,0,0} --back
     }
 
+local allDirectionsLIN = {
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+
 local BIG_NUMBER = 1000000
 -- Helper function to calculate Manhattan distance
 function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
@@ -629,7 +622,7 @@ end
 
 -- Finds path to xzd coordinates based on relative position
 
-function lib.pathTo(x, z, d, digFlag, dirPref)
+function lib.pathTo(x, z, d, digFlag, dPrefStr)
     local path = {}
     local obstacles = {}
     local visited = {}
@@ -639,15 +632,17 @@ function lib.pathTo(x, z, d, digFlag, dirPref)
     local pathIndex = 1
 
     local dirPref = allDirectionsFU
-    if dirPref ~= nil then
-        if dirPref == "FD" then
+    if dPrefStr ~= nil then
+        if dPrefStr == "FD" then
             dirPref = allDirectionsFD
-        elseif dirPref == "FU" then
+        elseif dPrefStr == "FU" then
             dirPref = allDirectionsFU
-        elseif dirPref == "UDF" then
+        elseif dPrefStr == "UDF" then
             dirPref = allDirectionsUDF
-        elseif dirPref == "DUF" then
+        elseif dPrefStr == "DUF" then
             dirPref = allDirectionsDUF
+        elseif dPrefStr == "LIN" then
+            dirPref = allDirectionsLIN
         end
     end
 
@@ -720,6 +715,32 @@ function lib.pathTo(x, z, d, digFlag, dirPref)
     return true
 end
 
+
+function lib.spiralOut(radius, sweep)
+    local side = 1
+    local steps = 1
+    local x, z, d = lib.getPos()
+    local xd, zd = lib.getDir()
+    while side <= radius * 2 do
+      if sweep then
+        turtle.suckDown()
+      end
+      for i = 1, steps do
+        x = x + xd
+        z = z + zd
+        print("Pathing to: "..x..","..z..","..d)
+        lib.pathTo(x, z, d, true)
+      end
+      
+      x, z = lib.getDirLeft(x, z)
+
+      if side % 2 == 0 then
+        steps = steps + 1
+      end
+      
+      side = side + 1
+    end
+end
 
 lib.moveMemory = ""
 
