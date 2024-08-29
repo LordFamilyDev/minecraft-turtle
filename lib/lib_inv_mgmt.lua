@@ -69,9 +69,9 @@ function lib.selectItemFromList(list)
     for slot = 1, 16 do
         local item = turtle.getItemDetail(slot)
         if item then
-            if lib.isSapling(item.name) then
+            if lib.isItemInList(item.name, list) then
                 turtle.select(slot)
-                return true
+                return turtle.getItemCount()
             end
         end
     end

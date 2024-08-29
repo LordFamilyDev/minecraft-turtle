@@ -154,7 +154,7 @@ function lib.isWhitelist(direction)
         return true
     end
     
-    print("Checking: "..data.name)
+    --print("Checking: "..data.name)
 
     return itemTypes.isItemInList(data.name, lib.whitelist)
 end
@@ -184,7 +184,7 @@ end
 function lib.canDig(dir)
     -- Check if the block is blacklisted
     if lib.isBlacklist(dir) then
-        print("Block Blacklisted")
+        --print("Block Blacklisted")
         return false
     end
 
@@ -193,7 +193,7 @@ function lib.canDig(dir)
         return true
     end
 
-    print("Block Not Whitelisted")
+    --print("Block Not Whitelisted")
     return false
 end
 
@@ -621,6 +621,7 @@ function lib.step(xD, zD, dD, digFlag)
 end
 
 -- Finds path to xzd coordinates based on relative position
+lib.aggressiveness = 3
 
 function lib.pathTo(x, z, d, digFlag, dPrefStr)
     local path = {}
@@ -630,6 +631,7 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
     local goal = {x, z, d}
     local current = start
     local pathIndex = 1
+    local localMinScore = BIG_NUMBER
 
     local dirPref = allDirectionsFU
     if dPrefStr ~= nil then
@@ -665,7 +667,15 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
         while #neighborScores > 0 do
             local n, scoreIndex, deadend = lib.getLowestScore(neighborScores)
             lib_debug.print_debug("next:",unpack(n),scoreIndex,deadend)
-            
+            if n[7] < localMinScore then
+                localMinScore = n[7] 
+            end
+
+            if n[7] > (localMinScore + lib.aggressiveness) then
+                print("!!!BHailing. No path found!!!")
+                return false
+            end 
+                        
             if deadend then
                 if #path == 0 then
                     print("!!!No path found!!!")
@@ -676,6 +686,7 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
                     n = path[1]
                     table.remove(path, 1)
                     local xN, zN, dN, xD, zD, dD, s = unpack(n)
+                    
                     -- no need to chech other neighbor scores
                     if lib.step(xD, zD, dD, true) then -- if we are backtracking...dig through shit in our way
                         current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
@@ -700,6 +711,11 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
                 visited[currentIndex] = true
                 break
             else
+                --make sure we havent been given the impossible
+                if nextIndex == goalIndex then
+                    print("We Got To: " .. goalIndex)
+                    return true
+                end
                 -- else add to obstacles and try next lowest score
                 lib_debug.print_debug("Adding to obstacles"..nextIndex)
                 obstacles[nextIndex] = true
@@ -711,7 +727,7 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
             return false
         end
     end
-    print("We Got Home!!!!!")
+    print("We Got To: " .. goalIndex)
     return true
 end
 

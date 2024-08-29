@@ -35,7 +35,7 @@ end
 function farm.mineLeaves()
     local depth = move.getdepth() 
     while depth > 0 do
-        move.pathTo(0,0,move.getdepth(),true)
+        move.pathTo(0,0,depth,true)
         move.spiralOut(6)
         depth = depth - 1
     end

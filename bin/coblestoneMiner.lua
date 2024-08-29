@@ -11,7 +11,9 @@ while true do
     if( turtle.getItemCount() == 64 ) then
         turtle.turnRight()
         turtle.turnRight()
-        turtle.drop(64)
+        while not turtle.drop(64) do
+            sleep(1)
+        end
         turtle.turnRight()
         turtle.turnRight()
     end
