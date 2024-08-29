@@ -103,7 +103,7 @@ local function lavaScoop()
     move.goHome()
 end
 
-local function findLavaAndScoop()
+local function findLavaAndScoop(iterations)
     while not hasBucket() do
         print("Give me a bucket...")
         sleep(2)

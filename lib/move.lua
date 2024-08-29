@@ -40,12 +40,19 @@ function lib.getDirLeft(x, z)
     return z, -x
 end
 
+--default off, activate as needed for given script
 lib.whitelist = {}
-lib.blacklist = itemTypes.noMine
-lib.tether = 34
+lib.blacklist = {}
+lib.tether = 0
+lib.tetherIs2d = false
 
-function lib.distToHome()
-    return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
+function lib.distToHome(xyOnlyFlag)
+    if xyOnlyFlag then
+        return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos)
+    else
+        return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
+    end
+    
 end
 
 function lib.maxDimToHome()
@@ -198,10 +205,18 @@ function lib.canDig(dir)
 end
 
 function lib.overTether()
-    if lib.tether > 0 and lib.distToHome() > lib.tether then
-        print("Tether reached")
-        return true
+    if lib.tetherIs2d then
+        if lib.tether > 0 and lib.distToHome(true) > lib.tether then
+            print("Tether reached")
+            return true
+        end
+    else
+        if lib.tether > 0 and lib.distToHome() > lib.tether then
+            print("Tether reached")
+            return true
+        end
     end
+    
     return false
 end
 
@@ -764,15 +779,26 @@ function lib.clearMoveMemory()
     lib.moveMemory = ""
 end
 
+function lib.appendMoveMem(moveSequence)
+    lib.moveMemory = lib.moveMemory .. moveSequence
+end
+
+function lib.popBackMoveMem()
+    if #lib.moveMemory > 0 then
+        -- Get the last character
+        local lastChar = lib.moveMemory:sub(-1)
+        -- Remove the last character from the string
+        lib.moveMemory = lib.moveMemory:sub(1, -2)
+        -- Return the removed character
+        return lastChar
+    else
+        return nil -- Return nil if the string is empty
+    end
+end
+
 function lib.memPlayback(revFlag, digFlag)
     if revFlag then
-        lib.turnRight()
-        lib.turnRight()
-
         lib.macroMove(lib.reverseMacro(lib.moveMemory),false,digFlag)
-
-        lib.turnRight()
-        lib.turnRight()
     else
         lib.macroMove(lib.moveMemory,false,digFlag)
     end
@@ -782,26 +808,35 @@ function lib.reverseMacro(moveSequence)
     local revMoveSequence = ""
     for i = #moveSequence, 1, -1 do
         local char = moveSequence:sub(i, i)
-        if char == "R" then
-            revMoveSequence = revMoveSequence .. "L"
-        elseif char == "L" then
-            revMoveSequence = revMoveSequence .. "R"
-        elseif char == "U" then
-            revMoveSequence = revMoveSequence .. "D"
-        elseif char == "D" then
-            revMoveSequence = revMoveSequence .. "U"
-        elseif char == "F" then
-            revMoveSequence = revMoveSequence .. "F"
-        end
+        revMoveSequence = revMoveSequence .. lib.revMoveChar(char)
     end
-
     return revMoveSequence
 end
 
---Valid move chars: F,R,L,U,D
+function lib.revMoveChar(moveChar)
+    if moveChar == "R" then
+        return "L"
+    elseif moveChar == "L" then
+        return "R"
+    elseif moveChar == "U" then
+        return "D"
+    elseif moveChar == "D" then
+        return "U"
+    elseif moveChar == "F" then
+        return "B"
+    elseif moveChar == "B" then
+        return "F"
+    end
+end
+
+--Valid move chars: F,R,L,U,D,B
 function lib.charMove(moveChar, memFlag, digFlag)
     if moveChar == "F" then
         if not lib.goForward(digFlag) then
+            return false
+        end
+    elseif moveChar == "B" then
+        if not lib.goBackwards(digFlag) then
             return false
         end
     elseif moveChar == "U" then
@@ -830,7 +865,7 @@ end
 
 --Takes a sequency of chars eg: "FFRFUDR" and performs the motion sequence (returns mid motion if any move fails)
 --Returns true if sequence completed
---Valid move chars: F,R,L,U,D
+--Valid move chars: F,R,L,U,D,B
 --Note: I considered adding dig and place here, but think there should be a different library for structure macros
 function lib.macroMove(moveSequence, memFlag, digFlag)
     print(moveSequence)

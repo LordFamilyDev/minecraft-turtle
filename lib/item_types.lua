@@ -82,7 +82,11 @@ lib.valuableOres = {
     "minecraft:nether_gold_ore",
     "minecraft:ancient_debris",
     "minecraft:glowstone",
-    "minecraft:glowstone_dust"
+    "minecraft:glowstone_dust",
+    --Ocean monument
+    "minecraft:gold_block",
+    "minecraft:sponge",
+    "minecraft:wet_sponge"
 }
 
 -- Global list of unwanted items
