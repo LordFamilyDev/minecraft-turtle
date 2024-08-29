@@ -153,7 +153,7 @@ end
 
 function lib.isTreeFwd()
     x, info = turtle.inspect()
-    return x and lib.isTree(info.name)
+    return x and lib.isTree(info.name), info.name
 end 
 
 function lib.isTreeUp()

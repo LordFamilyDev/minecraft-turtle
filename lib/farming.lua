@@ -5,11 +5,14 @@ local farm = {}
 
 
 function farm.waitForTree()
-    while not itemTypes.isTreeFwd() do
+    treePresent, treeType =  itemTypes.isTreeFwd()
+    while not  treePresent do
         print("No Tree... Sleeping..")
         sleep(10)
         move.turnRight()
+        treePresent, treeType = itemTypes.isTreeFwd()
     end
+    return treeType
 end
 
 function farm.isTree()
@@ -22,59 +25,37 @@ function farm.mineTree()
     turtle.digDown()
     sleep(0.5)
     turtle.suckDown()
-    if itemTypes.selectSapling() then
-        turtle.placeDown()
-    end
     local blockUp, info = turtle.inspectUp()
     while itemTypes.isTreeUp() do
         move.goUp(true)
-        sleep(0.5)
+        sleep(0.1)
     end
 end
 
 function farm.mineLeaves()
-    while move.getdepth() < 2 do
-        move.goUp(true)
-    end
-    while move.getdepth() > 2 do
-        move.goTo(0,0,move.getdepth(),1,0)
-        move.spiralOut(10)
-        move.goDown(true)
+    local depth = move.getdepth() 
+    while depth > 0 do
+        move.pathTo(0,0,move.getdepth(),true)
+        move.spiralOut(6)
+        depth = depth - 1
     end
 end
 
 --assumes you are 1 above ground level (above the sapling)
 function farm.sweepUp(radius)
-    move.setHome()
-    local currentRad = 1
-    while currentRad <= radius do
-        move.turnLeft()
-        move.goForward(false)
-        turtle.suckDown()
-        move.turnRight()
-
-        for i = 1, 4 do
-            while move.maxDimToHome() <= currentRad do
-                move.goForward(false)
-                turtle.suckDown()
-            end
-            move.goBackwards(false)
-            move.turnRight()
-        end
-        currentRad = currentRad + 1
-    end
-    move.goHome()
+    move.spiralOut(radius,true)
+    move.pathTo(0,0,0)
 end
 
 function farm.fillFurnace(dir)
-    woodCount = itemTypes.getWood()
-    if woodCount then
-        if dir == "Down" then 
-            turtle.dropDown(woodCount/3)
-        elseif dir == "Forward" then
-            turtle.drop(woodCount/3)
-        end
-    end
+    -- woodCount = itemTypes.getWood()
+    -- if woodCount then
+    --     if dir == "Down" then 
+    --         turtle.dropDown(woodCount/3)
+    --     elseif dir == "Forward" then
+    --         turtle.drop(woodCount/3)
+    --     end
+    -- end
 end
 
 function farm.dumpWood()

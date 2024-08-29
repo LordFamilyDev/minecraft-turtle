@@ -13,15 +13,26 @@ function oakFarm()
 -- 0   lsTsl     
 -- -1   lsl     
 -- -2  c l c      
-
 --      0
 -- 2
 -- 1    f
 -- 0    T
 --      l
 -- 
+
+    local layout = {
+        ["home"] = {0,0,0},
+        ["torch"] = {{1,-1,-1},{2,0,-1},{1,1,-1},
+                 {0,-2,-1},{0,0,-1},{0,2,-1},
+                 {-1,-1,-1},{-2,0,-1},{-1,1,-1}},
+        ["logchest"] = {2,2,-1},
+        ["charcoalchest"] = {2,-2,-1},
+        ["furnace"] = {0,0,1},
+        ["trees"] = {{1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0}}
+    }
     while true do
         m.setHome()
+        m.addWhitelist(itemTypes.treeBlocks)
         ::continue::
         f.waitForTree()
         print("Tree found Mining!")
@@ -29,29 +40,14 @@ function oakFarm()
         print("Get the leaves")
         f.mineLeaves()
         print("Feed the furnace")
-        m.goTo(0,0,2,1,0) --above the furnace
-        f.fillFurnace("Down")
-        if f.isTree() then
-            goto continue
-        end
-        m.goForward(true)
-        m.goDown(true)
-        m.turnRight()
-        m.turnRight()
-        f.fillFurnace("Forward")
-        m.goDown(true)
-        m.goForward(true)
-        turtle.suckUp()
-        m.goTo(2,2,0,1,0)
-        f.dumpWood()
-        m.goTo(2,-2,0,1,0)
-        f.dumpCharcoal()
-        m.goTo(-2,2,0,1,0)
-        f.dumpOther()
+        m.pathTo(0, 0, 0, false) --under the furnace
+        f.fillFurnace("Up")
         print("Sweep up")
-        f.sweepUp()
+        f.sweepUp(6)
+        print("Plant Trees")
+        f.plant(itemTypes.saplingTypes, layout["trees"])        
         print("Going Home")
-        m.goHome()
+        m.pathTo(0, 0, 0, false)
         sleep(0.5)
     end
 end
@@ -141,7 +137,11 @@ if arg1 then
         megaSpruce()
     end
 else
-    print("Please provide valid arguments:")
-    print("1: oak farmer")
-    print("2: megaSpruce farmer")
+    tree = f.waitForTree()
+    print("Tree found Mining!")
+    if tree == "minecraft:spruce_log" then
+        megaSpruce()
+    else
+        oakFarm()
+    end
 end
