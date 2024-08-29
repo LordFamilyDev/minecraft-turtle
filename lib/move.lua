@@ -732,7 +732,7 @@ function lib.spiralOut(radius, sweep)
         lib.pathTo(x, z, d, true)
       end
       
-      x, z = lib.getDirLeft(x, z)
+      xd, zd = lib.getDirLeft(xd, zd)
 
       if side % 2 == 0 then
         steps = steps + 1
