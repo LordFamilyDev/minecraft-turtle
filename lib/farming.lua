@@ -41,6 +41,9 @@ function farm.mineLeaves()
     end
 end
 
+function farm.plant(locationList, itemTypeList)
+end
+
 --assumes you are 1 above ground level (above the sapling)
 function farm.sweepUp(radius)
     move.spiralOut(radius,true)
