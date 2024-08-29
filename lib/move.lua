@@ -1,5 +1,6 @@
 itemTypes = require("/lib/item_types")
-
+lib_debug = require("/lib/lib_debug")
+lib_debug.set_verbose(false)
 
 local lib = {}
 
@@ -20,8 +21,28 @@ function lib.setHome()
     _G.relativePosition.zDir = 0
 end
 
+function lib.setPos(x,z,d,xd,zd)
+    _G.relativePosition.depth = d
+    _G.relativePosition.xPos = x
+    _G.relativePosition.zPos = z
+    if xd~= nil and zd ~= nil then
+        _G.relativePosition.xDir = xd
+        _G.relativePosition.zDir = zd
+    end
+end
+
+
+function lib.getDirRight(x, z)
+    return -z, x
+end
+
+function lib.getDirLeft(x, z)
+    return z, -x
+end
+
 lib.whitelist = {}
-lib.blacklist = {}
+lib.blacklist = itemTypes.noMine
+lib.tether = 34
 
 function lib.distToHome()
     return math.abs(_G.relativePosition.xPos) + math.abs(_G.relativePosition.zPos) + math.abs(_G.relativePosition.depth)
@@ -38,14 +59,38 @@ function lib.maxDimToHome()
     return val
 end
 
-function lib.faceDir(x, z)
-    while x ~= _G.relativePosition.xDir or z ~= _G.relativePosition.zDir do
-        turnRight()
-    end
+function lib.setTether(t)
+    lib.tether = t
+end
+
+function lib.getTether()
+    return lib.tether
 end
 
 function lib.getDir()
     return _G.relativePosition.xDir, _G.relativePosition.zDir
+end
+
+function lib.getTurnCount(xC, zC, xT, zT)
+    local turns = 0
+    local x, z = xC, zC
+    while x ~= xT or z ~= zT do
+        x, z = lib.getDirRight(x, z)
+        turns = turns + 1
+    end
+    return turns
+end
+
+function lib.faceDir(x, z)
+    local turns = lib.getTurnCount(_G.relativePosition.xDir, _G.relativePosition.zDir, x, z)    
+    if turns == 1 then
+        turnRight()
+    elseif turns == 2 then
+        turnRight()
+        turnRight()
+    elseif turns == 3 then
+        turnLeft()
+    end
 end
 
 function lib.getPos()
@@ -109,6 +154,8 @@ function lib.isWhitelist(direction)
         return true
     end
     
+    --print("Checking: "..data.name)
+
     return itemTypes.isItemInList(data.name, lib.whitelist)
 end
 
@@ -137,6 +184,7 @@ end
 function lib.canDig(dir)
     -- Check if the block is blacklisted
     if lib.isBlacklist(dir) then
+        --print("Block Blacklisted")
         return false
     end
 
@@ -145,6 +193,15 @@ function lib.canDig(dir)
         return true
     end
 
+    --print("Block Not Whitelisted")
+    return false
+end
+
+function lib.overTether()
+    if lib.tether > 0 and lib.distToHome() > lib.tether then
+        print("Tether reached")
+        return true
+    end
     return false
 end
 
@@ -223,33 +280,19 @@ end
 
 function lib.turnLeft()
     turtle.turnLeft()
-    _G.relativePosition.xDir, _G.relativePosition.zDir = _G.relativePosition.zDir, -_G.relativePosition.xDir
+    _G.relativePosition.xDir, _G.relativePosition.zDir = lib.getDirLeft(_G.relativePosition.xDir,  _G.relativePosition.zDir)
 end
 
 function lib.turnRight()
     turtle.turnRight()
-    _G.relativePosition.xDir, _G.relativePosition.zDir = -_G.relativePosition.zDir, _G.relativePosition.xDir
-end
-
-function lib.goBackwards(dig)
-    if turtle.back() then
-        _G.relativePosition.xPos = _G.relativePosition.xPos - _G.relativePosition.xDir
-        _G.relativePosition.zPos = _G.relativePosition.zPos - _G.relativePosition.zDir
-        return true
-    elseif not dig then
-        return false
-    end
-
-    lib.turnRight()
-    lib.turnRight()
-    local moveResult = lib.goForward(dig)
-    lib.turnRight()
-    lib.turnRight()
-
-    return moveResult
+    _G.relativePosition.xDir, _G.relativePosition.zDir = lib.getDirRight(_G.relativePosition.xDir, _G.relativePosition.zDir)
 end
 
 function lib.goForward(dig)
+    if lib.overTether() then
+        print("Past My Tether.")
+        return false
+    end
     if turtle.forward() then
         _G.relativePosition.xPos = _G.relativePosition.xPos + _G.relativePosition.xDir
         _G.relativePosition.zPos = _G.relativePosition.zPos + _G.relativePosition.zDir
@@ -259,9 +302,10 @@ function lib.goForward(dig)
     end
 
     --dig enabled and want to move forward,
+
     -- Check the lists
     if not lib.canDig("forward") then
-        return
+        return false
     end
     --dig until shit stops falling if possible
     while not turtle.forward() do
@@ -288,8 +332,49 @@ function lib.goForward(dig)
     return true
 end
 
-function lib.goUp(dig)
+function lib.goBackwards(dig)
+    if lib.overTether() then
+        return false
+    end
+    if turtle.back() then
+        _G.relativePosition.xPos = _G.relativePosition.xPos - _G.relativePosition.xDir
+        _G.relativePosition.zPos = _G.relativePosition.zPos - _G.relativePosition.zDir
+        return true
+    elseif not dig then
+        return false
+    end
 
+    lib.turnRight()
+    lib.turnRight()
+    local moveResult = lib.goForward(dig)
+    lib.turnRight()
+    lib.turnRight()
+
+    return moveResult
+end
+
+function lib.goLeft(digFlag, turnFlag)
+    lib.turnLeft()
+    local moveResult = lib.goForward(digFlag)
+    if turnFlag then
+        lib.turnRight()
+    end
+    return moveResult
+end
+
+function lib.goRight(digFlag, turnFlag)
+    lib.turnRight()
+    local moveResult = lib.goForward(digFlag)
+    if turnFlag then
+        lib.turnLeft()
+    end
+    return moveResult
+end
+
+function lib.goUp(dig)
+    if lib.overTether() then
+        return false
+    end
     if turtle.up() then
         _G.relativePosition.depth = _G.relativePosition.depth + 1
         return true
@@ -300,7 +385,7 @@ function lib.goUp(dig)
     --dig enabled and want to move up, dig until shit stops falling if possible
     -- Check the lists
     if not lib.canDig("up") then
-        return
+        return false
     end
 
     while not turtle.up() do
@@ -327,6 +412,9 @@ function lib.goUp(dig)
 end
 
 function lib.goDown(dig)
+    if lib.overTether() then
+        return false
+    end
     if turtle.down() then
         _G.relativePosition.depth = _G.relativePosition.depth - 1
         return true
@@ -345,25 +433,6 @@ function lib.goDown(dig)
         end
     end
     return false
-end
-
-function lib.spiralOut(radius)
-    local side = 1
-    local steps = 1
-    
-    while side <= radius * 2 do
-      for i = 1, steps do
-        lib.goForward(true)
-      end
-      
-      lib.turnLeft()
-      
-      if side % 2 == 0 then
-        steps = steps + 1
-      end
-      
-      side = side + 1
-    end
 end
 
 function lib.goTo(x,z,depth, xd, zd)
@@ -427,6 +496,266 @@ end
 
 function lib.goHome()
     lib.goTo(0,0,0,1,0)
+end
+
+
+-- Directions from the turtle's perspective
+local allDirectionsFU = {
+        {1,0,0}, --forward
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+local allDirectionsFD = {
+        {1,0,0}, --forward
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+local allDirectionsUDF = {
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+local allDirectionsDUF = {
+        {0,0,1}, --up
+        {0,0,-1}, --down
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+
+local allDirectionsLIN = {
+        {1,0,0}, --forward
+        {0,1,0}, --right
+        {0,-1,0}, --left
+        {-1,0,0} --back
+    }
+
+local BIG_NUMBER = 1000000
+-- Helper function to calculate Manhattan distance
+function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
+    return ( math.abs((x1 - x2)) + math.abs((z1 - z2)) + math.abs((d1 - d2)) )
+end
+
+function lib.getIndex(x, z, d)
+    return x .. "," .. z .. " ," .. d
+end
+
+function lib.invert(xD, zD, dD)
+    return -xD, -zD, -dD
+end
+
+-- get Neighbor Scores
+function lib.isInTable(tbl, item)
+    for _, value in ipairs(tbl) do
+        if value == item then
+            return true
+        end
+    end
+    return false
+end
+
+function lib.getNeighborScores(currentPos, goal, obstacles, visited, allDirections)
+    local neighborScores = {}
+    local x, z, d = unpack(currentPos)
+    local xT, zT, dT = unpack(goal)
+    for i = 1, #allDirections do
+        local xD, zD, dD = unpack(allDirections[i]) 
+        local xN, zN, dN = x + xD, z + zD, d + dD
+        local index = lib.getIndex(xN, zN, dN)
+        score = BIG_NUMBER
+        if obstacles[index] ~= nil then
+            score = BIG_NUMBER
+        elseif visited[index] ~= nil then
+            score = BIG_NUMBER
+        else
+            score = lib.manhattanDistance(xN, zN, dN, xT, zT, dT)
+        end
+        table.insert(neighborScores, {xN, zN, dN, xD, zD, dD, score})
+    end
+    return neighborScores
+end
+
+function lib.getLowestScore(scores)
+    local lowest = scores[1]
+    local index = 1
+    for i = 2, #scores do
+        if scores[i][7] < lowest[7] then
+            index = i
+            lowest = scores[i]
+        end
+    end
+    return lowest, index, lowest[7] == BIG_NUMBER
+end
+
+
+function lib.step(xD, zD, dD, digFlag)
+    if turtle.getFuelLevel() == 0 then
+        error("Out of Fuel")
+    end
+    local err = false
+    if xD == 1 then
+        err = lib.goForward(digFlag)
+    elseif xD == -1 then
+        err = lib.goBackwards(digFlag)
+    elseif zD == 1 then
+        err = lib.goRight(digFlag, true)
+    elseif zD == -1 then
+        err = lib.goLeft(digFlag, true)
+    elseif dD == 1 then
+        err = lib.goUp(digFlag)
+    elseif dD == -1 then
+        err = lib.goDown(digFlag)
+    end
+    lib_debug.print_debug("Stepping"..xD.." "..zD.." "..dD .. " ::".. tostring(err))
+    return err
+end
+
+-- Finds path to xzd coordinates based on relative position
+lib.aggressiveness = 3
+
+function lib.pathTo(x, z, d, digFlag, dPrefStr)
+    local path = {}
+    local obstacles = {}
+    local visited = {}
+    local start = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
+    local goal = {x, z, d}
+    local current = start
+    local pathIndex = 1
+    local localMinScore = BIG_NUMBER
+
+    local dirPref = allDirectionsFU
+    if dPrefStr ~= nil then
+        if dPrefStr == "FD" then
+            dirPref = allDirectionsFD
+        elseif dPrefStr == "FU" then
+            dirPref = allDirectionsFU
+        elseif dPrefStr == "UDF" then
+            dirPref = allDirectionsUDF
+        elseif dPrefStr == "DUF" then
+            dirPref = allDirectionsDUF
+        elseif dPrefStr == "LIN" then
+            dirPref = allDirectionsLIN
+        end
+    end
+
+
+
+    local currentIndex = lib.getIndex(current[1],current[2],current[3])
+    local goalIndex = lib.getIndex(goal[1],goal[2],goal[3])
+    visited[currentIndex] = true
+    while not (currentIndex == goalIndex) do
+        -- read()
+        
+        local neighborScores = lib.getNeighborScores(current, goal, obstacles, visited, dirPref)
+
+        -- for i = 1, #neighborScores do
+        --     print("N:",unpack(neighborScores[i]))
+        -- end 
+        -- read()
+        lib_debug.print_debug("current:" .. currentIndex .. "goal:" .. goalIndex)
+
+        while #neighborScores > 0 do
+            local n, scoreIndex, deadend = lib.getLowestScore(neighborScores)
+            lib_debug.print_debug("next:",unpack(n),scoreIndex,deadend)
+            if n[7] < localMinScore then
+                localMinScore = n[7] 
+            end
+
+            if n[7] > (localMinScore + lib.aggressiveness) then
+                print("!!!BHailing. No path found!!!")
+                return false
+            end 
+                        
+            if deadend then
+                if #path == 0 then
+                    print("!!!No path found!!!")
+                    return false
+                else
+                    lib_debug.print_debug("backtracking:")
+                    obstacles[currentIndex] = true
+                    n = path[1]
+                    table.remove(path, 1)
+                    local xN, zN, dN, xD, zD, dD, s = unpack(n)
+                    
+                    -- no need to chech other neighbor scores
+                    if lib.step(xD, zD, dD, true) then -- if we are backtracking...dig through shit in our way
+                        current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
+                        break
+                    else
+                        print("Turtle stuck")
+                        return false
+                    end
+                end
+            end
+
+            local xN, zN, dN, xD, zD, dD, s = unpack(n)
+            local nextIndex = lib.getIndex(xN, zN, dN)
+            lib_debug.print_debug("trying:" .. nextIndex .. "Score" .. s )
+                
+            if lib.step(xD, zD, dD, digFlag) then
+                -- if sucess add to path and find the next step
+                xP, zP, dP = lib.invert(xD, zD, dD)
+                table.insert(path, 1, {current[1],current[2],current[3],xP,zP,dP,0} )
+                current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
+                currentIndex = lib.getIndex(current[1],current[2],current[3])
+                visited[currentIndex] = true
+                break
+            else
+                --make sure we havent been given the impossible
+                if nextIndex == goalIndex then
+                    print("We Got To: " .. goalIndex)
+                    return true
+                end
+                -- else add to obstacles and try next lowest score
+                lib_debug.print_debug("Adding to obstacles"..nextIndex)
+                obstacles[nextIndex] = true
+                table.remove(neighborScores, scoreIndex)
+            end
+        end
+        if #neighborScores == 0 then
+            print("!!!No path found!!!")
+            return false
+        end
+    end
+    print("We Got To: " .. goalIndex)
+    return true
+end
+
+
+function lib.spiralOut(radius, sweep)
+    local side = 1
+    local steps = 1
+    local x, z, d = lib.getPos()
+    local xd, zd = lib.getDir()
+    while side <= radius * 2 do
+      if sweep then
+        turtle.suckDown()
+      end
+      for i = 1, steps do
+        x = x + xd
+        z = z + zd
+        print("Pathing to: "..x..","..z..","..d)
+        lib.pathTo(x, z, d, true)
+      end
+      
+      xd, zd = lib.getDirLeft(xd, zd)
+
+      if side % 2 == 0 then
+        steps = steps + 1
+      end
+      
+      side = side + 1
+    end
 end
 
 lib.moveMemory = ""
