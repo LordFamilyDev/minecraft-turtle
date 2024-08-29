@@ -30,9 +30,10 @@ function oakFarm()
         ["furnace"] = {0,0,1},
         ["trees"] = {{1,1,0},{-1,1,0},{1,-1,0},{-1,-1,0}}
     }
+    m.setHome()
+    m.addWhitelist(itemTypes.treeBlocks)
+
     while true do
-        m.setHome()
-        m.addWhitelist(itemTypes.treeBlocks)
         ::continue::
         f.waitForTree()
         print("Tree found Mining!")
