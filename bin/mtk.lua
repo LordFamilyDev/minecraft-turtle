@@ -89,6 +89,37 @@ local function replenish_slot(slot)
     return true
 end
 
+-- Serialization functions
+local function serialize_snapshot(path)
+    local file = io.open(path, "w")
+    if not file then
+        print("Error: Unable to open file for writing")
+        return false
+    end
+    for i, item in ipairs(mtk.inventory_snapshot) do
+        file:write(i .. "," .. (item or "nil") .. "\n")
+    end
+    file:close()
+    return true
+end
+
+local function deserialize_snapshot(path)
+    local file = io.open(path, "r")
+    if not file then
+        print("Error: Unable to open file for reading")
+        return false
+    end
+    mtk.inventory_snapshot = {}
+    for line in file:lines() do
+        local index, item = line:match("(%d+),(.+)")
+        index = tonumber(index)
+        if item == "nil" then item = nil end
+        mtk.inventory_snapshot[index] = item
+    end
+    file:close()
+    return true
+end
+
 -- Macro functions
 local macro_functions = {
     mf = function() 
@@ -122,7 +153,7 @@ local macro_functions = {
         local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
         if slot and slot >= 1 and slot <= 16 then
             debug_print("Select slot", slot)
-            if turtle.getItemCount(slot) == 0 and mtk.inventory_snapshot[slot] then
+            if turtle.getItemCount(slot) <= 1 and mtk.inventory_snapshot[slot] then
                 if not replenish_slot(slot) then
                     return false, mtk.inventory_snapshot[slot]
                 end
@@ -134,9 +165,20 @@ local macro_functions = {
         end
         return true
     end,
+    S = function(c)
+        local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
+        if slot and slot >= 1 and slot <= 16 then
+            debug_print("Blindly select slot", slot)
+            turtle.select(slot)
+            mtk.lastSelected = slot
+        else
+            debug_print("Invalid slot:", c)
+        end
+        return true
+    end,
     pf = function() 
         debug_print("Place forward") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
             if not replenish_slot(mtk.lastSelected) then
                 return false, mtk.inventory_snapshot[mtk.lastSelected]
             end
@@ -145,7 +187,7 @@ local macro_functions = {
     end,
     pu = function() 
         debug_print("Place up") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
             if not replenish_slot(mtk.lastSelected) then
                 return false, mtk.inventory_snapshot[mtk.lastSelected]
             end
@@ -154,12 +196,33 @@ local macro_functions = {
     end,
     pd = function() 
         debug_print("Place down") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
             if not replenish_slot(mtk.lastSelected) then
                 return false, mtk.inventory_snapshot[mtk.lastSelected]
             end
         end
         return turtle.placeDown()
+    end,
+    Pf = function() 
+        debug_print("Blindly place forward") 
+        if not turtle.place() then
+            return false, "No items to place"
+        end
+        return true
+    end,
+    Pu = function() 
+        debug_print("Blindly place up") 
+        if not turtle.placeUp() then
+            return false, "No items to place"
+        end
+        return true
+    end,
+    Pd = function() 
+        debug_print("Blindly place down") 
+        if not turtle.placeDown() then
+            return false, "No items to place"
+        end
+        return true
     end,
     lf = function() 
         debug_print("Look forward")
@@ -289,41 +352,44 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
             local main_code = func_code:sub(1, 1)
             local sub_code = func_code:sub(2, 2)
             
-            local success, missing_item
+            local success, error_message
             if macro_functions[func_code] then
-                success, missing_item = macro_functions[func_code]()
+                success, error_message = macro_functions[func_code]()
             elseif macro_functions[main_code] then
-                if main_code == "s" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                    success, missing_item = macro_functions[main_code](sub_code)
+                if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
+                    success, error_message = macro_functions[main_code](sub_code)
                 else
-                    success, missing_item = macro_functions[main_code]()
+                    success, error_message = macro_functions[main_code]()
                 end
             else
                 print("Unknown macro command: " .. func_code)
             end
             
-            if not success and missing_item then
-                local message = string.format("Paused at index %d, loop %d. Missing item: %s", i, current_loop, missing_item)
+            if not success then
+                local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message or "Unknown error")
                 print(message)
-                return i, current_loop, missing_item
+                return false, message
             end
             
             if mtk.quit_flag then
-                return
+                return true
             end
         end
-        start_index = 1  -- Reset start_index after the first loop
+        start_index = 1
     end
+    return true
 end
 
 -- Command-line interface
 local function print_usage()
-    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t]")
+    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
     print("  -m, --macro    Macro string (required unless -t is used)")
     print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
     print("  -i, --index    Starting index for the macro (optional, default: 1)")
     print("  -v, --verbose  Enable debug output")
     print("  -t, --test     Enter test interface (REPL mode)")
+    print("  -S <path>      Serialize and save inventory snapshot to file")
+    print("  -s <path>      Load inventory snapshot from file")
     print("  -h, --help     Print this help message")
 end
 
@@ -352,10 +418,14 @@ local function run_test_interface()
             clear_console()
         else
             command_index = command_index + 1
-            local result = mtk.execute_macro(input)
-            if result then
-                print(string.format("Macro paused. Index: %d, Loop: 0, Missing item: %s", command_index, result[3]))
-            elseif not result and mtk.quit_flag then
+            local result, error_message = mtk.execute_macro(input)
+            if result == false then
+                if type(error_message) == "string" then
+                    print(string.format("Macro paused. Index: %d, Loop: 0, Error: %s", command_index, error_message))
+                else
+                    print(string.format("Macro paused. Index: %d, Loop: 0, Unknown error", command_index))
+                end
+            elseif mtk.quit_flag then
                 break
             end
         end
@@ -367,6 +437,8 @@ function mtk.run_cli(args)
     local loop_count = 1
     local start_index = 1
     local test_mode = false
+    local save_path = nil
+    local load_path = nil
 
     local i = 1
     while i <= #args do
@@ -389,12 +461,34 @@ function mtk.run_cli(args)
             end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
+        elseif args[i] == "-S" then
+            i = i + 1
+            save_path = args[i]
+        elseif args[i] == "-s" then
+            i = i + 1
+            load_path = args[i]
         else
             print("Unknown argument: " .. args[i])
             print_usage()
             return
         end
         i = i + 1
+    end
+
+    if load_path then
+        if not deserialize_snapshot(load_path) then
+            print("Failed to load inventory snapshot from " .. load_path)
+            return
+        end
+    else
+        take_inventory_snapshot()
+    end
+
+    if save_path then
+        if not serialize_snapshot(save_path) then
+            print("Failed to save inventory snapshot to " .. save_path)
+            return
+        end
     end
 
     if test_mode then
