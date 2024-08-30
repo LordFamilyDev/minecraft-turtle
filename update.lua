@@ -44,7 +44,7 @@ local function prompt_for_url()
     print("-u <custom URL> : switches to custom url")
 
 
-    print("Please enter the URL for the JSON data:")
+    print("Please enter the root URL for the files tree:")
     return read()
 end
 

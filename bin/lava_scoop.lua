@@ -104,8 +104,9 @@ local function lavaScoop()
 end
 
 local function findLavaAndScoop(iterations)
-    if not hasBucket() then
-        error("No bucket found in inventory")
+    while not hasBucket() do
+        print("Give me a bucket...")
+        sleep(2)
     end
     move.setHome()
 

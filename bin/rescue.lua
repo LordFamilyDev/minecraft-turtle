@@ -1,2 +1,2 @@
-require(/move/move.lua)
+require("/move/move.lua")
 
