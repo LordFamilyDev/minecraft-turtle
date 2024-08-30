@@ -1,174 +1,121 @@
-# Macro Toolkit (MTK) for ComputerCraft Turtles
+# Macro Toolkit (MTK) for ComputerCraft
 
 ## Overview
 
-The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft turtles. It provides a simple yet powerful macro system for automating turtle actions, with support for both command-line execution and integration as a module in other scripts.
+The Macro Toolkit (MTK) is a powerful scripting tool for ComputerCraft turtles, allowing users to create complex sequences of actions using simple, compact commands. MTK is designed to streamline turtle programming, making it easier to automate tasks in Minecraft.
 
 ## Features
 
-- Compact macro language for turtle actions
-- Support for movement, digging, placing, and inventory management
-- Waypoint and chest position management
-- Integration with advanced movement libraries (when available)
-- Command-line interface with looping and verbose mode options
-- Interactive test mode (REPL) for easy experimentation
-- Extensible with custom functions
-- Advanced inventory management with automatic replenishment
-- Ability to resume macros from a specific index
-- Blind inventory selection and placement options
-- Inventory snapshot serialization and deserialization
+- Compact command syntax for turtle actions
+- Support for movement, digging, placing blocks, and inventory management
+- Waypoint system for easy navigation
+- Chest operations for automated storage management
+- Jump and return functionality for creating loops and subroutines
+- Inventory snapshot and replenishment capabilities
 
 ## Installation
 
-1. Save the `mtk.lua` file to your turtle's file system.
-2. (Optional) Place the `move.lua`, `item_types.lua`, and `lib_debug.lua` libraries in the `/lib/` directory for advanced functionality.
+1. Save the MTK script as `/bin/mtk` on your ComputerCraft computer or turtle.
+2. Ensure that the required libraries (`move`, `item_types`, and `lib_debug`) are present in the `/lib/` directory.
 
 ## Usage
 
-### Command-line Interface
+### Basic Syntax
 
-Run the script directly with:
+MTK commands are typically two-character combinations. Here are some examples:
 
-```
-mtk -m <macro_string> [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]
-```
+- `mf`: Move forward
+- `mb`: Move backward
+- `mu`: Move up
+- `md`: Move down
+- `tl`: Turn left
+- `tr`: Turn right
+- `df`: Dig forward
+- `du`: Dig up
+- `dd`: Dig down
+- `pf`: Place forward
+- `pu`: Place up
+- `pd`: Place down
 
-Options:
-- `-m, --macro`: Macro string (required unless -t is used)
-- `-l, --loop`: Number of times to loop the macro (optional, default: 1)
-- `-i, --index`: Starting index for the macro (optional, default: 1)
-- `-v, --verbose`: Enable debug output
-- `-t, --test`: Enter test interface (REPL mode)
-- `-S <path>`: Serialize and save inventory snapshot to file
-- `-s <path>`: Load inventory snapshot from file
-- `-h, --help`: Print help message
-- `-x`        : Label inner loop lengths in order: [loop count x1] [loop count x2] etc
+### Running MTK
 
-### As a Module
+To execute a sequence of MTK commands:
 
 ```lua
-local mtk = require("mtk")
-local success, error_message = mtk("mfmftrdfpf", 2, 1)  -- Execute the macro "mfmftrdfpf" twice, starting from index 1
-
-if not success then
-    print("Macro execution failed:", error_message)
-end
+mtk("mfmftrdfpf")
 ```
 
-### Macro Commands
+This would move the turtle forward twice, turn right, dig forward, and place a block forward.
 
-- Movement: `mf` (forward), `mb` (back), `mu` (up), `md` (down), `tr` (turn right), `tl` (turn left)
-- Digging: `df` (forward), `du` (up), `dd` (down)
-- Placing: `pf` (forward), `pu` (up), `pd` (down)
-- Blind Placing: `Pf` (forward), `Pu` (up), `Pd` (down)
-- Inventory: `s[0-F]` (select slot with replenishment, hex)
-- Blind Inventory Selection: `S[0-F]` (select slot without replenishment, hex)
-- Inspection: `lf` (look forward), `lu` (look up), `ld` (look down)
-- Waypoints: `W[c]` (set), `w[c]` (go to)
-- Chests: `C[c]` (set), `c[c]` (go to)
-- Utility: `re` (refuel), `dt` (dump trash), `gh` (go home), `Gh` (set home), `q` (quit)
-- LoopStart: `x[c]` (loop start), `X[c]` (loop end) inner loops, can be nested (Tom: todo)
+### Command-line Interface
 
-### Test Mode
+MTK can be run from the command line with various options:
 
-In test mode, enter macro commands interactively. Special commands:
-- `exit` or `q`: Quit the test interface
-- `clear`: Clear the console
+```
+mtk [-m <macro_string>] [-j <jump_counts>] [-x <loop_counts>] [-v] [-t] [-S <save_path>] [-s <load_path>]
+```
 
-## Advanced Features
+- `-m, --macro`: Specify the macro string to execute
+- `-j, --jumps`: Specify jump counts for loops (e.g., "5,2,,2")
+- `-x`: (Deprecated) Specify loop counts (use `-j` instead)
+- `-v, --verbose`: Enable verbose debug output
+- `-t, --test`: Enter test interface (REPL mode)
+- `-S <path>`: Save inventory snapshot to file
+- `-s <path>`: Load inventory snapshot from file
+
+### Waypoints and Chests
+
+- `W<x>`: Set waypoint (e.g., `W0` sets waypoint 0)
+- `w<x>`: Go to waypoint (e.g., `w0` goes to waypoint 0)
+- `C<x>`: Set chest position (e.g., `C0` sets chest 0)
+- `c<x>`: Go to chest (e.g., `c0` goes to chest 0)
+
+### Jumps and Returns
+
+- `J<x>`: Set a jump label (e.g., `J0`)
+- `j<x>`: Jump to a label (e.g., `j0`)
+- `r<x>`: Return from a jump (e.g., `r0`)
+
+Use these to create loops and subroutines in your macros.
 
 ### Inventory Management
 
-MTK now includes advanced inventory management:
-- At the start of a macro execution, a snapshot of the inventory is taken.
-- When selecting a slot (`s[0-F]`), if the slot has 1 or fewer items and wasn't empty in the initial snapshot, MTK attempts to replenish it from other slots.
-- When placing blocks (`pf`, `pu`, `pd`), if the current slot has 1 or fewer items, MTK attempts to replenish it based on the last selected slot's initial content.
-- Blind selection (`S[0-F]`) and blind placement (`Pf`, `Pu`, `Pd`) commands are available for operations without automatic replenishment.
-
-### Inventory Snapshot Serialization
-
-You can now save and load inventory snapshots:
-- Use the `-S <path>` command-line option to save the current inventory snapshot to a file.
-- Use the `-s <path>` command-line option to load a previously saved inventory snapshot.
-
-### Resuming Macros
-
-You can now resume a macro from a specific index:
-- Use the `-i` command-line option to specify the starting index.
-- When using MTK as a module, provide the starting index as the third argument.
-
-### Error Handling
-
-If MTK encounters an error during execution (e.g., failed movement, unable to place a block), it will pause execution and return:
-- A boolean indicating success or failure
-- An error message describing the issue
+- `s<x>`: Select inventory slot (hex value, e.g., `s0` for slot 1, `sa` for slot 11)
+- `re`: Refuel the turtle
+- `dt`: Dump trash items
 
 ## Examples
 
-1. Move forward 3 times, turn right, and dig:
+1. Simple mining operation:
    ```
-   mtk -m mfmfmftrdf
-   ```
-
-2. Set a waypoint 'A', move in a square, and return to 'A':
-   ```
-   mtk -m WAmfmftrtrwA
+   mtk -m "mfdfmfdfmfdf"
    ```
 
-3. Run a macro 5 times with verbose output, starting from the 3rd command:
+2. Create a 3x3 platform:
    ```
-   mtk -m mfdfmbdu -l 5 -i 3 -v
-   ```
-
-4. Save the current inventory snapshot and run a macro:
-   ```
-   mtk -S inventory.snap -m mfPfmfPf
+   mtk -m "pdmfpdmftrpdmfpdtrpdmfpd"
    ```
 
-5. Load a saved inventory snapshot and run a macro:
+3. Loop with jumps:
    ```
-   mtk -s inventory.snap -m mfPfmfPf
+   mtk -m "J0mfdfj0" -j 5
    ```
+   This will move forward and dig 5 times.
 
-6. Enter test mode:
+4. Function-like behavior:
    ```
-   mtk -t
+   mtk -m "J0mfdfr0muj0mdj0"
    ```
+   This creates a reusable "move and dig" function.
 
-7. Simple flying machine (internal looping with prefix and postfix):
-   ```
-   mtk -m muddpdmfmdmddupumbmbmumux1mfmdmdmfmfmumudumdmdpumbmbmumuX1mdmdmfmudf -x 5
-   ```
+## Note on Deprecated Features
 
-8. Bore down (nested looping):
-   ```
-   mtk -m mfmfx1mdx2dftrX2X1 -x 5 4
-   ```
+The `-x` argument for specifying loop counts is deprecated. Please use the `-j` argument instead. The `-x` argument will be removed in a future version.
 
-## Extending MTK
+## Contributing
 
-Custom functions can be added to `mtk.func` table:
-
-```lua
-local mtk = require("mtk")
-mtk.func.x = function() 
-    -- Custom function logic
-end
-```
-
-Then use `fx` in your macro to call this function.
-
-## Dependencies
-
-- ComputerCraft environment
-- (Optional) Move Library (`/lib/move.lua`)
-- (Optional) Item Types Library (`/lib/item_types.lua`)
-- (Optional) Debug Library (`/lib/lib_debug.lua`)
+Contributions to MTK are welcome! Please submit pull requests or open issues on the project's GitHub repository.
 
 ## License
 
 [Specify your license here]
-
-## Contributing
-
-[Add contribution guidelines if applicable]

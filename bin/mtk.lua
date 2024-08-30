@@ -33,8 +33,10 @@ mtk.quit_flag = false
 mtk.inventory_snapshot = {}
 mtk.lastSelected = 1
 
-mtk.loopMem = {}
-mtk.loopTargets = {}
+-- New variables for jump and function call-like behavior
+mtk.jump_counts = {}
+mtk.jump_stacks = {}
+mtk.current_index = 1
 
 -- Debug function
 local function debug_print(...)
@@ -180,44 +182,6 @@ local macro_functions = {
     df = function() debug_print("Dig forward") turtle.dig() end,
     du = function() debug_print("Dig up") turtle.digUp() end,
     dd = function() debug_print("Dig down") turtle.digDown() end,
-    x = function(c, macro_string)
-        --technically do nothing, this is just a loopback location
-    end,
-    X = function(c, macro_string)
-        c = tonumber(c)
-
-        if #mtk.loopMem == 0 then
-            for i = 1, #mtk.loopTargets do
-                table.insert(mtk.loopMem, 1)
-            end
-        end
-
-        --if loopTarget and loopMem < loopTarget, loopMem +=1 return loop back index
-        if mtk.loopTargets[c] and mtk.loopMem[c] and mtk.loopMem[c] < mtk.loopTargets[c] then
-            mtk.loopMem[c] = mtk.loopMem[c] + 1
-
-            --look for loop start string and return macro index
-            local tag = "x" .. c
-            local xxStart, xxEnd = string.find(macro_string, tag)
-            if xxStart then
-                --reset any start loop flags after this
-                for i = xxStart + 1, #macro_string - 1 do
-                    local nestedStart, nestedEnd =string.find(macro_string, "x", i)
-                    if nestedStart then
-
-                        local nestedC = tonumber(macro_string:sub(nestedStart+1,nestedStart+1))
-                        if nestedC then
-                            mtk.loopMem[nestedC] = 1
-                        end
-                    end
-                end
-
-                return xxStart
-            else
-                return false, "no start tag found"
-            end
-        end
-    end,
     s = function(c)
         local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
         if slot and slot >= 1 and slot <= 16 then
@@ -355,8 +319,8 @@ local macro_functions = {
         end
     end,
     f = function(c)
+        debug_print("Run function", c)
         if mtk.func[c] then
-            debug_print("Run function", c)
             mtk.func[c]()
         else
             debug_print("No function defined for f" .. c)
@@ -409,76 +373,113 @@ local macro_functions = {
     q = function()
         debug_print("Quit")
         mtk.quit_flag = true
+    end,
+    
+    -- Deprecated functions
+    x = function(c)
+        debug_print("DEPRECATED: Loop start", c)
+        print("Warning: 'x' is deprecated. Use 'J' and 'j' instead.")
+        -- Functionality removed
+    end,
+    X = function(c)
+        debug_print("DEPRECATED: Loop end", c)
+        print("Warning: 'X' is deprecated. Use 'J' and 'j' instead.")
+        -- Functionality removed
+    end,
+    
+    -- New functions
+    J = function(c)
+        debug_print("Label", c)
+        -- This is a no-op, just for labeling
+        return true
+    end,
+    j = function(c)
+        debug_print("Jump", c)
+        local jump_count = mtk.jump_counts[c]
+        if jump_count == nil then
+            -- Function call-like behavior
+            if not mtk.jump_stacks[c] then
+                mtk.jump_stacks[c] = {}
+            end
+            if #mtk.jump_stacks[c] >= 1000 then
+                return false, "Stack overflow for jump " .. c
+            end
+            table.insert(mtk.jump_stacks[c], mtk.current_index)
+        elseif jump_count > 0 then
+            mtk.jump_counts[c] = jump_count - 1
+        end
+        -- Find the corresponding label
+        for i = 1, #mtk.macro_string, 2 do
+            local func_code = mtk.macro_string:sub(i, i+1)
+            if func_code == "J" .. c then
+                mtk.current_index = i - 2  -- Set to just before the label
+                return true
+            end
+        end
+        return false, "Label J" .. c .. " not found"
+    end,
+    r = function(c)
+        debug_print("Return", c)
+        if mtk.jump_counts[c] ~= nil then
+            return false, "Return called for non-function jump " .. c
+        end
+        if not mtk.jump_stacks[c] or #mtk.jump_stacks[c] == 0 then
+            return false, "Return stack empty for jump " .. c
+        end
+        mtk.current_index = table.remove(mtk.jump_stacks[c])
+        return true
     end
 }
 
 -- Main function to execute the macro
-function mtk.execute_macro(macro_string, loop_count, start_index)
-    loop_count = loop_count or 1
-    start_index = start_index or 1
+function mtk.execute_macro(macro_string, jump_counts)
+    mtk.macro_string = macro_string
+    mtk.jump_counts = jump_counts or {}
+    mtk.jump_stacks = {}
+    mtk.current_index = 1
     mtk.quit_flag = false
     take_inventory_snapshot()
-    
-    for current_loop = 1, loop_count do
 
-        local inner_loop_flag = true
-        while inner_loop_flag do
-            inner_loop_flag = false
+    while mtk.current_index <= #macro_string do
+        local func_code = macro_string:sub(mtk.current_index, mtk.current_index + 1)
+        local main_code = func_code:sub(1, 1)
+        local sub_code = func_code:sub(2, 2)
 
-            for i = start_index, #macro_string, 2 do
-                local func_code = macro_string:sub(i, i+1)
-                local main_code = func_code:sub(1, 1)
-                local sub_code = func_code:sub(2, 2)
-                
-                local result, error_message
-                if macro_functions[func_code] then
-                    result, error_message = macro_functions[func_code]()
-                elseif macro_functions[main_code] then
-                    if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                        result, error_message = macro_functions[main_code](sub_code)
-                    elseif main_code == "x" or main_code == "X" then
-                        result, error_message = macro_functions[main_code](sub_code, macro_string)
-                        if result then
-                            start_index = result
-                            inner_loop_flag = true
-                            break
-                        end
-                    else
-                        result, error_message = macro_functions[main_code]()
-                    end
-                else
-                    print("Unknown macro command: " .. func_code)
-                    return false, "Unknown command"
-                end
-                
-                if result == false and error_message then
-                    local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
-                    print(message)
-                    return false, message
-                end
-                
-                if mtk.quit_flag then
-                    return true
-                end
-            end
+        local result, error_message
+        if macro_functions[func_code] then
+            result, error_message = macro_functions[func_code]()
+        elseif macro_functions[main_code] then
+            result, error_message = macro_functions[main_code](sub_code)
+        else
+            print("Unknown macro command: " .. func_code)
+            return false, "Unknown command"
         end
-        --TL note: this may need to be debugged with inner loop handling
-        start_index = 1  -- Reset start_index after the first loop
+
+        if result == false and error_message then
+            local message = string.format("Error at index %d: %s", mtk.current_index, error_message)
+            print(message)
+            return false, message
+        end
+
+        if mtk.quit_flag then
+            return true
+        end
+
+        mtk.current_index = mtk.current_index + 2
     end
     return true
 end
 
 -- Command-line interface
 local function print_usage()
-    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
+    print("Usage: mtk [-m <macro_string>] [-j <jump_counts>] [-x <loop_counts>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
     print("  -m, --macro    Macro string (required unless -t is used)")
-    print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
-    print("  -i, --index    Starting index for the macro (optional, default: 1)")
+    print("  -j, --jumps    Jump counts, format: <n1>,<n2>,<n3>... (optional)")
+    print("  -x             DEPRECATED: Loop counts (use -j instead)")
     print("  -v, --verbose  Enable debug output")
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -S <path>      Serialize and save inventory snapshot to file")
     print("  -s <path>      Load inventory snapshot from file")
-    print("  -x             Label inner loop lengths in order: [loop count x1] [loop count x2] etc")
     print("  -h, --help     Print this help message")
 end
 
@@ -496,8 +497,7 @@ end
 local function run_test_interface()
     print("Entering test interface. Type 'exit' or 'q' to quit, 'clear' to clear console.")
     take_inventory_snapshot()  -- Take initial inventory snapshot
-    local command_index = 0
-    
+
     while true do
         io.write("m> ")
         local input = io.read()
@@ -506,8 +506,8 @@ local function run_test_interface()
         elseif input == "clear" then
             clear_console()
         else
-            command_index = command_index + 1
-            local success, error_message = mtk.execute_macro(input)
+            local jump_counts = {}
+            local success, error_message = mtk.execute_macro(input, jump_counts)
             if not success and error_message then
                 print(error_message)
             elseif mtk.quit_flag then
@@ -519,11 +519,11 @@ end
 
 function mtk.run_cli(args)
     local macro_string = nil
-    local loop_count = 1
-    local start_index = 1
+    local jump_counts = {}
     local test_mode = false
     local save_path = nil
     local load_path = nil
+    local deprecated_x_used = false
 
     local i = 1
     while i <= #args do
@@ -533,23 +533,21 @@ function mtk.run_cli(args)
         elseif args[i] == "-m" or args[i] == "--macro" then
             i = i + 1
             macro_string = args[i]
-        elseif args[i] == "-l" or args[i] == "--loop" then
+        elseif args[i] == "-j" or args[i] == "--jumps" then
             i = i + 1
-            loop_count = tonumber(args[i])
-        elseif args[i] == "-i" or args[i] == "--index" then
+            for count in args[i]:gmatch("([^,]+)") do
+                table.insert(jump_counts, tonumber(count) or nil)
+            end
+        elseif args[i] == "-x" then
+            deprecated_x_used = true
             i = i + 1
-            start_index = tonumber(args[i])
+            for count in args[i]:gmatch("%S+") do
+                table.insert(jump_counts, tonumber(count))
+            end
         elseif args[i] == "-v" or args[i] == "--verbose" then
             mtk.debug = true
             if lib_debug then
                 lib_debug.set_verbose(true)
-            end
-        elseif args[i] == "-x" or args[i] == "--innerLoops" then
-            mtk.loopTargets = {}
-            i = i + 1
-            while tonumber(args[i]) do
-                table.insert(mtk.loopTargets, tonumber(args[i]))
-                i = i + 1
             end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
@@ -565,6 +563,11 @@ function mtk.run_cli(args)
             return
         end
         i = i + 1
+    end
+
+    if deprecated_x_used then
+        print("Warning: The -x argument is deprecated. Please use -j instead.")
+        print("Example: -j " .. table.concat(jump_counts, ","))
     end
 
     if load_path then
@@ -590,7 +593,7 @@ function mtk.run_cli(args)
         print_usage()
         return
     else
-        mtk.execute_macro(macro_string, loop_count, start_index)
+        mtk.execute_macro(macro_string, jump_counts)
     end
 end
 
@@ -601,7 +604,7 @@ end
 
 -- Module interface
 return setmetatable(mtk, {
-    __call = function(_, macro_string, loop_count, start_index)
-        return mtk.execute_macro(macro_string, loop_count, start_index)
+    __call = function(_, macro_string, jump_counts)
+        return mtk.execute_macro(macro_string, jump_counts)
     end
 })
