@@ -185,8 +185,6 @@ local macro_functions = {
     end,
     X = function(c, macro_string)
         c = tonumber(c)
-        --returns macro and loop index adjustments
-        local macroIndex, loopIndex
 
         if #mtk.loopMem == 0 then
             for i = 1, #mtk.loopTargets do
