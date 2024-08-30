@@ -135,6 +135,16 @@ If MTK encounters an error during execution (e.g., failed movement, unable to pl
    mtk -t
    ```
 
+7. Simple flying machine:
+   ```
+   mtk -m muddpdmfmdmddupumbmbmumux1mfmdmdmfmfmumudumdmdpumbmbmumuX1mdmdmfmudf -x 5
+   ```
+
+8. Bore down:
+   ```
+   mtk -m mfmfx1mdx2dftrX2X1 -x 5 4
+   ```
+
 ## Extending MTK
 
 Custom functions can be added to `mtk.func` table:
