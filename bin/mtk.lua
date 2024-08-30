@@ -124,27 +124,53 @@ end
 local macro_functions = {
     mf = function() 
         debug_print("Move forward") 
-        if move then move.goForward(true) else turtle.forward() end 
+        if move then 
+            return move.goForward(true)
+        else 
+            return turtle.forward()
+        end 
     end,
     mb = function() 
         debug_print("Move back") 
-        if move then move.goBackwards(true) else turtle.back() end 
+        if move then 
+            return move.goBackwards(true)
+        else 
+            return turtle.back()
+        end 
     end,
     mu = function() 
         debug_print("Move up") 
-        if move then move.goUp(true) else turtle.up() end 
+        if move then 
+            return move.goUp(true)
+        else 
+            return turtle.up()
+        end 
     end,
     md = function() 
         debug_print("Move down") 
-        if move then move.goDown(true) else turtle.down() end 
+        if move then 
+            return move.goDown(true)
+        else 
+            return turtle.down()
+        end 
     end,
     tr = function() 
         debug_print("Turn right") 
-        if move then move.turnRight() else turtle.turnRight() end 
+        if move then 
+            move.turnRight()
+        else 
+            turtle.turnRight()
+        end 
+        return true
     end,
     tl = function() 
         debug_print("Turn left") 
-        if move then move.turnLeft() else turtle.turnLeft() end 
+        if move then 
+            move.turnLeft()
+        else 
+            turtle.turnLeft()
+        end 
+        return true
     end,
     df = function() debug_print("Dig forward") turtle.dig() end,
     du = function() debug_print("Dig up") turtle.digUp() end,
@@ -352,21 +378,22 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
             local main_code = func_code:sub(1, 1)
             local sub_code = func_code:sub(2, 2)
             
-            local success, error_message
+            local result, error_message
             if macro_functions[func_code] then
-                success, error_message = macro_functions[func_code]()
+                result, error_message = macro_functions[func_code]()
             elseif macro_functions[main_code] then
                 if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                    success, error_message = macro_functions[main_code](sub_code)
+                    result, error_message = macro_functions[main_code](sub_code)
                 else
-                    success, error_message = macro_functions[main_code]()
+                    result, error_message = macro_functions[main_code]()
                 end
             else
                 print("Unknown macro command: " .. func_code)
+                return false, "Unknown command"
             end
             
-            if not success then
-                local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message or "Unknown error")
+            if result == false and error_message then
+                local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
                 print(message)
                 return false, message
             end
@@ -375,7 +402,7 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
                 return true
             end
         end
-        start_index = 1
+        start_index = 1  -- Reset start_index after the first loop
     end
     return true
 end
@@ -418,13 +445,9 @@ local function run_test_interface()
             clear_console()
         else
             command_index = command_index + 1
-            local result, error_message = mtk.execute_macro(input)
-            if result == false then
-                if type(error_message) == "string" then
-                    print(string.format("Macro paused. Index: %d, Loop: 0, Error: %s", command_index, error_message))
-                else
-                    print(string.format("Macro paused. Index: %d, Loop: 0, Unknown error", command_index))
-                end
+            local success, error_message = mtk.execute_macro(input)
+            if not success and error_message then
+                print(error_message)
             elseif mtk.quit_flag then
                 break
             end
