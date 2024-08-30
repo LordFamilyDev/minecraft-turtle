@@ -13,6 +13,8 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 - Command-line interface with looping and verbose mode options
 - Interactive test mode (REPL) for easy experimentation
 - Extensible with custom functions
+- Advanced inventory management with automatic replenishment
+- Ability to resume macros from a specific index
 
 ## Installation
 
@@ -26,12 +28,13 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 Run the script directly with:
 
 ```
-mtk -m <macro_string> [-l <loop_count>] [-v] [-t]
+mtk -m <macro_string> [-l <loop_count>] [-i <start_index>] [-v] [-t]
 ```
 
 Options:
 - `-m, --macro`: Macro string (required unless -t is used)
 - `-l, --loop`: Number of times to loop the macro (optional, default: 1)
+- `-i, --index`: Starting index for the macro (optional, default: 1)
 - `-v, --verbose`: Enable debug output
 - `-t, --test`: Enter test interface (REPL mode)
 - `-h, --help`: Print help message
@@ -40,7 +43,11 @@ Options:
 
 ```lua
 local mtk = require("mtk")
-mtk("mfmftrdfpf", 2)  -- Execute the macro "mfmftrdfpf" twice
+local result = mtk("mfmftrdfpf", 2, 1)  -- Execute the macro "mfmftrdfpf" twice, starting from index 1
+
+if result then
+    print("Macro paused. Index:", result[1], "Loop:", result[2], "Missing item:", result[3])
+end
 ```
 
 ### Macro Commands
@@ -60,6 +67,28 @@ In test mode, enter macro commands interactively. Special commands:
 - `exit` or `q`: Quit the test interface
 - `clear`: Clear the console
 
+## Advanced Features
+
+### Inventory Management
+
+MTK now includes advanced inventory management:
+- At the start of a macro execution, a snapshot of the inventory is taken.
+- When selecting a slot (`s[0-F]`), if the slot is empty but wasn't in the initial snapshot, MTK attempts to replenish it from other slots.
+- When placing blocks (`pf`, `pu`, `pd`), if the current slot is empty, MTK attempts to replenish it based on the last selected slot's initial content.
+
+### Resuming Macros
+
+You can now resume a macro from a specific index:
+- Use the `-i` command-line option to specify the starting index.
+- When using MTK as a module, provide the starting index as the third argument.
+
+### Error Handling
+
+If MTK can't replenish a required item, it will pause execution and return:
+- The index of the operation where it paused
+- The current loop number
+- The block type that's missing
+
 ## Examples
 
 1. Move forward 3 times, turn right, and dig:
@@ -72,9 +101,9 @@ In test mode, enter macro commands interactively. Special commands:
    mtk -m WAmfmftrtrwA
    ```
 
-3. Run a macro 5 times with verbose output:
+3. Run a macro 5 times with verbose output, starting from the 3rd command:
    ```
-   mtk -m mfdfmbdu -l 5 -v
+   mtk -m mfdfmbdu -l 5 -i 3 -v
    ```
 
 4. Enter test mode:
