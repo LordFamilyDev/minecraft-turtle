@@ -94,7 +94,91 @@ end
 
 -- Test cases
 local tests = {
-    -- ... [Previous test cases remain unchanged] ...
+    test_movement = function()
+        clear_path()
+        mtk("mfmbmumddftrtl")
+        assert_path("mfmbmumddftrtr", "Movement test failed")
+    end,
+
+    test_digging = function()
+        clear_path()
+        mtk("dfduddddpdpu")
+        assert_path("dfdudddddpdppu", "Digging test failed")
+    end,
+
+    test_placing = function()
+        clear_path()
+        mtk("pfpupd")
+        assert_path("pfpupd", "Placing test failed")
+    end,
+
+    test_looking = function()
+        clear_path()
+        mtk("lfluldpf")
+        assert_path("lfluldpf", "Looking test failed")
+    end,
+
+    test_slot_selection = function()
+        clear_path()
+        mtk("s0s5sa")
+        assert_path("s0s5sa", "Slot selection test failed")
+    end,
+
+    test_waypoints = function()
+        clear_path()
+        mtk("W0w0")
+        -- Add assertions for waypoint behavior if possible
+        assert_path("W0w0", "Waypoint test failed")
+    end,
+
+    test_chest_operations = function()
+        clear_path()
+        mtk("C0c0")
+        -- Add assertions for chest operations if possible
+        assert_path("C0c0", "Chest operations test failed")
+    end,
+
+    test_refuel = function()
+        clear_path()
+        mtk("re")
+        assert_path("re", "Refuel test failed")
+    end,
+
+    test_dump_trash = function()
+        clear_path()
+        mtk("dt")
+        assert_path("dt", "Dump trash test failed")
+    end,
+
+    test_go_home = function()
+        clear_path()
+        mtk("gh")
+        assert_path("gh", "Go home test failed")
+    end,
+
+    test_set_home = function()
+        clear_path()
+        mtk("Gh")
+        assert_path("Gh", "Set home test failed")
+    end,
+
+    test_jump_and_return = function()
+        clear_path()
+        mtk("J0mfj0mfr0", {[0] = 2})
+        assert_path("J0mfj0mfr0", "Jump and return test failed")
+    end,
+
+    test_nested_jumps = function()
+        clear_path()
+        mtk("J0J1mfj1mfr1j0mfr0", {[0] = 2, [1] = 3})
+        assert_path("J0J1mfj1mfr1j0mfr0", "Nested jumps test failed")
+    end,
+
+    test_function_call_behavior = function()
+        clear_path()
+        mtk("J0mfj0mfr0J1mfj1mfr1", {})
+        assert_path("J0mfj0mfr0J1mfj1mfr1", "Function call behavior test failed")
+    end
 
     test_dig_bedrock = function()
         clear_path()
