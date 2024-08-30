@@ -750,9 +750,10 @@ end
 function lib.spiralOut(radius, sweep)
     local side = 1
     local steps = 1
+    local x0, z0, d0 = lib.getPos()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
-    while side <= radius * 2 do
+    while steps <= radius * 2 do
       if sweep then
         turtle.suckDown()
       end
@@ -771,6 +772,9 @@ function lib.spiralOut(radius, sweep)
       
       side = side + 1
     end
+
+    --return to start position
+    lib.pathTo(x0, z0, d0, true)
 end
 
 lib.moveMemory = ""

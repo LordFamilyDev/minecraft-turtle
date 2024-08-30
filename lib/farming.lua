@@ -47,7 +47,6 @@ end
 --assumes you are 1 above ground level (above the sapling)
 function farm.sweepUp(radius)
     move.spiralOut(radius,true)
-    move.pathTo(0,0,0)
 end
 
 function farm.fillFurnace(dir)
