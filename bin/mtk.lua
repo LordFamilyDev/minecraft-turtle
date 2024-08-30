@@ -530,9 +530,9 @@ function mtk.run_cli(args)
         elseif args[i] == "-x" or args[i] == "--innerLoops" then
         mtk.loopTargets = {}
         i = i + 1
-        for i2 = 1, tonumber(args[i]) do
-            i = i + 1
+        while tonumber(args[i]) do
             table.insert(mtk.loopTargets, tonumber(args[i]))
+            i = i + 1
         end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true

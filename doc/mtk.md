@@ -42,7 +42,7 @@ Options:
 - `-S <path>`: Serialize and save inventory snapshot to file
 - `-s <path>`: Load inventory snapshot from file
 - `-h, --help`: Print help message
-- `-x, --innerLoops`: [label count] [loop count x1] [loop count x2] etc
+- `-x, --innerLoops`: [loop count x1] [loop count x2] etc
 
 ### As a Module
 
