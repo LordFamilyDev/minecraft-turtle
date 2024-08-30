@@ -101,7 +101,7 @@ function transferMaterial(source, destination, partialBlockName, amount)
             return transferred
         elseif item.name:find("book") or item.name:find("potion") then
             local itemDetail = source.getItemDetail(slot)
-            if itemDetail and textutils.serialize(itemDetail):find(partialBlockName) then
+            if itemDetail and itemDetail.nbt and textutils.serialize(itemDetail.nbt):find(partialBlockName) then
                 local transferred = source.pushItems(peripheral.getName(destination), slot,amount)
                 return transferred
             end
