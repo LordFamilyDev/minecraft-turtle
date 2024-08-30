@@ -70,7 +70,7 @@ end
 local function find_item_in_inventory(item_name)
     for i = 1, 16 do
         local item = turtle.getItemDetail(i)
-        if item and item.name == item_name then
+        if item and item.name == item_name and turtle.getItemCount(i) > 1 then
             return i
         end
     end
@@ -84,9 +84,11 @@ local function replenish_slot(slot)
     local source_slot = find_item_in_inventory(target_item)
     if not source_slot then return false end
 
+    local current_slot = turtle.getSelectedSlot()
     turtle.select(source_slot)
-    turtle.transferTo(slot)
-    return true
+    local success = turtle.transferTo(slot, turtle.getItemCount(source_slot) - 1)
+    turtle.select(current_slot)
+    return success
 end
 
 -- Serialization functions
@@ -181,13 +183,14 @@ local macro_functions = {
             debug_print("Select slot", slot)
             if turtle.getItemCount(slot) <= 1 and mtk.inventory_snapshot[slot] then
                 if not replenish_slot(slot) then
-                    return false, mtk.inventory_snapshot[slot]
+                    return false, "Failed to replenish slot " .. c
                 end
             end
             turtle.select(slot)
             mtk.lastSelected = slot
         else
             debug_print("Invalid slot:", c)
+            return false, "Invalid slot: " .. c
         end
         return true
     end,
@@ -204,27 +207,30 @@ local macro_functions = {
     end,
     pf = function() 
         debug_print("Place forward") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
-            if not replenish_slot(mtk.lastSelected) then
-                return false, mtk.inventory_snapshot[mtk.lastSelected]
+        local current_slot = turtle.getSelectedSlot()
+        if turtle.getItemCount(current_slot) <= 1 then
+            if not replenish_slot(current_slot) then
+                return false, "Failed to replenish items for placing"
             end
         end
         return turtle.place()
     end,
     pu = function() 
         debug_print("Place up") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
-            if not replenish_slot(mtk.lastSelected) then
-                return false, mtk.inventory_snapshot[mtk.lastSelected]
+        local current_slot = turtle.getSelectedSlot()
+        if turtle.getItemCount(current_slot) <= 1 then
+            if not replenish_slot(current_slot) then
+                return false, "Failed to replenish items for placing"
             end
         end
         return turtle.placeUp()
     end,
     pd = function() 
         debug_print("Place down") 
-        if turtle.getItemCount(turtle.getSelectedSlot()) <= 1 then
-            if not replenish_slot(mtk.lastSelected) then
-                return false, mtk.inventory_snapshot[mtk.lastSelected]
+        local current_slot = turtle.getSelectedSlot()
+        if turtle.getItemCount(current_slot) <= 1 then
+            if not replenish_slot(current_slot) then
+                return false, "Failed to replenish items for placing"
             end
         end
         return turtle.placeDown()
