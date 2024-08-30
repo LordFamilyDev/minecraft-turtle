@@ -545,12 +545,12 @@ function mtk.run_cli(args)
                 lib_debug.set_verbose(true)
             end
         elseif args[i] == "-x" or args[i] == "--innerLoops" then
-        mtk.loopTargets = {}
-        i = i + 1
-        while tonumber(args[i]) do
-            table.insert(mtk.loopTargets, tonumber(args[i]))
+            mtk.loopTargets = {}
             i = i + 1
-        end
+            while tonumber(args[i]) do
+                table.insert(mtk.loopTargets, tonumber(args[i]))
+                i = i + 1
+            end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
         elseif args[i] == "-S" then
