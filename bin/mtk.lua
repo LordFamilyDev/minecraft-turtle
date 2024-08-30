@@ -13,6 +13,8 @@ end
 success, result = pcall(require, "/lib/item_types")
 if success then
     itemTypes = result
+else
+    itemTypes = {}
 end
 
 success, result = pcall(require, "/lib/lib_debug")
@@ -28,6 +30,8 @@ mtk.chest = {}
 mtk.func = {}
 mtk.debug = false
 mtk.quit_flag = false
+mtk.inventory_snapshot = {}
+mtk.lastSelected = 1
 
 -- Debug function
 local function debug_print(...)
@@ -53,6 +57,36 @@ local function getPos()
     else
         return 0, 0, 0  -- Default position if not available
     end
+end
+
+-- Inventory management functions
+local function take_inventory_snapshot()
+    for i = 1, 16 do
+        local item = turtle.getItemDetail(i)
+        mtk.inventory_snapshot[i] = item and item.name or nil
+    end
+end
+
+local function find_item_in_inventory(item_name)
+    for i = 1, 16 do
+        local item = turtle.getItemDetail(i)
+        if item and item.name == item_name then
+            return i
+        end
+    end
+    return nil
+end
+
+local function replenish_slot(slot)
+    local target_item = mtk.inventory_snapshot[slot]
+    if not target_item then return false end
+
+    local source_slot = find_item_in_inventory(target_item)
+    if not source_slot then return false end
+
+    turtle.select(source_slot)
+    turtle.transferTo(slot)
+    return true
 end
 
 -- Macro functions
@@ -88,14 +122,45 @@ local macro_functions = {
         local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
         if slot and slot >= 1 and slot <= 16 then
             debug_print("Select slot", slot)
+            if turtle.getItemCount(slot) == 0 and mtk.inventory_snapshot[slot] then
+                if not replenish_slot(slot) then
+                    return false, mtk.inventory_snapshot[slot]
+                end
+            end
             turtle.select(slot)
+            mtk.lastSelected = slot
         else
             debug_print("Invalid slot:", c)
         end
+        return true
     end,
-    pf = function() debug_print("Place forward") turtle.place() end,
-    pu = function() debug_print("Place up") turtle.placeUp() end,
-    pd = function() debug_print("Place down") turtle.placeDown() end,
+    pf = function() 
+        debug_print("Place forward") 
+        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+            if not replenish_slot(mtk.lastSelected) then
+                return false, mtk.inventory_snapshot[mtk.lastSelected]
+            end
+        end
+        return turtle.place()
+    end,
+    pu = function() 
+        debug_print("Place up") 
+        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+            if not replenish_slot(mtk.lastSelected) then
+                return false, mtk.inventory_snapshot[mtk.lastSelected]
+            end
+        end
+        return turtle.placeUp()
+    end,
+    pd = function() 
+        debug_print("Place down") 
+        if turtle.getItemCount(turtle.getSelectedSlot()) == 0 then
+            if not replenish_slot(mtk.lastSelected) then
+                return false, mtk.inventory_snapshot[mtk.lastSelected]
+            end
+        end
+        return turtle.placeDown()
+    end,
     lf = function() 
         debug_print("Look forward")
         local success, data = turtle.inspect()
@@ -212,40 +277,51 @@ local macro_functions = {
 }
 
 -- Main function to execute the macro
-function mtk.execute_macro(macro_string, loop_count)
+function mtk.execute_macro(macro_string, loop_count, start_index)
     loop_count = loop_count or 1
+    start_index = start_index or 1
     mtk.quit_flag = false
+    take_inventory_snapshot()
     
-    for _ = 1, loop_count do
-        for i = 1, #macro_string, 2 do
+    for current_loop = 1, loop_count do
+        for i = start_index, #macro_string, 2 do
             local func_code = macro_string:sub(i, i+1)
             local main_code = func_code:sub(1, 1)
             local sub_code = func_code:sub(2, 2)
             
+            local success, missing_item
             if macro_functions[func_code] then
-                macro_functions[func_code]()
+                success, missing_item = macro_functions[func_code]()
             elseif macro_functions[main_code] then
                 if main_code == "s" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                    macro_functions[main_code](sub_code)
+                    success, missing_item = macro_functions[main_code](sub_code)
                 else
-                    macro_functions[main_code]()
+                    success, missing_item = macro_functions[main_code]()
                 end
             else
                 print("Unknown macro command: " .. func_code)
+            end
+            
+            if not success and missing_item then
+                local message = string.format("Paused at index %d, loop %d. Missing item: %s", i, current_loop, missing_item)
+                print(message)
+                return i, current_loop, missing_item
             end
             
             if mtk.quit_flag then
                 return
             end
         end
+        start_index = 1  -- Reset start_index after the first loop
     end
 end
 
 -- Command-line interface
 local function print_usage()
-    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-v] [-t]")
+    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t]")
     print("  -m, --macro    Macro string (required unless -t is used)")
     print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
+    print("  -i, --index    Starting index for the macro (optional, default: 1)")
     print("  -v, --verbose  Enable debug output")
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -h, --help     Print this help message")
@@ -264,6 +340,9 @@ end
 -- Test interface (REPL)
 local function run_test_interface()
     print("Entering test interface. Type 'exit' or 'q' to quit, 'clear' to clear console.")
+    take_inventory_snapshot()  -- Take initial inventory snapshot
+    local command_index = 0
+    
     while true do
         io.write("m> ")
         local input = io.read()
@@ -272,8 +351,11 @@ local function run_test_interface()
         elseif input == "clear" then
             clear_console()
         else
-            mtk.execute_macro(input)
-            if mtk.quit_flag then
+            command_index = command_index + 1
+            local result = mtk.execute_macro(input)
+            if result then
+                print(string.format("Macro paused. Index: %d, Loop: 0, Missing item: %s", command_index, result[3]))
+            elseif not result and mtk.quit_flag then
                 break
             end
         end
@@ -283,6 +365,7 @@ end
 function mtk.run_cli(args)
     local macro_string = nil
     local loop_count = 1
+    local start_index = 1
     local test_mode = false
 
     local i = 1
@@ -296,6 +379,9 @@ function mtk.run_cli(args)
         elseif args[i] == "-l" or args[i] == "--loop" then
             i = i + 1
             loop_count = tonumber(args[i])
+        elseif args[i] == "-i" or args[i] == "--index" then
+            i = i + 1
+            start_index = tonumber(args[i])
         elseif args[i] == "-v" or args[i] == "--verbose" then
             mtk.debug = true
             if lib_debug then
@@ -318,7 +404,7 @@ function mtk.run_cli(args)
         print_usage()
         return
     else
-        mtk.execute_macro(macro_string, loop_count)
+        mtk.execute_macro(macro_string, loop_count, start_index)
     end
 end
 
@@ -329,7 +415,7 @@ end
 
 -- Module interface
 return setmetatable(mtk, {
-    __call = function(_, macro_string, loop_count)
-        mtk.execute_macro(macro_string, loop_count)
+    __call = function(_, macro_string, loop_count, start_index)
+        return mtk.execute_macro(macro_string, loop_count, start_index)
     end
 })
