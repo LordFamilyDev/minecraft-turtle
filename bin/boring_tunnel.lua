@@ -30,6 +30,28 @@ end
 local function checkMats()
 end
 
+local atFloor = true
+local function digTunnelSection(height, wall, torch)
+    --dig forward
+    if atFloor then
+        atFloor = false
+        --check down
+            -- Place down
+        
+        -- for height
+            -- dig up
+            if wall == "right" then
+                m.turnRight()
+                --checkWall
+                    --Place wall
+            elseif wall == "left" then
+                
+            end
+    else
+        atFloor = true
+
+    end
+end
 
 local function main()
 end

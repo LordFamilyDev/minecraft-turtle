@@ -159,7 +159,7 @@ end
 
 function lib.isTreeFwd()
     x, info = turtle.inspect()
-    return x and lib.isTree(info.name)
+    return x and lib.isTree(info.name), info.name
 end 
 
 function lib.isTreeUp()
@@ -183,5 +183,6 @@ end
 function lib.selectSapling()
     return lib.selectItemFromList(lib.saplingTypes)
 end
+
 
 return lib
