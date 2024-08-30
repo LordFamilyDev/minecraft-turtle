@@ -15,6 +15,8 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 - Extensible with custom functions
 - Advanced inventory management with automatic replenishment
 - Ability to resume macros from a specific index
+- Blind inventory selection and placement options
+- Inventory snapshot serialization and deserialization
 
 ## Installation
 
@@ -28,7 +30,7 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 Run the script directly with:
 
 ```
-mtk -m <macro_string> [-l <loop_count>] [-i <start_index>] [-v] [-t]
+mtk -m <macro_string> [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]
 ```
 
 Options:
@@ -37,16 +39,18 @@ Options:
 - `-i, --index`: Starting index for the macro (optional, default: 1)
 - `-v, --verbose`: Enable debug output
 - `-t, --test`: Enter test interface (REPL mode)
+- `-S <path>`: Serialize and save inventory snapshot to file
+- `-s <path>`: Load inventory snapshot from file
 - `-h, --help`: Print help message
 
 ### As a Module
 
 ```lua
 local mtk = require("mtk")
-local result = mtk("mfmftrdfpf", 2, 1)  -- Execute the macro "mfmftrdfpf" twice, starting from index 1
+local success, error_message = mtk("mfmftrdfpf", 2, 1)  -- Execute the macro "mfmftrdfpf" twice, starting from index 1
 
-if result then
-    print("Macro paused. Index:", result[1], "Loop:", result[2], "Missing item:", result[3])
+if not success then
+    print("Macro execution failed:", error_message)
 end
 ```
 
@@ -55,7 +59,9 @@ end
 - Movement: `mf` (forward), `mb` (back), `mu` (up), `md` (down), `tr` (turn right), `tl` (turn left)
 - Digging: `df` (forward), `du` (up), `dd` (down)
 - Placing: `pf` (forward), `pu` (up), `pd` (down)
-- Inventory: `s[0-F]` (select slot, hex)
+- Blind Placing: `Pf` (forward), `Pu` (up), `Pd` (down)
+- Inventory: `s[0-F]` (select slot with replenishment, hex)
+- Blind Inventory Selection: `S[0-F]` (select slot without replenishment, hex)
 - Inspection: `lf` (look forward), `lu` (look up), `ld` (look down)
 - Waypoints: `W[c]` (set), `w[c]` (go to)
 - Chests: `C[c]` (set), `c[c]` (go to)
@@ -73,8 +79,15 @@ In test mode, enter macro commands interactively. Special commands:
 
 MTK now includes advanced inventory management:
 - At the start of a macro execution, a snapshot of the inventory is taken.
-- When selecting a slot (`s[0-F]`), if the slot is empty but wasn't in the initial snapshot, MTK attempts to replenish it from other slots.
-- When placing blocks (`pf`, `pu`, `pd`), if the current slot is empty, MTK attempts to replenish it based on the last selected slot's initial content.
+- When selecting a slot (`s[0-F]`), if the slot has 1 or fewer items and wasn't empty in the initial snapshot, MTK attempts to replenish it from other slots.
+- When placing blocks (`pf`, `pu`, `pd`), if the current slot has 1 or fewer items, MTK attempts to replenish it based on the last selected slot's initial content.
+- Blind selection (`S[0-F]`) and blind placement (`Pf`, `Pu`, `Pd`) commands are available for operations without automatic replenishment.
+
+### Inventory Snapshot Serialization
+
+You can now save and load inventory snapshots:
+- Use the `-S <path>` command-line option to save the current inventory snapshot to a file.
+- Use the `-s <path>` command-line option to load a previously saved inventory snapshot.
 
 ### Resuming Macros
 
@@ -84,10 +97,9 @@ You can now resume a macro from a specific index:
 
 ### Error Handling
 
-If MTK can't replenish a required item, it will pause execution and return:
-- The index of the operation where it paused
-- The current loop number
-- The block type that's missing
+If MTK encounters an error during execution (e.g., failed movement, unable to place a block), it will pause execution and return:
+- A boolean indicating success or failure
+- An error message describing the issue
 
 ## Examples
 
@@ -106,7 +118,17 @@ If MTK can't replenish a required item, it will pause execution and return:
    mtk -m mfdfmbdu -l 5 -i 3 -v
    ```
 
-4. Enter test mode:
+4. Save the current inventory snapshot and run a macro:
+   ```
+   mtk -S inventory.snap -m mfPfmfPf
+   ```
+
+5. Load a saved inventory snapshot and run a macro:
+   ```
+   mtk -s inventory.snap -m mfPfmfPf
+   ```
+
+6. Enter test mode:
    ```
    mtk -t
    ```
