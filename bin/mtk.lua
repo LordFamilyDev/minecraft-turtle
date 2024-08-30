@@ -478,6 +478,7 @@ local function print_usage()
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -S <path>      Serialize and save inventory snapshot to file")
     print("  -s <path>      Load inventory snapshot from file")
+    print("  -x             Label inner loop lengths in order: [loop count x1] [loop count x2] etc
     print("  -h, --help     Print this help message")
 end
 
