@@ -86,7 +86,8 @@ lib.valuableOres = {
     --Ocean monument
     "minecraft:gold_block",
     "minecraft:sponge",
-    "minecraft:wet_sponge"
+    "minecraft:wet_sponge",
+    "minecraft:sea_lantern"
 }
 
 -- Global list of unwanted items
@@ -96,7 +97,8 @@ lib.unwantedItems = {
     "minecraft:cobbled_deepslate",
     "minecraft:netherrack",
     "minecraft:blackstone",
-    "minecraft:magma_block"
+    "minecraft:magma_block",
+    "minecraft:kelp"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)

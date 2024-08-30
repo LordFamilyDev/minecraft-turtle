@@ -41,7 +41,7 @@ function isTargetBlock(blockInfo, targetBlockNames)
     return false
 end
 
-function floodFill(targetBlockNames)
+function floodFill(targetBlockNames, xzOnlyFlag)
 
     lib_move.setHome()
 
@@ -56,7 +56,7 @@ function floodFill(targetBlockNames)
         local success, blockInfo
         local moveMade = false
         --up
-        if not moveMade then
+        if not xzOnlyFlag and not moveMade then
             success, blockInfo = turtle.inspectUp()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
                 if not lib_move.charMove("U", true, true) then
@@ -69,7 +69,7 @@ function floodFill(targetBlockNames)
         end
 
         --down
-        if not moveMade then
+        if not xzOnlyFlag and not moveMade then
             success, blockInfo = turtle.inspectDown()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
                 if not lib_move.charMove("D", true, true) then
@@ -106,14 +106,12 @@ function floodFill(targetBlockNames)
                     return false
                 end
                 moveMade = true
-            else
-                lib_move.macroMove("R", false, true)
             end
         end
 
         --back
         if not moveMade then
-            lib_move.macroMove("LL", false, true)
+            lib_move.macroMove("L", false, true)
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
                 lib_move.appendMoveMem("LL")
@@ -123,14 +121,12 @@ function floodFill(targetBlockNames)
                     return false
                 end
                 moveMade = true
-            else
-                lib_move.macroMove("RR", false, true)
             end
         end
 
         --right
         if not moveMade then
-            lib_move.macroMove("R", false, true)
+            lib_move.macroMove("L", false, true)
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
                 lib_move.appendMoveMem("R")
@@ -140,13 +136,15 @@ function floodFill(targetBlockNames)
                     return false
                 end
                 moveMade = true
-            else
-                lib_move.macroMove("L", false, true)
             end
         end
 
         --if none step back one move in memory and look again
         if not moveMade then
+
+            --finish 360 to return to forward facing
+            lib_move.macroMove("L", false, true)
+
             local turnMoveFlag = false
             while true do
                 local lastMove = lib_move.popBackMoveMem()
@@ -191,8 +189,11 @@ if arg1 then
         inspectDownToPrint()
     elseif arg1 == 5 then
         print("flood fill demo")
-        local targetBlocks = {args[2]}
-        floodFill(targetBlocks)
+        local targetBlocks = {}
+        for i = 2, #args do
+            table.insert(targetBlocks, args[i])
+        end
+        floodFill(targetBlocks, false)
     elseif arg1 == 6 then
         turtle.up()
         turtle.up()
