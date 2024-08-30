@@ -33,6 +33,9 @@ mtk.quit_flag = false
 mtk.inventory_snapshot = {}
 mtk.lastSelected = 1
 
+mtk.loopMem = {}
+mtk.loopTargets = {}
+
 -- Debug function
 local function debug_print(...)
     if lib_debug then
@@ -177,6 +180,34 @@ local macro_functions = {
     df = function() debug_print("Dig forward") turtle.dig() end,
     du = function() debug_print("Dig up") turtle.digUp() end,
     dd = function() debug_print("Dig down") turtle.digDown() end,
+    x = function(c, macro_string)
+        --technically do nothing, this is just a loopback location
+    end,
+    X = function(c, macro_string)
+        c = tonumber(c)
+        --returns macro and loop index adjustments
+        local macroIndex, loopIndex
+
+        if #mtk.loopMem == 0 then
+            for i = 1, #mtk.loopTargets do
+                table.insert(mtk.loopMem, 1)
+            end
+        end
+
+        --if loopTarget and loopMem < loopTarget, loopMem +=1 return loop back index
+        if mtk.loopTargets[c] and mtk.loopMem[c] and mtk.loopMem[c] < mtk.loopTargets[c] then
+            mtk.loopMem[c] = mtk.loopMem[c] + 1
+
+            --look for loop start string and return macro index
+            local tag = "x" .. c
+            local xxStart, xxEnd = string.find(macro_string, tag)
+            if xxStart then
+                return xxStart
+            else
+                return false, "no start tag found"
+            end
+        end
+    end,
     s = function(c)
         local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
         if slot and slot >= 1 and slot <= 16 then
@@ -379,35 +410,49 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
     take_inventory_snapshot()
     
     for current_loop = 1, loop_count do
-        for i = start_index, #macro_string, 2 do
-            local func_code = macro_string:sub(i, i+1)
-            local main_code = func_code:sub(1, 1)
-            local sub_code = func_code:sub(2, 2)
-            
-            local result, error_message
-            if macro_functions[func_code] then
-                result, error_message = macro_functions[func_code]()
-            elseif macro_functions[main_code] then
-                if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                    result, error_message = macro_functions[main_code](sub_code)
+
+        local inner_loop_flag = true
+        while inner_loop_flag do
+            inner_loop_flag = false
+
+            for i = start_index, #macro_string, 2 do
+                local func_code = macro_string:sub(i, i+1)
+                local main_code = func_code:sub(1, 1)
+                local sub_code = func_code:sub(2, 2)
+                
+                local result, error_message
+                if macro_functions[func_code] then
+                    result, error_message = macro_functions[func_code]()
+                elseif macro_functions[main_code] then
+                    if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
+                        result, error_message = macro_functions[main_code](sub_code)
+                    elseif main_code == "x" or main_code == "X" then
+                        result, error_message = macro_functions[main_code](sub_code, macro_string)
+                        if result then
+                            start_index = result
+                            inner_loop_flag = true
+                            break
+                        end
+                    else
+                        result, error_message = macro_functions[main_code]()
+                    end
                 else
-                    result, error_message = macro_functions[main_code]()
+                    print("Unknown macro command: " .. func_code)
+                    return false, "Unknown command"
                 end
-            else
-                print("Unknown macro command: " .. func_code)
-                return false, "Unknown command"
-            end
-            
-            if result == false and error_message then
-                local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
-                print(message)
-                return false, message
-            end
-            
-            if mtk.quit_flag then
-                return true
+                
+                if result == false and error_message then
+                    local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
+                    print(message)
+                    return false, message
+                end
+                
+                if mtk.quit_flag then
+                    return true
+                end
             end
         end
+        --TL note: this may need to be debugged with inner loop handling
         start_index = 1  -- Reset start_index after the first loop
     end
     return true
@@ -488,6 +533,13 @@ function mtk.run_cli(args)
             if lib_debug then
                 lib_debug.set_verbose(true)
             end
+        elseif args[i] == "-x" or args[i] == "--innerLoops" then
+        mtk.loopTargets = {}
+        i = i + 1
+        while tonumber(args[i]) do
+            table.insert(mtk.loopTargets, tonumber(args[i]))
+            i = i + 1
+        end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
         elseif args[i] == "-S" then
