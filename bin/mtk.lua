@@ -202,6 +202,18 @@ local macro_functions = {
             local tag = "x" .. c
             local xxStart, xxEnd = string.find(macro_string, tag)
             if xxStart then
+                --reset any start loop flags after this
+                for i = xxStart + 1, #macro_string - 1 do
+                    local nestedStart, nestedEnd =string.find(macro_string, "x", i)
+                    if nestedStart then
+
+                        local nestedC = tonumber(macro_string:sub(nestedStart+1,nestedStart+1))
+                        if nestedC then
+                            mtk.loopMem[nestedC] = 1
+                        end
+                    end
+                end
+
                 return xxStart
             else
                 return false, "no start tag found"
