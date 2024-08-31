@@ -159,6 +159,22 @@ local macro_functions = {
             return turtle.down()
         end 
     end,
+    ml = function() 
+        debug_print("Move left") 
+        if move then 
+            return move.goLeft(true)
+        else 
+            return false
+        end 
+    end,
+    mr = function() 
+        debug_print("Move right") 
+        if move then 
+            return move.goRight(true)
+        else 
+            return false
+        end 
+    end,
     tr = function() 
         debug_print("Turn right") 
         if move then 
