@@ -595,8 +595,10 @@ function mtk.run_cli(args)
 end
 
 -- Check if this script is being run directly
-if arg then
+if arg ~= nil then
     mtk.run_cli(arg)
+else
+    debug_print("mtk.lua loaded")
 end
 
 -- Module interface
