@@ -41,130 +41,6 @@ function isTargetBlock(blockInfo, targetBlockNames)
     return false
 end
 
-function floodFill(targetBlockNames, xzOnlyFlag)
-
-    lib_move.setHome()
-
-    while true do
-        if lib_move.distToHome() >= 64 then
-            print("out of range, terminating program")
-            lib_move.goHome()
-            return
-        end
-
-        --move in first direction that has a block on target list
-        local success, blockInfo
-        local moveMade = false
-        --up
-        if not xzOnlyFlag and not moveMade then
-            success, blockInfo = turtle.inspectUp()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("U", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --down
-        if not xzOnlyFlag and not moveMade then
-            success, blockInfo = turtle.inspectDown()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("D", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --forward
-        if not moveMade then
-            success, blockInfo = turtle.inspect()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("F", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --left 
-        if not moveMade then
-            lib_move.macroMove("L", false, true)
-            success, blockInfo = turtle.inspect()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("L")
-                if not lib_move.macroMove("F", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --back
-        if not moveMade then
-            lib_move.macroMove("L", false, true)
-            success, blockInfo = turtle.inspect()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("LL")
-                if not lib_move.macroMove("F", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --right
-        if not moveMade then
-            lib_move.macroMove("L", false, true)
-            success, blockInfo = turtle.inspect()
-            if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("R")
-                if not lib_move.macroMove("F", true, true) then
-                    print("move failed")
-                    lib_move.goHome()
-                    return false
-                end
-                moveMade = true
-            end
-        end
-
-        --if none step back one move in memory and look again
-        if not moveMade then
-
-            --finish 360 to return to forward facing
-            lib_move.macroMove("L", false, true)
-
-            local turnMoveFlag = false
-            while true do
-                local lastMove = lib_move.popBackMoveMem()
-                if lastMove == "R" or lastMove == "L" then
-                    turnMoveFlag = true
-                else
-                    turnMoveFlag = false
-                end
-                if lastMove == nil then
-                    return true
-                end
-                lib_move.charMove(lib_move.revMoveChar(lastMove),false,true)
-                if not turnMoveFlag then
-                    break
-                end
-            end
-        end
-    end
-end
-
 -- Capture arguments passed to the script
 local args = {...}
 
@@ -188,12 +64,35 @@ if arg1 then
         lib_move.goForward(true)
         inspectDownToPrint()
     elseif arg1 == 5 then
-        print("flood fill demo")
+        print("vein miner")
+        lib_move.setHome()
+        lib_move.setTether(64,true)
+        local failedMoveFlag = false
+
         local targetBlocks = {}
-        for i = 2, #args do
+        local dir = args[2]
+        if dir == "u" then
+            while not turtle.inspectUp() do
+                failedMoveFlag = lib_move.goUp(true)
+            end
+        elseif dir == "f" then
+            while not turtle.inspect() do
+                failedMoveFlag = lib_move.goForward(true)
+            end
+        else
+
+        end
+        for i = 3, #args do
             table.insert(targetBlocks, args[i])
         end
-        floodFill(targetBlocks, false)
+
+        if not failedMoveFlag then
+            failedMoveFlag = lib_move.floodFill(targetBlocks, false)
+        end
+
+        if failedMoveFlag then
+            lib_move.goHome()
+        end
     elseif arg1 == 6 then
         turtle.up()
         turtle.up()
@@ -215,6 +114,16 @@ if arg1 then
             turtle.digUp()
             turtle.up()
         end
+    elseif arg1 == 8 then
+        local blocks = {"minecraft:lava","minecraft:obsidian"}
+
+        function bucketUp()
+            turtle.placeUp()
+            sleep(0.3)
+            turtle.placeUp()
+        end
+
+        lib_move.floodFill(blocks,true, bucketUp)
     end
     
 else
@@ -223,7 +132,8 @@ else
     print("2: vertical move loop test")
     print("3: spiral sweep test")
     print("4: print block below")
-    print("5: flood fill clear")
+    print("5: vein miner")
     print("6: diving bell")
     print("7: turtle up")
+    print("8: obsidian miner")
 end

@@ -66,8 +66,13 @@ function lib.maxDimToHome()
     return val
 end
 
-function lib.setTether(t)
+function lib.setTether(t, 2dflag)
     lib.tether = t
+    if 2dflag then
+        lib.tetherIs2d = true
+    else
+        lib.tetherIs2d = false
+    end
 end
 
 function lib.getTether()
@@ -746,6 +751,119 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
     return true
 end
 
+function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
+
+    while true do
+        if type(stepFunction) == "function" then
+            stepFunction()
+        end
+
+        --move in first direction that has a block on target list
+        local success, blockInfo
+        local moveMade = false
+        --up
+        if not xzOnlyFlag and not moveMade then
+            success, blockInfo = turtle.inspectUp()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                if not lib_move.charMove("U", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --down
+        if not xzOnlyFlag and not moveMade then
+            success, blockInfo = turtle.inspectDown()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                if not lib_move.charMove("D", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --forward
+        if not moveMade then
+            success, blockInfo = turtle.inspect()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                if not lib_move.charMove("F", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --left 
+        if not moveMade then
+            lib_move.macroMove("L", false, true)
+            success, blockInfo = turtle.inspect()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                lib_move.appendMoveMem("L")
+                if not lib_move.macroMove("F", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --back
+        if not moveMade then
+            lib_move.macroMove("L", false, true)
+            success, blockInfo = turtle.inspect()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                lib_move.appendMoveMem("LL")
+                if not lib_move.macroMove("F", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --right
+        if not moveMade then
+            lib_move.macroMove("L", false, true)
+            success, blockInfo = turtle.inspect()
+            if success and isTargetBlock(blockInfo,targetBlockNames) then
+                lib_move.appendMoveMem("R")
+                if not lib_move.macroMove("F", true, true) then
+                    print("move failed")
+                    return false
+                end
+                moveMade = true
+            end
+        end
+
+        --if none step back one move in memory and look again
+        if not moveMade then
+
+            --finish 360 to return to forward facing
+            lib_move.macroMove("L", false, true)
+
+            local turnMoveFlag = false
+            while true do
+                local lastMove = lib_move.popBackMoveMem()
+                if lastMove == "R" or lastMove == "L" then
+                    turnMoveFlag = true
+                else
+                    turnMoveFlag = false
+                end
+                if lastMove == nil then
+                    return true
+                end
+                lib_move.charMove(lib_move.revMoveChar(lastMove),false,true)
+                if not turnMoveFlag then
+                    break
+                end
+            end
+        end
+    end
+end
 
 function lib.spiralOut(radius, sweep)
     local side = 1
