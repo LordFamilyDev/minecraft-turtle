@@ -865,30 +865,34 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
     end
 end
 
-function lib.spiralOut(radius, sweep)
+function lib.spiralOut(radius, stepFunction)
     local side = 1
     local steps = 1
     local x0, z0, d0 = lib.getPos()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
     while steps <= radius * 2 do
-      if sweep then
+        if type(stepFunction) == "function" then
+            stepFunction()
+        end
+
+        if sweep then
         turtle.suckDown()
-      end
-      for i = 1, steps do
+        end
+        for i = 1, steps do
         x = x + xd
         z = z + zd
         print("Pathing to: "..x..","..z..","..d)
         lib.pathTo(x, z, d, true)
-      end
-      
-      xd, zd = lib.getDirLeft(xd, zd)
+        end
+        
+        xd, zd = lib.getDirLeft(xd, zd)
 
-      if side % 2 == 0 then
+        if side % 2 == 0 then
         steps = steps + 1
-      end
-      
-      side = side + 1
+        end
+        
+        side = side + 1
     end
 
     --return to start position

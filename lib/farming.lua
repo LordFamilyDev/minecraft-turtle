@@ -46,7 +46,7 @@ end
 
 --assumes you are 1 above ground level (above the sapling)
 function farm.sweepUp(radius)
-    move.spiralOut(radius,true)
+    move.spiralOut(radius,turtle.suckDown())
 end
 
 function farm.fillFurnace(dir)
