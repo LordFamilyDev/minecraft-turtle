@@ -67,16 +67,23 @@ if arg1 then
         print("vein miner")
         lib_move.setHome()
         lib_move.setTether(64,true)
-        local failedMoveFlag = false
 
         local dir = args[2]
         if dir == "u" then
-            while not turtle.inspectUp() do
-                failedMoveFlag = lib_move.goUp(true)
+            while true do
+                local has_block, data = turtle.inspectUp()
+                if has_block then
+                    break
+                end
+                lib_move.goUp(true)
             end
         elseif dir == "f" then
-            while not turtle.inspect() do
-                failedMoveFlag = lib_move.goForward(true)
+            while true do
+                local has_block, data = turtle.inspect()
+                if has_block then
+                    break
+                end
+                lib_move.goForward(true)
             end
         else
             --assume turtle is touching desired mat on some side
@@ -87,13 +94,10 @@ if arg1 then
             table.insert(targetBlocks, args[i])
         end
 
-        if not failedMoveFlag then
-            failedMoveFlag = lib_move.floodFill(targetBlocks, false)
-        end
+        lib_move.floodFill(targetBlocks, false)
 
-        if failedMoveFlag then
-            lib_move.goHome()
-        end
+        lib_move.goHome()
+
     elseif arg1 == 6 then
         turtle.up()
         turtle.up()
@@ -127,11 +131,9 @@ if arg1 then
         lib_move.setHome()
         lib_move.setTether(64,true)
 
-        local failedMoveFlag = lib_move.floodFill(blocks,true, bucketUp)
+        lib_move.floodFill(blocks,true, bucketUp)
 
-        if failedMoveFlag then
-            lib_move.goHome()
-        end
+        lib_move.goHome()
     end
     
 else

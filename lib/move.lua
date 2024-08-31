@@ -515,7 +515,11 @@ end
 
 
 function lib.goHome()
+    --turn off tether to allow turtle to go home
+    local tempTether = lib.getTether()
+    lib.setTether(0)
     lib.goTo(0,0,0,1,0)
+    lib.setTether(tempTether)
 end
 
 
@@ -751,7 +755,7 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
     return true
 end
 
-function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
+function lib.floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
 
     while true do
         if type(stepFunction) == "function" then
@@ -765,7 +769,7 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
         if not xzOnlyFlag and not moveMade then
             success, blockInfo = turtle.inspectUp()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("U", true, true) then
+                if not lib.charMove("U", true, true) then
                     print("move failed")
                     return false
                 end
@@ -777,7 +781,7 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
         if not xzOnlyFlag and not moveMade then
             success, blockInfo = turtle.inspectDown()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("D", true, true) then
+                if not lib.charMove("D", true, true) then
                     print("move failed")
                     return false
                 end
@@ -789,7 +793,7 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
         if not moveMade then
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                if not lib_move.charMove("F", true, true) then
+                if not lib.charMove("F", true, true) then
                     print("move failed")
                     return false
                 end
@@ -799,11 +803,11 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
 
         --left 
         if not moveMade then
-            lib_move.macroMove("L", false, true)
+            lib.macroMove("L", false, true)
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("L")
-                if not lib_move.macroMove("F", true, true) then
+                lib.appendMoveMem("L")
+                if not lib.macroMove("F", true, true) then
                     print("move failed")
                     return false
                 end
@@ -813,11 +817,11 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
 
         --back
         if not moveMade then
-            lib_move.macroMove("L", false, true)
+            lib.macroMove("L", false, true)
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("LL")
-                if not lib_move.macroMove("F", true, true) then
+                lib.appendMoveMem("LL")
+                if not lib.macroMove("F", true, true) then
                     print("move failed")
                     return false
                 end
@@ -827,11 +831,11 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
 
         --right
         if not moveMade then
-            lib_move.macroMove("L", false, true)
+            lib.macroMove("L", false, true)
             success, blockInfo = turtle.inspect()
             if success and isTargetBlock(blockInfo,targetBlockNames) then
-                lib_move.appendMoveMem("R")
-                if not lib_move.macroMove("F", true, true) then
+                lib.appendMoveMem("R")
+                if not lib.macroMove("F", true, true) then
                     print("move failed")
                     return false
                 end
@@ -843,11 +847,11 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
         if not moveMade then
 
             --finish 360 to return to forward facing
-            lib_move.macroMove("L", false, true)
+            lib.macroMove("L", false, true)
 
             local turnMoveFlag = false
             while true do
-                local lastMove = lib_move.popBackMoveMem()
+                local lastMove = lib.popBackMoveMem()
                 if lastMove == "R" or lastMove == "L" then
                     turnMoveFlag = true
                 else
@@ -856,7 +860,7 @@ function floodFill(targetBlockNames, xzOnlyFlag, stepFunction)
                 if lastMove == nil then
                     return true
                 end
-                lib_move.charMove(lib_move.revMoveChar(lastMove),false,true)
+                lib.charMove(lib.revMoveChar(lastMove),false,true)
                 if not turnMoveFlag then
                     break
                 end
@@ -873,7 +877,7 @@ function lib.spiralOut(radius, stepFunction)
     local xd, zd = lib.getDir()
     while steps <= radius * 2 do
         for i = 1, steps do
-            
+
             if type(stepFunction) == "function" then
                 stepFunction()
             end
@@ -992,7 +996,7 @@ end
 --Valid move chars: F,R,L,U,D,B
 --Note: I considered adding dig and place here, but think there should be a different library for structure macros
 function lib.macroMove(moveSequence, memFlag, digFlag)
-    print(moveSequence)
+    --print(moveSequence)
     for i = 1, #moveSequence do
         local char = moveSequence:sub(i, i)
         if not lib.charMove(char, memFlag, digFlag) then
