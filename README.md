@@ -10,6 +10,12 @@ wget run https://turtles.lordylordy.org/code/main/update.lua -m
 ```
 
 ## Update Process
+
+Run:
+```
+ update
+```
+
 ### Intended Workflow:
 - Use ~/turtles directory on lordylordy.org. 
     - This maps to a public fileserver at: `https:\\turtles.lordylordy.org\wip\<user>\`
@@ -22,7 +28,7 @@ wget run https://turtles.lordylordy.org/code/main/update.lua -m
 - Commit your code to your personal fork|branch
 - Create pull request to merge your code into main.
 - Approve and merge pull request
-- Pull main repo into turtle usint `update -m'
+- Pull main repo into turtle using `update -m'
     - Or full URL: `wget run https://turtles.lordylordy.org/code/main/update.lua -m`
 - turtles away!
 
