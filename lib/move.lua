@@ -872,21 +872,22 @@ function lib.spiralOut(radius, stepFunction)
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
     while steps <= radius * 2 do
-        if type(stepFunction) == "function" then
-            stepFunction()
-        end
-
         for i = 1, steps do
-        x = x + xd
-        z = z + zd
-        print("Pathing to: "..x..","..z..","..d)
-        lib.pathTo(x, z, d, true)
+            
+            if type(stepFunction) == "function" then
+                stepFunction()
+            end
+
+            x = x + xd
+            z = z + zd
+            print("Pathing to: "..x..","..z..","..d)
+            lib.pathTo(x, z, d, true)
         end
         
         xd, zd = lib.getDirLeft(xd, zd)
 
         if side % 2 == 0 then
-        steps = steps + 1
+            steps = steps + 1
         end
         
         side = side + 1

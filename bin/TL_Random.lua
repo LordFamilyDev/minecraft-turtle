@@ -58,7 +58,7 @@ if arg1 then
         end
     elseif arg1 == 3 then
         turtle.up()
-        lib_farming.sweepUp(4)
+        lib_farming.sweepUp(2)
         turtle.down()
     elseif arg1 == 4 then
         lib_move.goForward(true)
