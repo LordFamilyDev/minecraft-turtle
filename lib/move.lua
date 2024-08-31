@@ -66,9 +66,9 @@ function lib.maxDimToHome()
     return val
 end
 
-function lib.setTether(t, 2dflag)
+function lib.setTether(t, flag2d)
     lib.tether = t
-    if 2dflag then
+    if flag2d then
         lib.tetherIs2d = true
     else
         lib.tetherIs2d = false
@@ -876,9 +876,6 @@ function lib.spiralOut(radius, stepFunction)
             stepFunction()
         end
 
-        if sweep then
-        turtle.suckDown()
-        end
         for i = 1, steps do
         x = x + xd
         z = z + zd

@@ -69,7 +69,6 @@ if arg1 then
         lib_move.setTether(64,true)
         local failedMoveFlag = false
 
-        local targetBlocks = {}
         local dir = args[2]
         if dir == "u" then
             while not turtle.inspectUp() do
@@ -80,8 +79,10 @@ if arg1 then
                 failedMoveFlag = lib_move.goForward(true)
             end
         else
-
+            --assume turtle is touching desired mat on some side
         end
+
+        local targetBlocks = {}
         for i = 3, #args do
             table.insert(targetBlocks, args[i])
         end
@@ -123,7 +124,14 @@ if arg1 then
             turtle.placeUp()
         end
 
-        lib_move.floodFill(blocks,true, bucketUp)
+        lib_move.setHome()
+        lib_move.setTether(64,true)
+
+        local failedMoveFlag = lib_move.floodFill(blocks,true, bucketUp)
+
+        if failedMoveFlag then
+            lib_move.goHome()
+        end
     end
     
 else
