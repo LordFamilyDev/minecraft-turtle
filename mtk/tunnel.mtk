@@ -1,0 +1,12 @@
+## Tunnel bulding macro, simple 3x3 tunnel out of
+## whatever is in slot 0
+-m 
+s0mf\
+## center column
+PfPdmuPfmuPfPu\
+## right col
+mrPfPutrPfmdPftlPfmdPfPdtrPftl\
+## left col
+mlmlPdPftlPfmuPftrPfmuPfPutlPftr\
+##return for next step
+mrmdmd
