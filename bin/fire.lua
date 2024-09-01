@@ -1,3 +1,5 @@
+-- ToDo add header
+
 -- Function to perform the downwards mining pattern
 local function mineDown(x)
     for i = 1, x do
@@ -26,6 +28,60 @@ local function mineStraight(x)
         turtle.forward()
     end
 end
+
+-- select item
+local function selectItem(itemName)
+    for i = 1, 16 do
+        local item = turtle.getItemDetail(i)
+        if item and item.name == itemName then
+            turtle.select(i)
+            return true
+        end
+    end
+    return false
+end
+
+-- Refuel
+local function refuel(x)
+    for i = 1, x do
+        if not turtle.forward() then
+            print("Unable to move forward. Obstacle detected.")
+            return false
+        end
+
+        -- Check the block below for lava
+        local success, block = turtle.inspectDown()
+        if success and block.name == "minecraft:lava" then
+            if selectItem("minecraft:bucket") then
+                turtle.placeDown()  -- Use the bucket to scoop the lava
+                turtle.refuel()     -- Refuel using the lava bucket
+                print("Refueled using lava at position " .. i)
+            else
+                print("No empty bucket found. Cannot refuel.")
+                return false
+            end
+        end
+    end
+    -- Turn around
+    turtle.turnLeft()
+    turtle.turnLeft()
+
+    -- Move back to the original position
+    for i = 1, x do
+        if not turtle.forward() then
+            print("Unable to move back. Obstacle detected.")
+            return false
+        end
+    end
+
+    -- Turn back to original direction
+    turtle.turnLeft()
+    turtle.turnLeft()
+
+    print("Refuel process complete and returned to the original position.")
+    return true
+end
+
 
 -- Mine Cube
 local function mineCube(x, y, z)
@@ -60,6 +116,35 @@ local function mineCube(x, y, z)
             turtle.turnRight();
         end
     end
+    -- Return to the original position and orientation
+    -- Turn around to face the starting direction
+    turtle.turnRight()
+    turtle.turnRight()
+
+    -- Move back up to the original z level
+    for k = 1, z - 1 do
+        turtle.up()
+    end
+
+    -- Move back to the original y position
+    for j = 1, y - 1 do
+        turtle.forward()
+    end
+
+    -- Reorient the turtle to face the original direction after y move
+    if turnRight then
+        turtle.turnRight()
+        turtle.turnRight()
+    end
+
+    -- Move back to the original x position
+    turtle.turnRight()
+    for i = 1, x - 1 do
+        turtle.forward()
+    end
+    turtle.turnLeft()
+
+    -- Now, the turtle is back at the original position
 end
 
 
@@ -71,6 +156,8 @@ local function main(direction, x, y, z)
         mineStraight(x)
     elseif direction == "cube" then
         mineCube(x, y, z)
+    elseif direction == "refuel" then
+        refuel(x)
     else
         print("Invalid direction.")
     end
