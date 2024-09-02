@@ -124,6 +124,11 @@ local tests = {
     --     set_failure_scenario("blocked_movement")
     --     -- TODO - Add test for failure
     -- end,
+    test_fake_movement = function()
+        clear_path()
+        mtk("mrml")
+        assert_path("trmftltlmftr", "Fake Movement test failed")
+    end,
     test_digging = function()
         clear_path()
         mtk("dfdudd")
