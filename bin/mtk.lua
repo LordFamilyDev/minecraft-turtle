@@ -1,6 +1,7 @@
 -- mtk.lua
 
 local move, itemTypes, lib_debug
+local isLoaded_as_module = false
 
 -- Try to load libraries, use basic functionality if not available
 local success, result = pcall(require, "/lib/move")
@@ -42,6 +43,13 @@ local function debug_print(...)
         lib_debug.print_debug(...)
     elseif mtk.debug then
         print("[DEBUG]", ...)
+    end
+end
+
+-- cli print function
+local function cli_print(...)
+    if isLoaded_as_module == false then
+        print(...)
     end
 end
 
@@ -301,27 +309,27 @@ local macro_functions = {
         debug_print("Look forward")
         local success, data = turtle.inspect()
         if success then
-            print("Forward:", data.name)
+            cli_print("Forward:", data.name)
         else
-            print("Forward: No block")
+            cli_print("Forward: No block")
         end
     end,
     lu = function()
         debug_print("Look up")
         local success, data = turtle.inspectUp()
         if success then
-            print("Up:", data.name)
+            cli_print("Up:", data.name)
         else
-            print("Up: No block")
+            cli_print("Up: No block")
         end
     end,
     ld = function()
         debug_print("Look down")
         local success, data = turtle.inspectDown()
         if success then
-            print("Down:", data.name)
+            cli_print("Down:", data.name)
         else
-            print("Down: No block")
+            cli_print("Down: No block")
         end
     end,
     W = function(c)
@@ -595,10 +603,11 @@ function mtk.run_cli(args)
 end
 
 -- Check if this script is being run directly
-if arg ~= nil then
+if arg ~= nil and #arg > 0 then
     mtk.run_cli(arg)
 else
-    debug_print("mtk.lua loaded")
+    isLoaded_as_module = true
+    debug_print("mtk.lua loaded as a module")
 end
 
 -- Module interface
