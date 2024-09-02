@@ -167,6 +167,22 @@ local macro_functions = {
             return turtle.down()
         end 
     end,
+    ml = function() 
+        debug_print("Move left") 
+        if move then 
+            return move.goLeft(true,true)
+        else 
+            return false
+        end 
+    end,
+    mr = function() 
+        debug_print("Move right") 
+        if move then 
+            return move.goRight(true,true)
+        else 
+            return false
+        end 
+    end,
     tr = function() 
         debug_print("Turn right") 
         if move then 
@@ -254,56 +270,53 @@ local macro_functions = {
         end
         return true
     end,
-    pf = function() 
-        debug_print("Place forward") 
+    p = function(c)
+        debug_print("Place:"..c) 
         local current_slot = turtle.getSelectedSlot()
         if turtle.getItemCount(current_slot) <= 1 then
             if not replenish_slot(current_slot) then
                 return false, "Failed to replenish items for placing"
             end
         end
-        return turtle.place()
-    end,
-    pu = function() 
-        debug_print("Place up") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
+
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
         end
-        return turtle.placeUp()
+        return ret
     end,
-    pd = function() 
-        debug_print("Place down") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
+    P = function(c)
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
         end
-        return turtle.placeDown()
-    end,
-    Pf = function() 
-        debug_print("Blindly place forward") 
-        if not turtle.place() then
-            return false, "No items to place"
-        end
-        return true
-    end,
-    Pu = function() 
-        debug_print("Blindly place up") 
-        if not turtle.placeUp() then
-            return false, "No items to place"
-        end
-        return true
-    end,
-    Pd = function() 
-        debug_print("Blindly place down") 
-        if not turtle.placeDown() then
-            return false, "No items to place"
-        end
-        return true
+        return ret
     end,
     lf = function() 
         debug_print("Look forward")
@@ -442,9 +455,7 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
                 if macro_functions[func_code] then
                     result, error_message = macro_functions[func_code]()
                 elseif macro_functions[main_code] then
-                    if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                        result, error_message = macro_functions[main_code](sub_code)
-                    elseif main_code == "x" or main_code == "X" then
+                    if main_code == "x" or main_code == "X" then
                         result, error_message = macro_functions[main_code](sub_code, macro_string)
                         if result then
                             start_index = result
@@ -452,7 +463,7 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
                             break
                         end
                     else
-                        result, error_message = macro_functions[main_code]()
+                        result, error_message = macro_functions[main_code](sub_code)
                     end
                 else
                     print("Unknown macro command: " .. func_code)
@@ -479,14 +490,17 @@ end
 -- Command-line interface
 local function print_usage()
     print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
+    io.read()
     print("  -m, --macro    Macro string (required unless -t is used)")
     print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
     print("  -i, --index    Starting index for the macro (optional, default: 1)")
     print("  -v, --verbose  Enable debug output")
+    io.read()
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -S <path>      Serialize and save inventory snapshot to file")
     print("  -s <path>      Load inventory snapshot from file")
     print("  -x             Label inner loop lengths in order: [loop count x1] [loop count x2] etc")
+    io.read()
     print("  -h, --help     Print this help message")
 end
 
@@ -523,6 +537,66 @@ local function run_test_interface()
             end
         end
     end
+end
+
+function string.trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
+function string.split(inputString)
+    local words = {}
+    for word in inputString:gmatch("%S+") do
+        table.insert(words, word)
+    end
+    return unpack(words)
+end
+
+function parseFile(fileName)
+    -- Add .mtk extension if there's no extension
+    if not fileName:match("%.%w+$") then
+        fileName = fileName .. ".mtk"
+    end
+
+    -- Check if the file exists in the current directory
+    debug_print("Checking for file:"..fileName)
+    if not fs.exists(fileName) then
+        -- If not, check in the /mtk/ directory
+        fileName = "/mtk/" .. fileName
+        if not fs.exists(fileName) then
+            error("File not found: " .. fileName)
+        end
+    end
+
+    local file = fs.open(fileName, "r")
+    if not file then
+        error("Could not open file: " .. fileName)
+    end
+
+    local arguments = {}
+    local currentValue = nil
+
+    for line in file.readLine do
+        line = line:trim()
+        if #line > 0 and line:sub(1, 1) ~= "#" then
+            if currentValue and line:sub(1,1)== "-" then 
+                for word in currentValue:gmatch("%S+") do
+                    table.insert(arguments, word)
+                end
+                currentValue = line
+            elseif currentValue then
+                currentValue = currentValue .. line -- add the new line
+            else
+                currentValue = line
+            end
+        end
+    end
+    if currentValue then 
+        for word in currentValue:gmatch("%S+") do
+            table.insert(arguments, word)
+        end
+    end
+    file.close()
+    return arguments
 end
 
 function mtk.run_cli(args)
@@ -567,8 +641,17 @@ function mtk.run_cli(args)
         elseif args[i] == "-s" then
             i = i + 1
             load_path = args[i]
+        elseif args[i] == "-f" then
+            i = i + 1
+            local fileName = args[i]
+            local fileArgs = parseFile(fileName)
+            for j, argPair in ipairs(fileArgs) do
+                debug_print("Adding arg:" .. argPair)
+                table.insert(args, i + j, argPair)
+            end
         else
             print("Unknown argument: " .. args[i])
+            io.read()
             print_usage()
             return
         end
