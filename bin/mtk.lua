@@ -262,68 +262,53 @@ local macro_functions = {
         end
         return true
     end,
-    pf = function() 
-        debug_print("Place forward") 
+    p = function(c)
+        debug_print("Place:"..c) 
         local current_slot = turtle.getSelectedSlot()
         if turtle.getItemCount(current_slot) <= 1 then
             if not replenish_slot(current_slot) then
                 return false, "Failed to replenish items for placing"
             end
         end
-        return turtle.place()
+
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
+        end
+        return ret
     end,
-    pu = function() 
-        debug_print("Place up") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
+    P = function(c)
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
         end
-        return turtle.placeUp()
-    end,
-    pd = function() 
-        debug_print("Place down") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
-        end
-        return turtle.placeDown()
-    end,
-    Pf = function() 
-        debug_print("Force Place forward")
-        while turtle.dig() do end
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
-        end
-        return turtle.place()
-    end,
-    Pu = function() 
-        debug_print("Place up")
-        while turtle.digUp() do end
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
-        end
-        return turtle.placeUp()
-    end,
-    Pd = function() 
-        debug_print("Place down") 
-        while turtle.digDown() do end
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
-        end
-        return turtle.placeDown()
+        return ret
     end,
     lf = function() 
         debug_print("Look forward")
@@ -462,9 +447,7 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
                 if macro_functions[func_code] then
                     result, error_message = macro_functions[func_code]()
                 elseif macro_functions[main_code] then
-                    if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                        result, error_message = macro_functions[main_code](sub_code)
-                    elseif main_code == "x" or main_code == "X" then
+                    if main_code == "x" or main_code == "X" then
                         result, error_message = macro_functions[main_code](sub_code, macro_string)
                         if result then
                             start_index = result
@@ -472,7 +455,7 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
                             break
                         end
                     else
-                        result, error_message = macro_functions[main_code]()
+                        result, error_message = macro_functions[main_code](sub_code)
                     end
                 else
                     print("Unknown macro command: " .. func_code)
@@ -552,6 +535,14 @@ function string.trim(s)
     return s:match("^%s*(.-)%s*$")
 end
 
+function string.split(inputString)
+    local words = {}
+    for word in inputString:gmatch("%S+") do
+        table.insert(words, word)
+    end
+    return unpack(words)
+end
+
 function parseFile(fileName)
     -- Add .mtk extension if there's no extension
     if not fileName:match("%.%w+$") then
@@ -579,19 +570,23 @@ function parseFile(fileName)
     for line in file.readLine do
         line = line:trim()
         if #line > 0 and line:sub(1, 1) ~= "#" then
-            if currentValue then
-                currentValue = currentValue:sub(1, -2) .. line -- Remove the '\' and add the new line
+            if currentValue and line:sub(1,1)== "-" then 
+                for word in currentValue:gmatch("%S+") do
+                    table.insert(arguments, word)
+                end
+                currentValue = line
+            elseif currentValue then
+                currentValue = currentValue .. line -- add the new line
             else
                 currentValue = line
             end
-            -- Check if the line ends with '\'
-            if currentValue:sub(-1) ~= "\\" then
-                table.insert(arguments,currentValue:trim())
-                currentValue = nil
-            end
         end
     end
-
+    if currentValue then 
+        for word in currentValue:gmatch("%S+") do
+            table.insert(arguments, word)
+        end
+    end
     file.close()
     return arguments
 end
