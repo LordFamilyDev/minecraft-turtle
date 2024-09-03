@@ -1,8 +1,5 @@
 -- mtk_unit_test.lua
 
---test to add to validate nested loop functioning with main loop:
---mtk -m mumux1mdX1 -x 2 -l 2  (should return to initial position if working correctly)
-
 -- if _G.turtle is defined backup the original turtle object
 if _G.turtle then
     _G.original_turtle = _G.turtle
@@ -165,6 +162,15 @@ local tests = {
         mtk.loopTargets = {2,3}
         mtk("x1mfx2trX2X1")
         assert_path("mftrtrtrmftrtrtr", "Nested loop test failed")
+    end,
+    test_looping_jump = function()
+        --test to add to validate nested loop functioning with main loop:
+        --mtk -m mumux1mdX1 -x 2 -l 2  (should return to initial position if working correctly)
+        clear_path()
+        mtk.loopMem = {}
+        mtk.loopTargets = {2}
+        mtk("mumux1mdX1", 2)
+        assert_path("mumumdmdmumumdmd", "Looping jump test failed")
     end,
 }
 
