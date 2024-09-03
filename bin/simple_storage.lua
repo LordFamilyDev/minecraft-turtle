@@ -140,7 +140,7 @@ function clearUserStorage()
             -- If all items from the slot were transferred, move to the next slot
             if transferred == item.count then
                 break
-            else
+            elseif transferred then
                 -- If some items remain, update the item count and try the next chest
                 item.count = item.count - transferred
             end

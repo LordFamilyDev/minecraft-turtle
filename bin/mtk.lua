@@ -421,6 +421,11 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
     
     for current_loop = 1, loop_count do
 
+        --reset sub loops
+        for i = 1, #mtk.loopMem do
+            mtk.loopMem[i] = 1
+        end
+
         local inner_loop_flag = true
         while inner_loop_flag do
             inner_loop_flag = false
@@ -548,9 +553,11 @@ function mtk.run_cli(args)
             mtk.loopTargets = {}
             i = i + 1
             while tonumber(args[i]) do
+                print(args[i])
                 table.insert(mtk.loopTargets, tonumber(args[i]))
                 i = i + 1
             end
+            i = i - 1
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
         elseif args[i] == "-S" then
@@ -560,8 +567,8 @@ function mtk.run_cli(args)
             i = i + 1
             load_path = args[i]
         else
-            print("Unknown argument: " .. args[i])
-            print_usage()
+            print("Unknown argument: " .. args[i] .. " at index: " .. i)
+            --print_usage()
             return
         end
         i = i + 1
