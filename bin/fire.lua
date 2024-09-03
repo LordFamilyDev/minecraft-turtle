@@ -15,6 +15,16 @@ end
 -- Refuel
 local function refuel(x)
 
+    for slot = 1, 16 do
+        turtle.select(slot)
+        if turtle.getItemCount(slot) > 0 then
+            turtle.refuel(x)
+            if turtle.getFuelLevel() >= x then
+                break
+            end
+        end
+    end
+
     hasBucket = selectItem("minecraft:bucket")
     if not hasBucket then
         print("no bucket of fuckets")
@@ -168,13 +178,9 @@ end
 
 -- Main function to select pattern based on arguments
 local function main(direction, x, y, z, item)
-    if direction == "down" then
-        mineDown(x)
-    elseif direction == "straight" then
-        mineStraight(x)
-    elseif direction == "cubeDig" then
+    if direction == "dig" then
         doCube(x, y, z, true, safeDig)
-    elseif direction == "cubePlace" then
+    elseif direction == "place" then
         doCube(x, y, z, false, place)
     elseif direction == "refuel" then
         refuel(x)
@@ -216,7 +222,7 @@ else
     args.z = tonumber(args.z)
 end
 if args.item == nil then
-    print("Invalid or no item provided. Defaulting to 'minecraft:dirt'.")
+    print("No item. Defaulting item to 'minecraft:dirt'.")
     args.item = "minecraft:dirt"
 end
 
