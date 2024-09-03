@@ -1,5 +1,8 @@
 -- mtk_unit_test.lua
 
+--test to add to validate nested loop functioning with main loop:
+--mtk -m mumux1mdX1 -x 2 -l 2  (should return to initial position if working correctly)
+
 -- if _G.turtle is defined backup the original turtle object
 if _G.turtle then
     _G.original_turtle = _G.turtle
