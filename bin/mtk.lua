@@ -1,6 +1,7 @@
 -- mtk.lua
 
 local move, itemTypes, lib_debug
+local isLoaded_as_module = false
 
 -- Try to load libraries, use basic functionality if not available
 local success, result = pcall(require, "/lib/move")
@@ -33,12 +34,22 @@ mtk.quit_flag = false
 mtk.inventory_snapshot = {}
 mtk.lastSelected = 1
 
+mtk.loopMem = {}
+mtk.loopTargets = {}
+
 -- Debug function
 local function debug_print(...)
     if lib_debug then
         lib_debug.print_debug(...)
     elseif mtk.debug then
         print("[DEBUG]", ...)
+    end
+end
+
+-- cli print function
+local function cli_print(...)
+    if isLoaded_as_module == false then
+        print(...)
     end
 end
 
@@ -156,6 +167,22 @@ local macro_functions = {
             return turtle.down()
         end 
     end,
+    ml = function() 
+        debug_print("Move left") 
+        if move then 
+            return move.goLeft(true,true)
+        else 
+            return false
+        end 
+    end,
+    mr = function() 
+        debug_print("Move right") 
+        if move then 
+            return move.goRight(true,true)
+        else 
+            return false
+        end 
+    end,
     tr = function() 
         debug_print("Turn right") 
         if move then 
@@ -177,6 +204,44 @@ local macro_functions = {
     df = function() debug_print("Dig forward") turtle.dig() end,
     du = function() debug_print("Dig up") turtle.digUp() end,
     dd = function() debug_print("Dig down") turtle.digDown() end,
+    x = function(c, macro_string)
+        --technically do nothing, this is just a loopback location
+    end,
+    X = function(c, macro_string)
+        c = tonumber(c)
+
+        if #mtk.loopMem == 0 then
+            for i = 1, #mtk.loopTargets do
+                table.insert(mtk.loopMem, 1)
+            end
+        end
+
+        --if loopTarget and loopMem < loopTarget, loopMem +=1 return loop back index
+        if mtk.loopTargets[c] and mtk.loopMem[c] and mtk.loopMem[c] < mtk.loopTargets[c] then
+            mtk.loopMem[c] = mtk.loopMem[c] + 1
+
+            --look for loop start string and return macro index
+            local tag = "x" .. c
+            local xxStart, xxEnd = string.find(macro_string, tag)
+            if xxStart then
+                --reset any start loop flags after this
+                for i = xxStart + 1, #macro_string - 1 do
+                    local nestedStart, nestedEnd =string.find(macro_string, "x", i)
+                    if nestedStart then
+
+                        local nestedC = tonumber(macro_string:sub(nestedStart+1,nestedStart+1))
+                        if nestedC then
+                            mtk.loopMem[nestedC] = 1
+                        end
+                    end
+                end
+
+                return xxStart
+            else
+                return false, "no start tag found"
+            end
+        end
+    end,
     s = function(c)
         local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
         if slot and slot >= 1 and slot <= 16 then
@@ -205,82 +270,79 @@ local macro_functions = {
         end
         return true
     end,
-    pf = function() 
-        debug_print("Place forward") 
+    p = function(c)
+        debug_print("Place:"..c) 
         local current_slot = turtle.getSelectedSlot()
         if turtle.getItemCount(current_slot) <= 1 then
             if not replenish_slot(current_slot) then
                 return false, "Failed to replenish items for placing"
             end
         end
-        return turtle.place()
-    end,
-    pu = function() 
-        debug_print("Place up") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
+
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
         end
-        return turtle.placeUp()
+        return ret
     end,
-    pd = function() 
-        debug_print("Place down") 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
+    P = function(c)
+        local ret = nil
+        if c == "f" then
+            ret = turtle.place()
+        elseif c == "u" then
+            ret = turtle.placeUp()
+        elseif c == "d" then
+            ret = turtle.placeDown()
+        elseif c == "F" then
+            while turtle.dig() do end
+            ret = turtle.place()
+        elseif c == "U" then
+            while turtle.digUp() do end
+            ret = turtle.placeUp()
+        elseif c == "D" then
+            while turtle.digDown() do end
+            ret = turtle.placeDown()
         end
-        return turtle.placeDown()
-    end,
-    Pf = function() 
-        debug_print("Blindly place forward") 
-        if not turtle.place() then
-            return false, "No items to place"
-        end
-        return true
-    end,
-    Pu = function() 
-        debug_print("Blindly place up") 
-        if not turtle.placeUp() then
-            return false, "No items to place"
-        end
-        return true
-    end,
-    Pd = function() 
-        debug_print("Blindly place down") 
-        if not turtle.placeDown() then
-            return false, "No items to place"
-        end
-        return true
+        return ret
     end,
     lf = function() 
         debug_print("Look forward")
         local success, data = turtle.inspect()
         if success then
-            print("Forward:", data.name)
+            cli_print("Forward:", data.name)
         else
-            print("Forward: No block")
+            cli_print("Forward: No block")
         end
     end,
     lu = function()
         debug_print("Look up")
         local success, data = turtle.inspectUp()
         if success then
-            print("Up:", data.name)
+            cli_print("Up:", data.name)
         else
-            print("Up: No block")
+            cli_print("Up: No block")
         end
     end,
     ld = function()
         debug_print("Look down")
         local success, data = turtle.inspectDown()
         if success then
-            print("Down:", data.name)
+            cli_print("Down:", data.name)
         else
-            print("Down: No block")
+            cli_print("Down: No block")
         end
     end,
     W = function(c)
@@ -379,35 +441,47 @@ function mtk.execute_macro(macro_string, loop_count, start_index)
     take_inventory_snapshot()
     
     for current_loop = 1, loop_count do
-        for i = start_index, #macro_string, 2 do
-            local func_code = macro_string:sub(i, i+1)
-            local main_code = func_code:sub(1, 1)
-            local sub_code = func_code:sub(2, 2)
-            
-            local result, error_message
-            if macro_functions[func_code] then
-                result, error_message = macro_functions[func_code]()
-            elseif macro_functions[main_code] then
-                if main_code == "s" or main_code == "S" or main_code == "W" or main_code == "w" or main_code == "C" or main_code == "c" or main_code == "f" then
-                    result, error_message = macro_functions[main_code](sub_code)
+
+        local inner_loop_flag = true
+        while inner_loop_flag do
+            inner_loop_flag = false
+
+            for i = start_index, #macro_string, 2 do
+                local func_code = macro_string:sub(i, i+1)
+                local main_code = func_code:sub(1, 1)
+                local sub_code = func_code:sub(2, 2)
+                
+                local result, error_message
+                if macro_functions[func_code] then
+                    result, error_message = macro_functions[func_code]()
+                elseif macro_functions[main_code] then
+                    if main_code == "x" or main_code == "X" then
+                        result, error_message = macro_functions[main_code](sub_code, macro_string)
+                        if result then
+                            start_index = result
+                            inner_loop_flag = true
+                            break
+                        end
+                    else
+                        result, error_message = macro_functions[main_code](sub_code)
+                    end
                 else
-                    result, error_message = macro_functions[main_code]()
+                    print("Unknown macro command: " .. func_code)
+                    return false, "Unknown command"
                 end
-            else
-                print("Unknown macro command: " .. func_code)
-                return false, "Unknown command"
-            end
-            
-            if result == false and error_message then
-                local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
-                print(message)
-                return false, message
-            end
-            
-            if mtk.quit_flag then
-                return true
+                
+                if result == false and error_message then
+                    local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
+                    print(message)
+                    return false, message
+                end
+                
+                if mtk.quit_flag then
+                    return true
+                end
             end
         end
+        --TL note: this may need to be debugged with inner loop handling
         start_index = 1  -- Reset start_index after the first loop
     end
     return true
@@ -416,13 +490,17 @@ end
 -- Command-line interface
 local function print_usage()
     print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
+    io.read()
     print("  -m, --macro    Macro string (required unless -t is used)")
     print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
     print("  -i, --index    Starting index for the macro (optional, default: 1)")
     print("  -v, --verbose  Enable debug output")
+    io.read()
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -S <path>      Serialize and save inventory snapshot to file")
     print("  -s <path>      Load inventory snapshot from file")
+    print("  -x             Label inner loop lengths in order: [loop count x1] [loop count x2] etc")
+    io.read()
     print("  -h, --help     Print this help message")
 end
 
@@ -461,6 +539,66 @@ local function run_test_interface()
     end
 end
 
+function string.trim(s)
+    return s:match("^%s*(.-)%s*$")
+end
+
+function string.split(inputString)
+    local words = {}
+    for word in inputString:gmatch("%S+") do
+        table.insert(words, word)
+    end
+    return unpack(words)
+end
+
+function parseFile(fileName)
+    -- Add .mtk extension if there's no extension
+    if not fileName:match("%.%w+$") then
+        fileName = fileName .. ".mtk"
+    end
+
+    -- Check if the file exists in the current directory
+    debug_print("Checking for file:"..fileName)
+    if not fs.exists(fileName) then
+        -- If not, check in the /mtk/ directory
+        fileName = "/mtk/" .. fileName
+        if not fs.exists(fileName) then
+            error("File not found: " .. fileName)
+        end
+    end
+
+    local file = fs.open(fileName, "r")
+    if not file then
+        error("Could not open file: " .. fileName)
+    end
+
+    local arguments = {}
+    local currentValue = nil
+
+    for line in file.readLine do
+        line = line:trim()
+        if #line > 0 and line:sub(1, 1) ~= "#" then
+            if currentValue and line:sub(1,1)== "-" then 
+                for word in currentValue:gmatch("%S+") do
+                    table.insert(arguments, word)
+                end
+                currentValue = line
+            elseif currentValue then
+                currentValue = currentValue .. line -- add the new line
+            else
+                currentValue = line
+            end
+        end
+    end
+    if currentValue then 
+        for word in currentValue:gmatch("%S+") do
+            table.insert(arguments, word)
+        end
+    end
+    file.close()
+    return arguments
+end
+
 function mtk.run_cli(args)
     local macro_string = nil
     local loop_count = 1
@@ -488,6 +626,13 @@ function mtk.run_cli(args)
             if lib_debug then
                 lib_debug.set_verbose(true)
             end
+        elseif args[i] == "-x" or args[i] == "--innerLoops" then
+            mtk.loopTargets = {}
+            i = i + 1
+            while tonumber(args[i]) do
+                table.insert(mtk.loopTargets, tonumber(args[i]))
+                i = i + 1
+            end
         elseif args[i] == "-t" or args[i] == "--test" then
             test_mode = true
         elseif args[i] == "-S" then
@@ -496,8 +641,17 @@ function mtk.run_cli(args)
         elseif args[i] == "-s" then
             i = i + 1
             load_path = args[i]
+        elseif args[i] == "-f" then
+            i = i + 1
+            local fileName = args[i]
+            local fileArgs = parseFile(fileName)
+            for j, argPair in ipairs(fileArgs) do
+                debug_print("Adding arg:" .. argPair)
+                table.insert(args, i + j, argPair)
+            end
         else
             print("Unknown argument: " .. args[i])
+            io.read()
             print_usage()
             return
         end
@@ -532,8 +686,11 @@ function mtk.run_cli(args)
 end
 
 -- Check if this script is being run directly
-if arg then
+if arg ~= nil and #arg > 0 then
     mtk.run_cli(arg)
+else
+    isLoaded_as_module = true
+    debug_print("mtk.lua loaded as a module")
 end
 
 -- Module interface

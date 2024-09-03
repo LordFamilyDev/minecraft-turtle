@@ -42,6 +42,7 @@ Options:
 - `-S <path>`: Serialize and save inventory snapshot to file
 - `-s <path>`: Load inventory snapshot from file
 - `-h, --help`: Print help message
+- `-x`        : Label inner loop lengths in order: [loop count x1] [loop count x2] etc
 
 ### As a Module
 
@@ -66,6 +67,7 @@ end
 - Waypoints: `W[c]` (set), `w[c]` (go to)
 - Chests: `C[c]` (set), `c[c]` (go to)
 - Utility: `re` (refuel), `dt` (dump trash), `gh` (go home), `Gh` (set home), `q` (quit)
+- LoopStart: `x[c]` (loop start), `X[c]` (loop end) inner loops, can be nested (Tom: todo)
 
 ### Test Mode
 
@@ -131,6 +133,16 @@ If MTK encounters an error during execution (e.g., failed movement, unable to pl
 6. Enter test mode:
    ```
    mtk -t
+   ```
+
+7. Simple flying machine (internal looping with prefix and postfix):
+   ```
+   mtk -m muddpdmfmdmddupumbmbmumux1mfmdmdmfmfmumudumdmdpumbmbmumuX1mdmdmfmudf -x 5
+   ```
+
+8. Bore down (nested looping):
+   ```
+   mtk -m mfmfx1mdx2dftrX2X1 -x 5 4
    ```
 
 ## Extending MTK

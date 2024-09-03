@@ -450,6 +450,7 @@ function lib.goDown(dig)
     return false
 end
 
+
 function lib.goTo(x,z,depth, xd, zd)
     print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
     print(string.format("      at:%d:%d:%d ; %d:%d",
