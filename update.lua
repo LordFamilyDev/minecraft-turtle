@@ -194,6 +194,7 @@ local function main(args)
     process_directory(update_info.json_url, "", files)
 
     print("File update process completed!")
+    shell.run("/startup.lua")
 end
 
 -- Run the main function with command-line arguments
