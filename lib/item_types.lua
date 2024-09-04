@@ -106,7 +106,10 @@ lib.unwantedItems = {
     "minecraft:magma_block",
     "minecraft:kelp",
     "minecraft:tuff",
-    "minecraft:polished_blackstone_bricks"
+    "minecraft:polished_blackstone_bricks",
+    "minecraft:cracked_polished_blackstone_bricks",
+    "minecraft:soul_soil",
+    "minecraft:soul_sand"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)
