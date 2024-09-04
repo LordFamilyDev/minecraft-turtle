@@ -87,7 +87,11 @@ lib.valuableOres = {
     "minecraft:gold_block",
     "minecraft:sponge",
     "minecraft:wet_sponge",
-    "minecraft:sea_lantern"
+    "minecraft:sea_lantern",
+    --Blocks
+    "minecraft:raw_iron_block",
+    "minecraft:raw_copper_block",
+    "minecraft:raw_gold_block"
 }
 
 -- Global list of unwanted items
@@ -98,7 +102,8 @@ lib.unwantedItems = {
     "minecraft:netherrack",
     "minecraft:blackstone",
     "minecraft:magma_block",
-    "minecraft:kelp"
+    "minecraft:kelp",
+    "minecraft:tuff"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)

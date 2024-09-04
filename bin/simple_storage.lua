@@ -13,9 +13,40 @@ local clientChestNameFile = "resources/clientChestName.txt"
 function getCount(blockName)
 end
 
-function countOpenSlots()
+function inventoryTimeTest()
+    local startTime = os.clock()
+    local chestSize = storageChests[1].size()
+    for slot = 1, chestSize do
+        if storageChests[1].getItemDetail(slot) then
+            --do nothing
+        end
+    end
+    print("test1: " .. os.clock() - startTime)
+
+    startTime = os.clock()
+    local items = storageChests[1].list()
+    for _ in pairs(items) do
+        --do nothing
+    end
+    print("test2: " .. os.clock() - startTime)
 end
 
+function getStorageUtilization()
+    local totalStorage = 0
+    local usedStorage = 0
+    for i = 1, #storageChests do
+        local chestSize = storageChests[i].size()
+        totalStorage = totalStorage + chestSize
+        local items = storageChests[i].list()
+        -- Count the number of filled slots
+        for _ in pairs(items) do
+            usedStorage = usedStorage + 1
+        end
+    end
+    return usedStorage, totalStorage
+end
+
+--attempts to combine stacks
 function refineStorage()
 end
 
@@ -140,7 +171,7 @@ function clearUserStorage()
             -- If all items from the slot were transferred, move to the next slot
             if transferred == item.count then
                 break
-            else
+            elseif transferred then
                 -- If some items remain, update the item count and try the next chest
                 item.count = item.count - transferred
             end
@@ -160,6 +191,8 @@ if args[1] == nil or args[1] == "help" then
     print("get [partial or complete blockName] [quantity]")
     print("clear")
     print("initialize [clientChestName]")
+    print("capacity")
+    print("test")
 elseif args[1] == "get" then
     if userChest == nil then
         print("initialize storage system before using")
@@ -176,4 +209,9 @@ elseif args[1] == "clear" then
 elseif args[1] == "initialize" then
     --verify that args[2] is a chest in the network and save it to file locally
     writeClientChestName(args[2])
+elseif args[1] == "capacity" then
+    local used, total = getStorageUtilization()
+    print("Network capacity: " .. used .. " / " .. total)
+elseif args[1] == "test" then
+    inventoryTimeTest()
 end
