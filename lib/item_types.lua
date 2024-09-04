@@ -91,7 +91,9 @@ lib.valuableOres = {
     --Blocks
     "minecraft:raw_iron_block",
     "minecraft:raw_copper_block",
-    "minecraft:raw_gold_block"
+    "minecraft:raw_gold_block",
+    --Other
+    "minecraft:gilded_blackstone"
 }
 
 -- Global list of unwanted items
@@ -103,7 +105,8 @@ lib.unwantedItems = {
     "minecraft:blackstone",
     "minecraft:magma_block",
     "minecraft:kelp",
-    "minecraft:tuff"
+    "minecraft:tuff",
+    "minecraft:polished_blackstone_bricks"
 }
 
 --List of items not to mine (this list should be much longer, but im lazy)
@@ -113,6 +116,15 @@ lib.noMine = {
     "minecraft:furnace",
     "bed",
     "torch"
+}
+
+--List of inventory reward blocks
+lib.reward = {
+    "minecraft:chest",
+    "minecraft:trapped_chest",
+    "minecraft:barrel",
+    "minecraft:rail",
+    "minecraft:activator_rail"
 }
 
 function lib.isItemInList(blockName, list)

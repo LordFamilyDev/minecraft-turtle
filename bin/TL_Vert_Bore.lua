@@ -26,6 +26,14 @@ function spinAndDigMinerals()
         if success and lib_itemTypes.isBlockNameInList(block.name,lib_itemTypes.valuableOres) then
             turtle.dig()
             lib_debug.print_debug("Found and dug " .. block.name)
+        elseif success and lib_itemTypes.isBlockNameInList(block.name,lib_itemTypes.reward) then
+            dropUnwantedItems()
+            turtle.dig()
+
+            --attack twice to break chest minecarts
+            turtle.attack()
+            turtle.attack()
+            lib_debug.print_debug("chest found!")
         end
         turtle.turnRight()
     end
@@ -62,7 +70,10 @@ function spinMineDown(maxDepth)
 
     local depth = 0
     while depth <= maxDepth do
-        spinAndDigMinerals()
+        if depth > 0 then
+            spinAndDigMinerals()
+        end
+        
 
         if turtle.detectDown() then
             turtle.digDown()
