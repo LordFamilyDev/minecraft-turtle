@@ -1,4 +1,43 @@
--- ToDo add header
+--[[
+    Turtle Control Script
+    ---------------------
+    This script allows you to control a turtle to perform various tasks such as digging, placing blocks, and refueling.
+    
+    Usage:
+    - direction: The action to perform. Options are "dig", "place", and "refuel".
+    - x, y, z: The dimensions of the area to operate in (required for "dig" and "place").
+    - item: The item to place (required for "place" direction).
+    
+    Default Values:
+    - direction: "straight"
+    - x, y, z: 10 (Default size for cube)
+    - item: "minecraft:dirt" (Default item to place)
+    
+    Example:
+    - To dig a 10x10x10 cube: `turtleScript dig 10 10 10`
+    - To place blocks in a 5x5x5 cube using dirt: `turtleScript place 5 5 5 minecraft:dirt`
+    - To refuel the turtle with up to 100 units of fuel: `turtleScript refuel 100`
+--]]
+
+-- Function to display help information
+local function displayHelp()
+    print("Turtle Control Script Help")
+    print("----------------------------")
+    print("Usage:")
+    print("  direction: The action to perform. Options are 'dig', 'place', 'refuel'.")
+    print("  x, y, z: The dimensions of the area to operate in (required for 'dig' and 'place').")
+    print("  item: The item to place (required for 'place' direction).")
+    print()
+    print("Default Values:")
+    print("  direction: 'straight'")
+    print("  x, y, z: 10 (Default size for cube)")
+    print("  item: 'minecraft:dirt' (Default item to place)")
+    print()
+    print("Examples:")
+    print("  turtleScript dig 10 10 10")
+    print("  turtleScript place 5 5 5 minecraft:dirt")
+    print("  turtleScript refuel 100")
+end
 
 -- select item
 local function selectItem(itemName)
@@ -184,8 +223,10 @@ local function main(direction, x, y, z, item)
         doCube(x, y, z, false, place)
     elseif direction == "refuel" then
         refuel(x)
+    elseif direction == "help" then
+        displayHelp()
     else
-        print("Invalid direction.")
+        print("Invalid direction. Type 'help' for usage instructions.")
     end
 end
 
