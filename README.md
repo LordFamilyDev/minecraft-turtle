@@ -13,7 +13,11 @@ wget run https://turtles.lordylordy.org/code/main/update.lua -m
 
 Run:
 ```
- update
+ update -w
+ -m          pulls from main repo
+ -b <branch>  pulls from a published branch
+ -w <user>   pulls from that users WIP folder
+ -u <url>    pulls from a caddy fileserve with root at url
 ```
 
 ### Intended Workflow:
