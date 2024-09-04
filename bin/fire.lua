@@ -4,12 +4,12 @@
     This script allows you to control a turtle to perform various tasks such as digging, placing blocks, and refueling.
     
     Usage:
-    - direction: The action to perform. Options are "dig", "place", and "refuel".
+    - command: The action to perform. Options are "dig", "place", and "refuel".
     - x, y, z: The dimensions of the area to operate in (required for "dig" and "place").
-    - item: The item to place (required for "place" direction).
+    - item: The item to place (required for "place" command).
     
     Default Values:
-    - direction: "straight"
+    - command: "straight"
     - x, y, z: 10 (Default size for cube)
     - item: "minecraft:dirt" (Default item to place)
     
@@ -24,12 +24,12 @@ local function displayHelp()
     print("Turtle Control Script Help")
     print("----------------------------")
     print("Usage:")
-    print("  direction: The action to perform. Options are 'dig', 'place', 'refuel'.")
+    print("  command: The action to perform. Options are 'dig', 'place', 'refuel'.")
     print("  x, y, z: The dimensions of the area to operate in (required for 'dig' and 'place').")
-    print("  item: The item to place (required for 'place' direction).")
+    print("  item: The item to place (required for 'place' command).")
     print()
     print("Default Values:")
-    print("  direction: 'straight'")
+    print("  command: 'straight'")
     print("  x, y, z: 10 (Default size for cube)")
     print("  item: 'minecraft:dirt' (Default item to place)")
     print()
@@ -53,16 +53,6 @@ end
 
 -- Refuel
 local function refuel(x)
-
-    for slot = 1, 16 do
-        turtle.select(slot)
-        if turtle.getItemCount(slot) > 0 then
-            turtle.refuel(x)
-            if turtle.getFuelLevel() >= x then
-                break
-            end
-        end
-    end
 
     hasBucket = selectItem("minecraft:bucket")
     if not hasBucket then
@@ -216,23 +206,25 @@ end
 
 
 -- Main function to select pattern based on arguments
-local function main(direction, x, y, z, item)
-    if direction == "dig" then
+local function main(command, x, y, z, item)
+    if command == "dig" then
         doCube(x, y, z, true, safeDig)
-    elseif direction == "place" then
+    -- elseif command == "mine" then
+    --     bin_boring.bore(x)
+    elseif command == "place" then
         doCube(x, y, z, false, place)
-    elseif direction == "refuel" then
+    elseif command == "refuel" then
         refuel(x)
-    elseif direction == "help" then
+    elseif command == "help" then
         displayHelp()
     else
-        print("Invalid direction. Type 'help' for usage instructions.")
+        print("Invalid command. Type 'help' for usage instructions.")
     end
 end
 
 -- Get the command-line arguments
 local args = {
-    direction = arg[1],
+    command = arg[1],
     x = arg[2],
     y = arg[3],
     z = arg[4],
@@ -240,9 +232,9 @@ local args = {
 }
 
 -- Validate the arguments
-if args.direction == nil then
-    print("Invalid or no direction provided. Defaulting to 'straight'.")
-    args.direction = "straight"
+if args.command == nil then
+    print("Invalid or no command provided. Defaulting to 'dig'.")
+    args.command = "straight"
 end
 if not tonumber(args.x) then
     print("No x. Defaulting to 10.")
@@ -267,4 +259,4 @@ if args.item == nil then
     args.item = "minecraft:dirt"
 end
 
-main(args.direction, args.x, args.y, args.z, args.item)
+main(args.command, args.x, args.y, args.z, args.item)
