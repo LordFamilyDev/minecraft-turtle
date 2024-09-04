@@ -170,8 +170,8 @@ table.insert(tests, {
     func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2,3}
-        mtk("x1mfX1")
+        mtk.jump_list = {2}
+        mtk("J0mfj0")
         assert_path("mfmf", "Jump test failed")
     end
 })
@@ -181,8 +181,8 @@ table.insert(tests, {
     func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2,3}
-        mtk("x1mfx2trX2X1")
+        mtk.jump_list = {2,3}
+        mtk("J0mfJ1trj1j0")
         assert_path("mftrtrtrmftrtrtr", "Nested loop test failed")
     end
 })
@@ -192,9 +192,20 @@ table.insert(tests, {
     func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2}
-        mtk("mumux1mdX1", 2)
+        mtk.jump_list = {2}
+        mtk("mumuJ0mdj0", 2)
         assert_path("mumumdmdmumumdmd", "Looping jump test failed")
+    end
+})
+
+table.insert(tests, {
+    name = "test_jump_return",
+    func = function()
+        clear_path()
+        mtk.loopMem = {}
+        mtk.jump_list = {nil, nil}
+        mtk("j0J1mur1J0j1j1j1")
+        assert_path("mumumu", "Jump Return test failed")
     end
 })
 

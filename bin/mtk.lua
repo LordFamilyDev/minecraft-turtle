@@ -134,378 +134,407 @@ local function deserialize_snapshot(path)
 end
 
 -- Macro functions
-local macro_functions = {
-    mf = function() 
-        debug_print("Move forward") 
-        if move then 
-            return move.goForward(true)
-        else 
-            return turtle.forward()
-        end 
-    end,
-    mb = function() 
-        debug_print("Move back") 
-        if move then 
-            return move.goBackwards(true)
-        else 
-            return turtle.back()
-        end 
-    end,
-    mu = function() 
-        debug_print("Move up") 
-        if move then 
-            return move.goUp(true)
-        else 
-            return turtle.up()
-        end 
-    end,
-    md = function() 
-        debug_print("Move down") 
-        if move then 
-            return move.goDown(true)
-        else 
-            return turtle.down()
-        end 
-    end,
-    ml = function() 
-        debug_print("Move left") 
-        if move then 
-            return move.goLeft(true,true)
-        else 
-            return false
-        end 
-    end,
-    mr = function() 
-        debug_print("Move right") 
-        if move then 
-            return move.goRight(true,true)
-        else 
-            return false
-        end 
-    end,
-    tr = function() 
-        debug_print("Turn right") 
-        if move then 
-            move.turnRight()
-        else 
-            turtle.turnRight()
-        end 
-        return true
-    end,
-    tl = function() 
-        debug_print("Turn left") 
-        if move then 
-            move.turnLeft()
-        else 
-            turtle.turnLeft()
-        end 
-        return true
-    end,
-    df = function() debug_print("Dig forward") turtle.dig() end,
-    du = function() debug_print("Dig up") turtle.digUp() end,
-    dd = function() debug_print("Dig down") turtle.digDown() end,
-    x = function(c, macro_string)
-        --technically do nothing, this is just a loopback location
-    end,
-    X = function(c, macro_string)
-        c = tonumber(c)
+local macro_functions = {}
 
-        if #mtk.loopMem == 0 then
-            for i = 1, #mtk.loopTargets do
-                table.insert(mtk.loopMem, 1)
-            end
-        end
-
-        --if loopTarget and loopMem < loopTarget, loopMem +=1 return loop back index
-        if mtk.loopTargets[c] and mtk.loopMem[c] and mtk.loopMem[c] < mtk.loopTargets[c] then
-            mtk.loopMem[c] = mtk.loopMem[c] + 1
-
-            --look for loop start string and return macro index
-            local tag = "x" .. c
-            local xxStart, xxEnd = string.find(macro_string, tag)
-            if xxStart then
-                --reset any start loop flags after this
-                for i = xxStart + 1, #macro_string - 1 do
-                    local nestedStart, nestedEnd =string.find(macro_string, "x", i)
-                    if nestedStart then
-
-                        local nestedC = tonumber(macro_string:sub(nestedStart+1,nestedStart+1))
-                        if nestedC then
-                            mtk.loopMem[nestedC] = 1
-                        end
-                    end
-                end
-
-                return xxStart
-            else
-                return false, "no start tag found"
-            end
-        end
-    end,
-    s = function(c)
-        local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
-        if slot and slot >= 1 and slot <= 16 then
-            debug_print("Select slot", slot)
-            if turtle.getItemCount(slot) <= 1 and mtk.inventory_snapshot[slot] then
-                if not replenish_slot(slot) then
-                    return false, "Failed to replenish slot " .. c
-                end
-            end
-            turtle.select(slot)
-            mtk.lastSelected = slot
-        else
-            debug_print("Invalid slot:", c)
-            return false, "Invalid slot: " .. c
-        end
-        return true
-    end,
-    S = function(c)
-        local slot = tonumber(c, 16) + 1  -- Convert hex to decimal and add 1
-        if slot and slot >= 1 and slot <= 16 then
-            debug_print("Blindly select slot", slot)
-            turtle.select(slot)
-            mtk.lastSelected = slot
-        else
-            debug_print("Invalid slot:", c)
-        end
-        return true
-    end,
-    p = function(c)
-        debug_print("Place:"..c) 
-        local current_slot = turtle.getSelectedSlot()
-        if turtle.getItemCount(current_slot) <= 1 then
-            if not replenish_slot(current_slot) then
-                return false, "Failed to replenish items for placing"
-            end
-        end
-
-        local ret = nil
-        if c == "f" then
-            ret = turtle.place()
-        elseif c == "u" then
-            ret = turtle.placeUp()
-        elseif c == "d" then
-            ret = turtle.placeDown()
-        elseif c == "F" then
-            while turtle.dig() do end
-            ret = turtle.place()
-        elseif c == "U" then
-            while turtle.digUp() do end
-            ret = turtle.placeUp()
-        elseif c == "D" then
-            while turtle.digDown() do end
-            ret = turtle.placeDown()
-        end
-        return ret
-    end,
-    P = function(c)
-        local ret = nil
-        if c == "f" then
-            ret = turtle.place()
-        elseif c == "u" then
-            ret = turtle.placeUp()
-        elseif c == "d" then
-            ret = turtle.placeDown()
-        elseif c == "F" then
-            while turtle.dig() do end
-            ret = turtle.place()
-        elseif c == "U" then
-            while turtle.digUp() do end
-            ret = turtle.placeUp()
-        elseif c == "D" then
-            while turtle.digDown() do end
-            ret = turtle.placeDown()
-        end
-        return ret
-    end,
-    lf = function() 
-        debug_print("Look forward")
-        local success, data = turtle.inspect()
-        if success then
-            cli_print("Forward:", data.name)
-        else
-            cli_print("Forward: No block")
-        end
-    end,
-    lu = function()
-        debug_print("Look up")
-        local success, data = turtle.inspectUp()
-        if success then
-            cli_print("Up:", data.name)
-        else
-            cli_print("Up: No block")
-        end
-    end,
-    ld = function()
-        debug_print("Look down")
-        local success, data = turtle.inspectDown()
-        if success then
-            cli_print("Down:", data.name)
-        else
-            cli_print("Down: No block")
-        end
-    end,
-    W = function(c)
-        debug_print("Set waypoint", c)
-        local x, z, depth = getPos()
-        mtk.waypoint[c] = {x, z, depth}
-        print("Waypoint " .. c .. " set to " .. x .. "," .. z .. "," .. depth)
-    end,
-    w = function(c)
-        debug_print("Go to waypoint", c)
-        if mtk.waypoint[c] then
-            local x, z, depth = table.unpack(mtk.waypoint[c])
-            goTo(x, z, depth)
-        else
-            print("Waypoint " .. c .. " not set")
-        end
-    end,
-    C = function(c)
-        debug_print("Set chest position", c)
-        local x, z, depth = getPos()
-        mtk.chest[c] = {x, z, depth - 1}  -- Set position below the turtle
-        print("Chest " .. c .. " set to " .. x .. "," .. z .. "," .. (depth - 1))
-    end,
-    c = function(c)
-        debug_print("Go to chest", c)
-        if mtk.chest[c] then
-            local x, z, depth = table.unpack(mtk.chest[c])
-            goTo(x, z, depth)
-        else
-            print("Chest " .. c .. " not set")
-        end
-    end,
-    f = function(c)
-        if mtk.func[c] then
-            debug_print("Run function", c)
-            mtk.func[c]()
-        else
-            debug_print("No function defined for f" .. c)
-        end
-    end,
-    re = function() 
-        debug_print("Refuel") 
-        if move and move.refuel then 
-            move.refuel() 
-        else 
-            local success = false
-            for i = 1, 16 do
-                if turtle.getItemCount(i) > 0 then
-                    turtle.select(i)
-                    if turtle.refuel(1) then
-                        success = true
-                        break
-                    end
-                end
-            end
-            if not success then
-                print("No fuel found")
-            end
-        end 
-    end,
-    dt = function() 
-        debug_print("Dump Trash") 
-        if move and move.dumpTrash then 
-            move.dumpTrash() 
-        else 
-            print("Dump trash function not available")
-        end 
-    end,
-    gh = function() 
-        debug_print("Go Home") 
-        if move and move.goHome then 
-            move.goHome() 
-        else 
-            print("Go home function not available")
-        end 
-    end,
-    Gh = function() 
-        debug_print("Set Home") 
-        if move and move.setHome then 
-            move.setHome() 
-        else 
-            print("Set home function not available")
-        end 
-    end,
-    q = function()
-        debug_print("Quit")
-        mtk.quit_flag = true
+-- Move function
+table.insert(macro_functions, {"m", function(c)
+    debug_print("Move " .. c)
+    local actions
+    if move then
+        actions = {
+            f = move.goForward,
+            b = move.goBackwards,
+            u = move.goUp,
+            d = move.goDown,
+            l = function() return move.goLeft(true, true) end,
+            r = function() return move.goRight(true, true) end
+        }
+    else
+        actions = {
+            f = turtle.forward,
+            b = turtle.back,
+            u = turtle.up,
+            d = turtle.down,
+            l = function() return false end,
+            r = function() return false end
+        }
     end
-}
+    return actions[c] and actions[c](true) or false
+end})
 
--- Main function to execute the macro
-function mtk.execute_macro(macro_string, loop_count, start_index)
-    loop_count = loop_count or 1
-    start_index = start_index or 1
-    mtk.quit_flag = false
-    take_inventory_snapshot()
-    
-    for current_loop = 1, loop_count do
+-- Turn function
+table.insert(macro_functions, {"t", function(c)
+    debug_print("Turn " .. c)
+    local actions
+    if move then
+        actions = {
+            r = move.turnRight,
+            l = move.turnLeft
+        }
+    else
+        actions = {
+            r = turtle.turnRight,
+            l = turtle.turnLeft
+        }
+    end
+    return actions[c] and actions[c]() or false
+end})
 
-        --reset sub loops
-        for i = 1, #mtk.loopMem do
-            mtk.loopMem[i] = 1
+-- Dig function
+table.insert(macro_functions, {"d", function(c)
+    debug_print("Dig " .. c)
+    local actions = {
+        f = turtle.dig,
+        u = turtle.digUp,
+        d = turtle.digDown
+    }
+    return actions[c] and actions[c]() or false
+end})
+
+-- Select function
+table.insert(macro_functions, {"s", function(c)
+    local slot = tonumber(c, 16) + 1
+    if slot and slot >= 1 and slot <= 16 then
+        debug_print("Select slot", slot)
+        if turtle.getItemCount(slot) <= 1 and mtk.inventory_snapshot[slot] then
+            if not replenish_slot(slot) then
+                return false, "Failed to replenish slot " .. c
+            end
         end
+        turtle.select(slot)
+        mtk.lastSelected = slot
+    else
+        debug_print("Invalid slot:", c)
+        return false, "Invalid slot: " .. c
+    end
+    return true
+end})
 
-        local inner_loop_flag = true
-        while inner_loop_flag do
-            inner_loop_flag = false
+-- Blindly Select function
+table.insert(macro_functions, {"S", function(c)
+    local slot = tonumber(c, 16) + 1
+    if slot and slot >= 1 and slot <= 16 then
+        debug_print("Blindly select slot", slot)
+        turtle.select(slot)
+        mtk.lastSelected = slot
+    else
+        debug_print("Invalid slot:", c)
+    end
+    return true
+end})
 
-            for i = start_index, #macro_string, 2 do
-                local func_code = macro_string:sub(i, i+1)
-                local main_code = func_code:sub(1, 1)
-                local sub_code = func_code:sub(2, 2)
-                
-                local result, error_message
-                if macro_functions[func_code] then
-                    result, error_message = macro_functions[func_code]()
-                elseif macro_functions[main_code] then
-                    if main_code == "x" or main_code == "X" then
-                        result, error_message = macro_functions[main_code](sub_code, macro_string)
-                        if result then
-                            start_index = result
-                            inner_loop_flag = true
-                            break
-                        end
-                    else
-                        result, error_message = macro_functions[main_code](sub_code)
-                    end
-                else
-                    print("Unknown macro command: " .. func_code)
-                    return false, "Unknown command"
-                end
-                
-                if result == false and error_message then
-                    local message = string.format("Paused at index %d, loop %d. Error: %s", i, current_loop, error_message)
-                    print(message)
-                    return false, message
-                end
-                
-                if mtk.quit_flag then
-                    return true
+-- Place function
+table.insert(macro_functions, {"p", function(c)
+    debug_print("Place:" .. c) 
+    local current_slot = turtle.getSelectedSlot()
+    if turtle.getItemCount(current_slot) <= 1 then
+        if not replenish_slot(current_slot) then
+            return false, "Failed to replenish items for placing"
+        end
+    end
+    local actions = {
+        f = turtle.place,
+        u = turtle.placeUp,
+        d = turtle.placeDown,
+        F = function() while turtle.dig() do end return turtle.place() end,
+        U = function() while turtle.digUp() do end return turtle.placeUp() end,
+        D = function() while turtle.digDown() do end return turtle.placeDown() end
+    }
+    return actions[c] and actions[c]() or false
+end})
+
+-- Blindly Place function
+table.insert(macro_functions, {"P", function(c)
+    local actions = {
+        f = turtle.place,
+        u = turtle.placeUp,
+        d = turtle.placeDown,
+        F = function() while turtle.dig() do end return turtle.place() end,
+        U = function() while turtle.digUp() do end return turtle.placeUp() end,
+        D = function() while turtle.digDown() do end return turtle.placeDown() end
+    }
+    return actions[c] and actions[c]() or false
+end})
+
+-- Look function
+table.insert(macro_functions, {"l", function(c)
+    debug_print("Look " .. c)
+    local actions = {
+        f = turtle.inspect,
+        u = turtle.inspectUp,
+        d = turtle.inspectDown
+    }
+    if actions[c] then
+        local success, data = actions[c]()
+        if success then
+            cli_print(c:upper() .. ":", data.name)
+        else
+            cli_print(c:upper() .. ": No block")
+        end
+    else
+        cli_print("Invalid direction: " .. c)
+        return false
+    end
+    return true
+end})
+
+-- Set Waypoint functions
+table.insert(macro_functions, {"W", function(c)
+    debug_print("Set waypoint", c)
+    local x, z, depth = getPos()
+    mtk.waypoint[c] = {x, z, depth}
+    print("Waypoint " .. c .. " set to " .. x .. "," .. z .. "," .. depth)
+end})
+
+-- Go to Waypoint functions
+table.insert(macro_functions, {"w", function(c)
+    debug_print("Go to waypoint", c)
+    if mtk.waypoint[c] then
+        local x, z, depth = table.unpack(mtk.waypoint[c])
+        goTo(x, z, depth)
+    else
+        print("Waypoint " .. c .. " not set")
+    end
+end})
+
+-- Chest functions
+table.insert(macro_functions, {"C", function(c)
+    debug_print("Set chest position", c)
+    local x, z, depth = getPos()
+    mtk.chest[c] = {x, z, depth - 1}  -- Set position below the turtle
+    print("Chest " .. c .. " set to " .. x .. "," .. z .. "," .. (depth - 1))
+end})
+
+table.insert(macro_functions, {"c", function(c)
+    debug_print("Go to chest", c)
+    if mtk.chest[c] then
+        local x, z, depth = table.unpack(mtk.chest[c])
+        goTo(x, z, depth)
+    else
+        print("Chest " .. c .. " not set")
+    end
+end})
+
+-- Custom function
+table.insert(macro_functions, {"f", function(c)
+    if mtk.func[c] then
+        debug_print("Run function", c)
+        mtk.func[c]()
+    else
+        debug_print("No function defined for f" .. c)
+    end
+end})
+
+-- Refuel function
+table.insert(macro_functions, {"r", function(c)
+    debug_print("Refuel")
+    if move and move.refuel then
+        return move.refuel()
+    else
+        local success = false
+        for i = 1, 16 do
+            if turtle.getItemCount(i) > 0 then
+                turtle.select(i)
+                if turtle.refuel(1) then
+                    success = true
+                    break
                 end
             end
         end
-        --TL note: this may need to be debugged with inner loop handling
-        start_index = 1  -- Reset start_index after the first loop
+        if not success then
+            print("No fuel found")
+        end
+        return success
+    end
+end})
+
+-- Dump trash function
+table.insert(macro_functions, {"d", function(c)
+    debug_print("Dump Trash")
+    if move and move.dumpTrash then
+        return move.dumpTrash()
+    else
+        print("Dump trash function not available")
+        return false
+    end
+end})
+
+-- Go home function
+table.insert(macro_functions, {"g", function(c)
+    debug_print("Go Home")
+    if move and move.goHome then
+        return move.goHome()
+    else
+        print("Go home function not available")
+        return false
+    end
+end})
+
+-- Set home function
+table.insert(macro_functions, {"G", function(c)
+    debug_print("Set Home")
+    if move and move.setHome then
+        return move.setHome()
+    else
+        print("Set home function not available")
+        return false
+    end
+end})
+
+-- Placeholder function
+table.insert(macro_functions, {"J", function(c)
+    debug_print("Placeholder " .. c)
+    -- This is a no-op function, it does nothing
+    return true
+end})
+
+-- Initialize jump context
+mtk.jump_context = {}
+
+-- Jump function
+table.insert(macro_functions, {"j", function(c, macro, current_index)
+    local hex = tonumber(c, 16)
+    if not hex or hex < 0 or hex > 15 then
+        return false, "Invalid jump argument: " .. c
+    end
+
+    local j_pattern = string.format("j%s", c)
+    local J_pattern = string.format("J%s", c)
+    local r_pattern = string.format("r%s", c)
+
+    local j_index = mtk.orig_macro:find(j_pattern, 1, true)
+    local J_index = mtk.orig_macro:find(J_pattern, 1, true)
+
+    if not j_index and not J_index then
+        return false, string.format("No matching j%s or J%s found", c, c)
+    end
+
+
+    if j_index and (not J_index or j_index < J_index) then
+        -- This is a forward jump
+        if not mtk.jump_context[c] then
+            mtk.jump_context[c] = {}
+        end
+        table.insert(mtk.jump_context[c], current_index + 2)
+        return J_index and (J_index + 2) or #mtk.orig_macro + 1
+    else
+        -- This is a backward jump (or the start of a loop)
+        local end_index = mtk.orig_macro:find(string.format("[rjJ]%s", c), J_index + 2)
+        if not end_index then
+            return false, string.format("No matching end for J%s found", c)
+        end
+        local sub_macro = mtk.orig_macro:sub(J_index + 2, end_index - 1)
+
+        if not mtk.jump_context[c] then
+            mtk.jump_context[c] = {}
+        end
+        table.insert(mtk.jump_context[c], current_index + 2)
+
+        local loop_count = mtk.jump_list[hex + 1] or 1
+        if loop_count > 1 then
+            -- This is a feature not a bug
+            -- in `J0mfj0` with a -j of 2 you would expect 2x `mf`
+            -- but you get 3x `mf` because there is a `mf` before getting to the j0
+            -- subtract 1 to make it more intuitive
+            loop_count = loop_count - 1
+        end
+        local success, error_message = mtk.execute_macro(sub_macro, loop_count)
+        if not success then
+            return false, error_message
+        end
+
+        table.remove(mtk.jump_context[c])
+        if #mtk.jump_context[c] == 0 then
+            mtk.jump_context[c] = nil
+        end
+
+        return current_index + 2
+    end
+end})
+
+-- Return function
+table.insert(macro_functions, {"r", function(c, macro, current_index)
+    local hex = tonumber(c, 16)
+    if not hex or hex < 0 or hex > 15 then
+        return false, "Invalid return argument: " .. c
+    end
+
+    if not mtk.jump_context[c] or #mtk.jump_context[c] == 0 then
+        return false, "No matching jump context found"
+    end
+
+    -- Get the return index from the context
+    local return_index = table.remove(mtk.jump_context[c])
+    if #mtk.jump_context[c] == 0 then
+        mtk.jump_context[c] = nil
+    end
+    
+    return return_index
+end})
+
+-- Quit function
+table.insert(macro_functions, {"q", function(c)
+    debug_print("Quit")
+    mtk.quit_flag = true
+    return true
+end})
+
+function mtk.execute_macro(macro, loop_count)
+    loop_count = loop_count or 1
+    
+    if not mtk.orig_macro then
+        mtk.orig_macro = macro
+    else
+    end
+    
+    for loop = 1, loop_count do
+        local index = 1
+        while index <= #macro do
+            local main_code = macro:sub(index, index)
+            local sub_code = macro:sub(index + 1, index + 1)
+            
+            local func = nil
+            for _, f in ipairs(macro_functions) do
+                if f[1] == main_code then
+                    func = f[2]
+                    break
+                end
+            end
+            
+            if func then
+                local result, error_message = func(sub_code, macro, index)
+                if error_message then
+                    return false, string.format("Error at index %d: %s", index, error_message)
+                elseif type(result) == "number" then
+                    index = result
+                else
+                    index = index + 2
+                end
+            else
+                index = index + 2
+            end
+            
+            if mtk.quit_flag then
+                return true
+            end
+        end
     end
     return true
 end
 
 -- Command-line interface
 local function print_usage()
-    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]")
+    print("Usage: mtk [-m <macro_string>] [-l <loop_count>] [-v] [-t] [-S <save_path>] [-s <load_path>] [-j <jump_list>]")
     io.read()
     print("  -m, --macro    Macro string (required unless -t is used)")
     print("  -l, --loop     Number of times to loop the macro (optional, default: 1)")
-    print("  -i, --index    Starting index for the macro (optional, default: 1)")
     print("  -v, --verbose  Enable debug output")
-    io.read()
     print("  -t, --test     Enter test interface (REPL mode)")
     print("  -S <path>      Serialize and save inventory snapshot to file")
     print("  -s <path>      Load inventory snapshot from file")
-    print("  -x             Label inner loop lengths in order: [loop count x1] [loop count x2] etc")
+    print("  -j <list>      Comma-separated list of numbers for jump list")
     io.read()
+    print("  -f <file>      Load arguments from file")
     print("  -h, --help     Print this help message")
 end
 
@@ -544,19 +573,19 @@ local function run_test_interface()
     end
 end
 
-function string.trim(s)
-    return s:match("^%s*(.-)%s*$")
-end
-
-function string.split(inputString)
-    local words = {}
-    for word in inputString:gmatch("%S+") do
-        table.insert(words, word)
-    end
-    return unpack(words)
-end
-
 function parseFile(fileName)
+    function string.trim(s)
+        return s:match("^%s*(.-)%s*$")
+    end
+    
+    function string.split(inputString)
+        local words = {}
+        for word in inputString:gmatch("%S+") do
+            table.insert(words, word)
+        end
+        return unpack(words)
+    end
+
     -- Add .mtk extension if there's no extension
     if not fileName:match("%.%w+$") then
         fileName = fileName .. ".mtk"
@@ -604,59 +633,139 @@ function parseFile(fileName)
     return arguments
 end
 
+-- Initialize arg_handlers as an empty table
+local arg_handlers = {}
+
+-- Help handler
+table.insert(arg_handlers, {
+    flags = {"-h", "--help"},
+    handler = function(args, i, config)
+        print_usage()
+        return i, true  -- Return true to indicate execution should stop
+    end
+})
+
+-- Macro string handler
+table.insert(arg_handlers, {
+    flags = {"-m", "--macro"},
+    handler = function(args, i, config)
+        i = i + 1
+        config.macro_string = args[i]
+        return i
+    end
+})
+
+-- Loop count handler
+table.insert(arg_handlers, {
+    flags = {"-l", "--loop"},
+    handler = function(args, i, config)
+        i = i + 1
+        config.loop_count = tonumber(args[i])
+        return i
+    end
+})
+
+-- Verbose mode handler
+table.insert(arg_handlers, {
+    flags = {"-v", "--verbose"},
+    handler = function(args, i, config)
+        mtk.debug = true
+        if lib_debug then
+            lib_debug.set_verbose(true)
+        end
+        return i
+    end
+})
+
+-- Test mode handler
+table.insert(arg_handlers, {
+    flags = {"-t", "--test"},
+    handler = function(args, i, config)
+        config.test_mode = true
+        return i
+    end
+})
+
+-- Save snapshot handler
+table.insert(arg_handlers, {
+    flags = {"-S"},
+    handler = function(args, i, config)
+        i = i + 1
+        config.save_path = args[i]
+        return i
+    end
+})
+
+-- Load snapshot handler
+table.insert(arg_handlers, {
+    flags = {"-s"},
+    handler = function(args, i, config)
+        i = i + 1
+        config.load_path = args[i]
+        return i
+    end
+})
+
+-- Jump list handler
+table.insert(arg_handlers, {
+    flags = {"-j"},
+    handler = function(args, i, config)
+        i = i + 1
+        mtk.jump_list = {}
+        for num in args[i]:gmatch("([^,]+)") do
+            if num == "" then
+                table.insert(mtk.jump_list, nil)
+            else
+                table.insert(mtk.jump_list, tonumber(num))
+            end
+        end
+        return i
+    end
+})
+
+-- File input handler
+table.insert(arg_handlers, {
+    flags = {"-f"},
+    handler = function(args, i, config)
+        i = i + 1
+        local fileName = args[i]
+        local fileArgs = parseFile(fileName)
+        for j, argPair in ipairs(fileArgs) do
+            debug_print("Adding arg:" .. argPair)
+            table.insert(args, i + j, argPair)
+        end
+        return i
+    end
+})
+
 function mtk.run_cli(args)
-    local macro_string = nil
-    local loop_count = 1
-    local start_index = 1
-    local test_mode = false
-    local save_path = nil
-    local load_path = nil
+    local config = {
+        macro_string = nil,
+        loop_count = 1,
+        test_mode = false,
+        save_path = nil,
+        load_path = nil
+    }
+    mtk.jump_list = {}  -- Initialize jump_list
 
     local i = 1
     while i <= #args do
-        if args[i] == "-h" or args[i] == "--help" then
-            print_usage()
-            return
-        elseif args[i] == "-m" or args[i] == "--macro" then
-            i = i + 1
-            macro_string = args[i]
-        elseif args[i] == "-l" or args[i] == "--loop" then
-            i = i + 1
-            loop_count = tonumber(args[i])
-        elseif args[i] == "-i" or args[i] == "--index" then
-            i = i + 1
-            start_index = tonumber(args[i])
-        elseif args[i] == "-v" or args[i] == "--verbose" then
-            mtk.debug = true
-            if lib_debug then
-                lib_debug.set_verbose(true)
+        local handled = false
+        for _, handler in ipairs(arg_handlers) do
+            for _, flag in ipairs(handler.flags) do
+                if args[i] == flag then
+                    local new_i, should_return = handler.handler(args, i, config)
+                    i = new_i
+                    handled = true
+                    if should_return then
+                        return
+                    end
+                    break
+                end
             end
-        elseif args[i] == "-x" or args[i] == "--innerLoops" then
-            mtk.loopTargets = {}
-            i = i + 1
-            while tonumber(args[i]) do
-                print(args[i])
-                table.insert(mtk.loopTargets, tonumber(args[i]))
-                i = i + 1
-            end
-            i = i - 1
-        elseif args[i] == "-t" or args[i] == "--test" then
-            test_mode = true
-        elseif args[i] == "-S" then
-            i = i + 1
-            save_path = args[i]
-        elseif args[i] == "-s" then
-            i = i + 1
-            load_path = args[i]
-        elseif args[i] == "-f" then
-            i = i + 1
-            local fileName = args[i]
-            local fileArgs = parseFile(fileName)
-            for j, argPair in ipairs(fileArgs) do
-                debug_print("Adding arg:" .. argPair)
-                table.insert(args, i + j, argPair)
-            end
-        else
+            if handled then break end
+        end
+        if not handled then
             print("Unknown argument: " .. args[i])
             io.read()
             print_usage()
@@ -665,30 +774,30 @@ function mtk.run_cli(args)
         i = i + 1
     end
 
-    if load_path then
-        if not deserialize_snapshot(load_path) then
-            print("Failed to load inventory snapshot from " .. load_path)
+    if config.load_path then
+        if not deserialize_snapshot(config.load_path) then
+            print("Failed to load inventory snapshot from " .. config.load_path)
             return
         end
     else
         take_inventory_snapshot()
     end
 
-    if save_path then
-        if not serialize_snapshot(save_path) then
-            print("Failed to save inventory snapshot to " .. save_path)
+    if config.save_path then
+        if not serialize_snapshot(config.save_path) then
+            print("Failed to save inventory snapshot to " .. config.save_path)
             return
         end
     end
 
-    if test_mode then
+    if config.test_mode then
         run_test_interface()
-    elseif not macro_string then
+    elseif not config.macro_string then
         print("Error: Macro string is required unless in test mode")
         print_usage()
         return
     else
-        mtk.execute_macro(macro_string, loop_count, start_index)
+        mtk.execute_macro(config.macro_string, config.loop_count)
     end
 end
 
@@ -702,7 +811,8 @@ end
 
 -- Module interface
 return setmetatable(mtk, {
-    __call = function(_, macro_string, loop_count, start_index)
-        return mtk.execute_macro(macro_string, loop_count, start_index)
+    __call = function(_, macro_string, loop_count)
+        mtk.orig_macro = nil  -- Reset orig_macro before each execution
+        return mtk.execute_macro(macro_string, loop_count)
     end
 })
