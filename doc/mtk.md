@@ -17,6 +17,7 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 - Ability to resume macros from a specific index
 - Blind inventory selection and placement options
 - Inventory snapshot serialization and deserialization
+- Jump and return functionality for complex control flow
 
 ## Installation
 
@@ -30,25 +31,25 @@ The Macro Toolkit (MTK) is a versatile Lua script designed for ComputerCraft tur
 Run the script directly with:
 
 ```
-mtk -m <macro_string> [-l <loop_count>] [-i <start_index>] [-v] [-t] [-S <save_path>] [-s <load_path>]
+mtk -m <macro_string> [-l <loop_count>] [-v] [-t] [-S <save_path>] [-s <load_path>] [-j <jump_list>]
 ```
 
 Options:
 - `-m, --macro`: Macro string (required unless -t is used)
 - `-l, --loop`: Number of times to loop the macro (optional, default: 1)
-- `-i, --index`: Starting index for the macro (optional, default: 1)
 - `-v, --verbose`: Enable debug output
 - `-t, --test`: Enter test interface (REPL mode)
 - `-S <path>`: Serialize and save inventory snapshot to file
 - `-s <path>`: Load inventory snapshot from file
+- `-j <list>`: Comma-separated list of numbers for jump list
+- `-f <file>`: Load arguments from file
 - `-h, --help`: Print help message
-- `-x`        : Label inner loop lengths in order: [loop count x1] [loop count x2] etc
 
 ### As a Module
 
 ```lua
 local mtk = require("mtk")
-local success, error_message = mtk("mfmftrdfpf", 2, 1)  -- Execute the macro "mfmftrdfpf" twice, starting from index 1
+local success, error_message = mtk("mfmftrdfpf", 2)  -- Execute the macro "mfmftrdfpf" twice
 
 if not success then
     print("Macro execution failed:", error_message)
@@ -67,7 +68,7 @@ end
 - Waypoints: `W[c]` (set), `w[c]` (go to)
 - Chests: `C[c]` (set), `c[c]` (go to)
 - Utility: `re` (refuel), `dt` (dump trash), `gh` (go home), `Gh` (set home), `q` (quit)
-- LoopStart: `x[c]` (loop start), `X[c]` (loop end) inner loops, can be nested (Tom: todo)
+- Jump and Return: `J[0-F]` (jump start), `j[0-F]` (jump), `r[0-F]` (return)
 
 ### Test Mode
 
@@ -79,7 +80,7 @@ In test mode, enter macro commands interactively. Special commands:
 
 ### Inventory Management
 
-MTK now includes advanced inventory management:
+MTK includes advanced inventory management:
 - At the start of a macro execution, a snapshot of the inventory is taken.
 - When selecting a slot (`s[0-F]`), if the slot has 1 or fewer items and wasn't empty in the initial snapshot, MTK attempts to replenish it from other slots.
 - When placing blocks (`pf`, `pu`, `pd`), if the current slot has 1 or fewer items, MTK attempts to replenish it based on the last selected slot's initial content.
@@ -87,17 +88,41 @@ MTK now includes advanced inventory management:
 
 ### Inventory Snapshot Serialization
 
-You can now save and load inventory snapshots:
+You can save and load inventory snapshots:
 - Use the `-S <path>` command-line option to save the current inventory snapshot to a file.
 - Use the `-s <path>` command-line option to load a previously saved inventory snapshot.
 
-### Resuming Macros
+### Jump and Return Functionality
 
-You can now resume a macro from a specific index:
-- Use the `-i` command-line option to specify the starting index.
-- When using MTK as a module, provide the starting index as the third argument.
+MTK now supports complex control flow with jump and return commands:
 
-### Error Handling
+- `J[0-F]`: Marks the start of a jump section (hex value 0-15)
+- `j[0-F]`: Jumps to the corresponding `J` marker (hex value 0-15)
+- `r[0-F]`: Returns from a jump section (hex value 0-15)
+
+The `-j` command-line option allows you to specify a comma-separated list of numbers that determine how many times each jump section should be executed. Use empty values (e.g., `-j 2,,3`) to skip specifying counts for certain jumps.
+
+Examples:
+
+1. Simple jump:
+   ```
+   mtk -m "J0mfj0" -j 2
+   ```
+   This will execute `mf` twice.
+
+2. Nested jumps:
+   ```
+   mtk -m "J0mfJ1trj1j0" -j 2,3
+   ```
+   This will move forward, turn right 3 times, and repeat this sequence twice.
+
+3. Jump with return:
+   ```
+   mtk -m "j0J1mur1J0j1j1j1"
+   ```
+   This will move up three times by using jumps and returns.
+
+## Error Handling
 
 If MTK encounters an error during execution (e.g., failed movement, unable to place a block), it will pause execution and return:
 - A boolean indicating success or failure
@@ -115,9 +140,9 @@ If MTK encounters an error during execution (e.g., failed movement, unable to pl
    mtk -m WAmfmftrtrwA
    ```
 
-3. Run a macro 5 times with verbose output, starting from the 3rd command:
+3. Run a macro with jumps and returns:
    ```
-   mtk -m mfdfmbdu -l 5 -i 3 -v
+   mtk -m "J0mfJ1trj1j0" -j 2,3
    ```
 
 4. Save the current inventory snapshot and run a macro:
@@ -133,16 +158,6 @@ If MTK encounters an error during execution (e.g., failed movement, unable to pl
 6. Enter test mode:
    ```
    mtk -t
-   ```
-
-7. Simple flying machine (internal looping with prefix and postfix):
-   ```
-   mtk -m muddpdmfmdmddupumbmbmumux1mfmdmdmfmfmumudumdmdpumbmbmumuX1mdmdmfmudf -x 5
-   ```
-
-8. Bore down (nested looping):
-   ```
-   mtk -m mfmfx1mdx2dftrX2X1 -x 5 4
    ```
 
 ## Extending MTK
@@ -164,11 +179,3 @@ Then use `fx` in your macro to call this function.
 - (Optional) Move Library (`/lib/move.lua`)
 - (Optional) Item Types Library (`/lib/item_types.lua`)
 - (Optional) Debug Library (`/lib/lib_debug.lua`)
-
-## License
-
-[Specify your license here]
-
-## Contributing
-
-[Add contribution guidelines if applicable]

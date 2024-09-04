@@ -20,6 +20,11 @@ if not _G.colors then
     }
 end
 
+-- function that checks if we are in game
+local function in_game()
+    return _G.colors.blue ~= nil
+end
+
 -- Variable to track turtle actions
 local turtle_test_path = ""
 
@@ -113,82 +118,115 @@ local function clear_path()
 end
 
 -- Test cases
-local tests = {
-    test_movement = function()
+local tests = {}
+
+table.insert(tests, {
+    name = "test_movement",
+    func = function()
         clear_path()
         mtk("mfmbmumdtrtl")
         assert_path("mfmbmumdtrtl", "Movement test failed")
-    end,
-    -- test_movement_failure = function()
-    --     clear_path()
-    --     set_failure_scenario("blocked_movement")
-    --     -- TODO - Add test for failure
-    -- end,
-    test_fake_movement = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_fake_movement",
+    func = function()
         clear_path()
         mtk("mrml")
         assert_path("trmftltlmftr", "Fake Movement test failed")
-    end,
-    test_digging = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_digging",
+    func = function()
         clear_path()
         mtk("dfdudd")
         assert_path("dfdudd", "Digging test failed")
-    end,
-    -- test_digging_failure = function()
-    --     clear_path()
-    --     set_failure_scenario("bedrock")
-    --     -- TODO - Add test for failure
-    -- end,
-    test_inspecting = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_inspecting",
+    func = function()
         clear_path()
         mtk("lfldlu")
         assert_path("lfldlu", "Inspecting test failed")
-    end,
-    test_loop = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_loop",
+    func = function()
         clear_path()
         mtk("mf", 2)
         assert_path("mfmf", "Loop test failed")
-    end,
-    test_jump = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_jump",
+    func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2,3}
-        mtk("x1mfX1")
+        mtk.jump_list = {2}
+        mtk("J0mfj0")
         assert_path("mfmf", "Jump test failed")
-    end,
-    test_nested_jump = function()
+    end
+})
+
+table.insert(tests, {
+    name = "test_nested_jump",
+    func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2,3}
-        mtk("x1mfx2trX2X1")
+        mtk.jump_list = {2,3}
+        mtk("J0mfJ1trj1j0")
         assert_path("mftrtrtrmftrtrtr", "Nested loop test failed")
-    end,
-    test_looping_jump = function()
-        --test to add to validate nested loop functioning with main loop:
-        --mtk -m mumux1mdX1 -x 2 -l 2  (should return to initial position if working correctly)
+    end
+})
+
+table.insert(tests, {
+    name = "test_looping_jump",
+    func = function()
         clear_path()
         mtk.loopMem = {}
-        mtk.loopTargets = {2}
-        mtk("mumux1mdX1", 2)
+        mtk.jump_list = {2}
+        mtk("mumuJ0mdj0", 2)
         assert_path("mumumdmdmumumdmd", "Looping jump test failed")
-    end,
-}
+    end
+})
+
+table.insert(tests, {
+    name = "test_jump_return",
+    func = function()
+        clear_path()
+        mtk.loopMem = {}
+        mtk.jump_list = {nil, nil}
+        mtk("j0J1mur1J0j1j1j1")
+        assert_path("mumumu", "Jump Return test failed")
+    end
+})
 
 -- Run tests
 local function run_tests()
     local passed = 0
     local failed = 0
 
-    for name, func in pairs(tests) do
-        local success, error_message = pcall(func)
+    for _, test in ipairs(tests) do
+        local success, error_message = pcall(test.func)
+        if in_game() then
+            os.sleep(0.5)
+        end
         if success then
             term.setTextColor(colors.green) 
-            print("PASS: " .. name)
+            print("PASS: " .. test.name)
             term.setTextColor(colors.white)
             passed = passed + 1
         else
             term.setTextColor(colors.red)
-            print("FAIL: " .. name .. " - " .. error_message)
+            print("FAIL: " .. test.name .. " - " .. error_message)
             term.setTextColor(colors.white)
             failed = failed + 1
         end
