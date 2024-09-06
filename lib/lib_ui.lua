@@ -1,3 +1,5 @@
+local lib = {}
+
 local monitor = peripheral.wrap("monitor_4")  -- Replace "right" with the side your monitor is on
 
 -- Function to draw a single pixel
@@ -14,15 +16,18 @@ end
 function drawPixels(startX, startY, pixelGrid)
     local originalColor = monitor.getBackgroundColor()
     monitor.setCursorPos(startX, startY)
+    local endY = startY
     for rowIndex, row in ipairs(pixelGrid) do
         for colIndex, color in ipairs(row) do
             local x = startX + colIndex - 1
             local y = startY + rowIndex - 1
-            drawPixel(monitor, x, y, color)
+            drawPixel(x, y, color)
         end
+        endY = endY + 1
     end
     -- Restore the original background color
     monitor.setBackgroundColor(originalColor)
+    return endY
 end
 
 -- Define two-letter color variables
@@ -94,9 +99,10 @@ local function write(x, y, text)
 end
 
 --
-local function displayBar(x, y, numItems, maxItems)
+function displayBar(x, y, numItems, maxItems)
+
     -- Write the storage percentage
-    local dText = "Chest is " .. string.format("%.2f", (numItems / maxItems) * 100) .. "% full"
+    local dText = "Storage is " .. string.format("%.2f", (numItems / maxItems) * 100) .. "% full"
     y = write(x, y, dText)
 
     -- Draw the progress bar
@@ -110,7 +116,8 @@ local function displayBar(x, y, numItems, maxItems)
 end
 
 --
-function displayManager(numItems, maxItems)
+function lib.displayManager(numItems, maxItems)
+    monitor.setTextScale(0.5)
 
     local cursorY = 1
     monitor.clear()
@@ -122,6 +129,8 @@ function displayManager(numItems, maxItems)
 
     cursorY = drawPixels( 4, cursorY, cakePixelGrid)
     
+    -- monitor.setTextScale(2)
+
     cursorY = write(1, cursorY, "this is a WIP.") 
     
     cursorY = drawHappyFace(3, cursorY)
@@ -133,3 +142,5 @@ end
 -- local maxItems = 1728  -- Example maximum capacity
 
 -- displayBar(numItems, maxItems)
+
+return lib
