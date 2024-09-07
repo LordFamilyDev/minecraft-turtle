@@ -1,4 +1,4 @@
--- print.lua
+-- print.lua (Optimized version with cursor and improvements)
 
 -- Function to read JSON file
 local function readJSON(path)
@@ -12,6 +12,9 @@ end
 -- Turtle state
 local position = {x = 0, y = 0, z = 0}
 local direction = 0 -- 0: +x, 90: +z, 180: -x, 270: -z
+
+-- Cursor state
+local cursor = {x = 0, y = 0, z = 0}
 
 -- Movement functions
 local function moveForward()
@@ -34,6 +37,14 @@ local function moveUp()
     return false
 end
 
+local function moveDown()
+    if turtle.down() then
+        position.y = position.y - 1
+        return true
+    end
+    return false
+end
+
 local function turnLeft()
     turtle.turnLeft()
     direction = (direction - 90) % 360
@@ -42,6 +53,61 @@ end
 local function turnRight()
     turtle.turnRight()
     direction = (direction + 90) % 360
+end
+
+-- Optimized function to turn to a target direction
+local function turnToDirection(targetDirection)
+    local diff = (targetDirection - direction + 360) % 360
+    if diff == 270 then
+        turnLeft()
+    else
+        while direction ~= targetDirection do
+            turnRight()
+        end
+    end
+end
+
+-- New function to move turtle to cursor position
+local function moveToCursor()
+    -- Calculate the difference between turtle position and cursor
+    local dx = cursor.x - position.x
+    local dy = cursor.y - position.y
+    local dz = cursor.z - position.z
+
+    -- Move vertically
+    while dy > 0 do moveUp() dy = dy - 1 end
+    while dy < 0 do moveDown() dy = dy + 1 end
+
+    -- Determine target direction and move horizontally
+    if dx ~= 0 then
+        turnToDirection(dx > 0 and 0 or 180)
+        while dx ~= 0 do
+            moveForward()
+            dx = dx > 0 and dx - 1 or dx + 1
+        end
+    end
+    if dz ~= 0 then
+        turnToDirection(dz > 0 and 90 or 270)
+        while dz ~= 0 do
+            moveForward()
+            dz = dz > 0 and dz - 1 or dz + 1
+        end
+    end
+end
+
+-- New function to return turtle to starting position
+local function returnToStart()
+    -- Move to x = -1, z = -1 first
+    turnToDirection(180) -- Face -x direction
+    while position.x > -1 do moveForward() end
+    turnToDirection(270) -- Face -z direction
+    while position.z > -1 do moveForward() end
+    
+    -- Then move down to y = 0
+    while position.y > 0 do moveDown() end
+    
+    -- Finally, face the original direction (+x)
+    turnToDirection(0)
 end
 
 -- Inventory management functions
@@ -96,6 +162,7 @@ local function printBlock(structure, x, y, z)
     local block = column:sub(z+1, z+1)
     if block == " " then return true end -- Air, no need to print
     if selectSlot(block) then
+        moveToCursor()
         return turtle.placeDown()
     end
     return false
@@ -111,44 +178,18 @@ local function printStructure(structure)
 
     for y = 0, height - 1 do
         print("Printing layer " .. (y + 1))
-        local forward = true
-        for z = 0, depth - 1 do
-            if forward then
-                for x = 0, width - 1 do
-                    printBlock(structure, position.x, position.y, position.z)
-                    if x < width - 1 then moveForward() end
-                end
-            else
-                for x = width - 1, 0, -1 do
-                    printBlock(structure, position.x, position.y, position.z)
-                    if x > 0 then moveForward() end
-                end
-            end
-
-            if z < depth - 1 then
-                if forward then
-                    turnRight()
-                    moveForward()
-                    turnRight()
-                else
-                    turnLeft()
-                    moveForward()
-                    turnLeft()
-                end
-                forward = not forward
-            end
-        end
-
-        if y < height - 1 then
-            moveUp()
-            -- Ensure we're facing the correct direction to start the next layer
-            if (depth % 2 == 0) ~= forward then
-                turnRight()
-                turnRight()
+        cursor.y = y
+        for x = 0, width - 1 do
+            cursor.x = x
+            for z = 0, depth - 1 do
+                cursor.z = z
+                printBlock(structure, x, y, z)
             end
         end
     end
     print("Structure printing completed!")
+    returnToStart()
+    print("Returned to starting position.")
 end
 
 -- Main execution
