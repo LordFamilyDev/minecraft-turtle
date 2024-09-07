@@ -1,4 +1,4 @@
--- print.lua (Optimized version with cursor and improvements)
+-- print.lua (Highly optimized version with efficient path planning)
 
 -- Function to read JSON file
 local function readJSON(path)
@@ -10,11 +10,13 @@ local function readJSON(path)
 end
 
 -- Turtle state
-local position = {x = 0, y = 0, z = 0}
+local position = {x = -1, y = 0, z = -1}  -- Start at -1, 0, -1
 local direction = 0 -- 0: +x, 90: +z, 180: -x, 270: -z
 
--- Cursor state
-local cursor = {x = 0, y = 0, z = 0}
+-- PrintObject constructor
+local function PrintObject(x, y, z, blockType)
+    return {x = x, y = y, z = z, blockType = blockType}
+end
 
 -- Movement functions
 local function moveForward()
@@ -67,36 +69,44 @@ local function turnToDirection(targetDirection)
     end
 end
 
--- New function to move turtle to cursor position
-local function moveToCursor()
-    -- Calculate the difference between turtle position and cursor
-    local dx = cursor.x - position.x
-    local dy = cursor.y - position.y
-    local dz = cursor.z - position.z
+-- Function to calculate Manhattan distance
+local function manhattanDistance(x1, z1, x2, z2)
+    return math.abs(x1 - x2) + math.abs(z1 - z2)
+end
 
-    -- Move vertically
-    while dy > 0 do moveUp() dy = dy - 1 end
-    while dy < 0 do moveDown() dy = dy + 1 end
-
-    -- Determine target direction and move horizontally
-    if dx ~= 0 then
-        turnToDirection(dx > 0 and 0 or 180)
-        while dx ~= 0 do
-            moveForward()
-            dx = dx > 0 and dx - 1 or dx + 1
+-- Function to find the nearest print object
+local function findNearestPrintObject(printObjects)
+    local nearest = nil
+    local minDistance = math.huge
+    for i, obj in ipairs(printObjects) do
+        local distance = manhattanDistance(position.x, position.z, obj.x, obj.z)
+        if distance < minDistance then
+            minDistance = distance
+            nearest = i
         end
     end
-    if dz ~= 0 then
-        turnToDirection(dz > 0 and 90 or 270)
-        while dz ~= 0 do
-            moveForward()
-            dz = dz > 0 and dz - 1 or dz + 1
-        end
+    return nearest
+end
+
+-- Function to move turtle to print object
+local function moveToPrintObject(obj)
+    -- Move vertically
+    while position.y < obj.y do moveUp() end
+    while position.y > obj.y do moveDown() end
+
+    -- Move horizontally
+    if position.x ~= obj.x then
+        turnToDirection(obj.x > position.x and 0 or 180)
+        while position.x ~= obj.x do moveForward() end
+    end
+    if position.z ~= obj.z then
+        turnToDirection(obj.z > position.z and 90 or 270)
+        while position.z ~= obj.z do moveForward() end
     end
 end
 
--- New function to return turtle to starting position
-local function returnToStart()
+-- Function to return turtle to refill position
+local function goToRefillPosition()
     -- Move to x = -1, z = -1 first
     turnToDirection(180) -- Face -x direction
     while position.x > -1 do moveForward() end
@@ -108,6 +118,19 @@ local function returnToStart()
     
     -- Finally, face the original direction (+x)
     turnToDirection(0)
+end
+
+-- Function to refill from chest
+local function refillFromChest()
+    goToRefillPosition()
+    print("Refilling from chest...")
+    for slot = 1, 16 do
+        if turtle.getItemCount(slot) == 0 then
+            turtle.select(slot)
+            turtle.suckDown()
+        end
+    end
+    print("Refill complete.")
 end
 
 -- Inventory management functions
@@ -131,7 +154,11 @@ local function replenishSlot(slot)
     if currentCount > 1 then return true end
 
     local sourceSlot = findSameItem(slot)
-    if not sourceSlot then return false end
+    if not sourceSlot then
+        refillFromChest()
+        sourceSlot = findSameItem(slot)
+        if not sourceSlot then return false end
+    end
 
     turtle.select(sourceSlot)
     turtle.transferTo(slot, 64 - currentCount)
@@ -146,6 +173,7 @@ local function selectSlot(index)
         if turtle.getItemCount() <= 1 then
             if not replenishSlot(slot) then
                 print("Warning: Running low on items in slot " .. slot)
+                return false
             end
         end
         return true
@@ -153,16 +181,28 @@ local function selectSlot(index)
     return false
 end
 
--- Printing function
-local function printBlock(structure, x, y, z)
+-- Function to generate print objects for a layer
+local function generatePrintObjects(structure, y)
+    local printObjects = {}
     local layer = structure.layerMap[y+1]
-    if not layer then return false end
-    local column = layer[x+1]
-    if not column then return false end
-    local block = column:sub(z+1, z+1)
-    if block == " " then return true end -- Air, no need to print
-    if selectSlot(block) then
-        moveToCursor()
+    if not layer then return printObjects end
+
+    for x = 0, #layer - 1 do
+        local column = layer[x+1]
+        for z = 0, #column - 1 do
+            local block = column:sub(z+1, z+1)
+            if block ~= " " then
+                table.insert(printObjects, PrintObject(x, y, z, block))
+            end
+        end
+    end
+    return printObjects
+end
+
+-- Function to print a single object
+local function printObject(obj)
+    if selectSlot(obj.blockType) then
+        moveToPrintObject(obj)
         return turtle.placeDown()
     end
     return false
@@ -170,25 +210,29 @@ end
 
 -- Main printing function
 local function printStructure(structure)
-    local width = #structure.layerMap[1]
-    local depth = #structure.layerMap[1][1]
     local height = #structure.layerMap
 
-    print("Structure dimensions: " .. width .. "x" .. depth .. "x" .. height)
+    print("Structure height: " .. height)
 
     for y = 0, height - 1 do
         print("Printing layer " .. (y + 1))
-        cursor.y = y
-        for x = 0, width - 1 do
-            cursor.x = x
-            for z = 0, depth - 1 do
-                cursor.z = z
-                printBlock(structure, x, y, z)
+        local printObjects = generatePrintObjects(structure, y)
+        
+        while #printObjects > 0 do
+            local nearestIndex = findNearestPrintObject(printObjects)
+            local obj = printObjects[nearestIndex]
+            
+            while not printObject(obj) do
+                print("Refilling and retrying...")
+                refillFromChest()
+                moveToPrintObject(obj)
             end
+            
+            table.remove(printObjects, nearestIndex)
         end
     end
     print("Structure printing completed!")
-    returnToStart()
+    goToRefillPosition()
     print("Returned to starting position.")
 end
 
