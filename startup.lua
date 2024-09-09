@@ -1,11 +1,20 @@
 local sPath = shell.path()
-sPath = sPath .. ":/bin"
+sPath = sPath .. ":/bin:/usr/bin"
 shell.setPath(sPath)
+os.run({}, "/httpupdate.lua")
+
+-- Clear the screen
+term.clear()
+term.setCursorPos(1,1)
+-- Print "CraftOS 1.9" in yellow
+term.setTextColor(colors.yellow)
+print("CraftOS 1.9 (updated)")
+term.setTextColor(colors.white)
+shell.run("motd")
 
 -- Startup Remote Desktop Service
 if term.isColor() then
     -- check for updates
-    shell.run("background", "httpupdate")
     -- this is an advanced computer
     if fs.exists("/usr/bin/vncd") then
         if fs.exists("/bin/util/wrapper.lua") then
@@ -15,6 +24,4 @@ if term.isColor() then
             end
         end
     end
-else
-    shell.run("httpupdate")
 end
