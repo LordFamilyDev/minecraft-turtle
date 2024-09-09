@@ -5,7 +5,7 @@ shell.setPath(sPath)
 -- Startup Remote Desktop Service
 if term.isColor() then
     -- check for updates
-    shell.run("background", "httpdupate")
+    shell.run("background", "httpupdate")
     -- this is an advanced computer
     if fs.exists("/usr/bin/vncd") then
         if fs.exists("/bin/util/wrapper.lua") then
@@ -16,5 +16,5 @@ if term.isColor() then
         end
     end
 else
-    shell.run("/bin/httpupdate")
+    shell.run("httpupdate")
 end
