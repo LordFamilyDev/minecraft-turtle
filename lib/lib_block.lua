@@ -8,6 +8,7 @@
 -- blockSet(properties, <direction>) - Set block properties in the specified direction
 -- blockSetUp(properties) - Set block properties above the turtle
 -- blockSetDown(properties) - Set block properties below the turtle
+-- groundPenetratingRadar(filter_string) - Scan for specified ore types below the turtle and track veins
 
 -- Properties: Lua table with the following keys
 -- facing - "north", "east", "south", "west"
@@ -148,6 +149,103 @@ end
 
 function blockAPI.blockSetDown(properties)
     return blockAPI.blockSet(properties, "down")
+end
+
+-- Helper function to check if a block matches the filter
+local function blockMatchesFilter(block_type, filter_list)
+    for ore in pairs(filter_list) do
+        if block_type:lower():find(ore) then
+            return ore
+        end
+    end
+    return nil
+end
+
+-- Helper function to get neighboring blocks
+local function getNeighbors(x, y, z)
+    return {
+        {x-1, y, z}, {x+1, y, z},
+        {x, y-1, z}, {x, y+1, z},
+        {x, y, z-1}, {x, y, z+1}
+    }
+end
+
+function blockAPI.groundPenetratingRadar(filter_string)
+    local pos, error = getTurtlePositionAndFacing()
+    if not pos then
+        return nil, error
+    end
+
+    local filter_list = {}
+    for ore in filter_string:gmatch("%w+") do
+        filter_list[ore:lower()] = true
+    end
+
+    local ScanData = {}
+    local to_scan = {}
+    local scanned = {}
+
+    -- Initial vertical scan
+    for y = pos.y - 1, -62, -1 do
+        local result, error = sendRequest("block_get", pos.x, y, pos.z)
+        if result and result.block_type then
+            local matched_ore = blockMatchesFilter(result.block_type, filter_list)
+            if matched_ore then
+                if not ScanData[matched_ore] then
+                    ScanData[matched_ore] = {}
+                end
+                table.insert(ScanData[matched_ore], {pos.x, y, pos.z})
+                
+                -- Add neighboring blocks to the scan list
+                for _, neighbor in ipairs(getNeighbors(pos.x, y, pos.z)) do
+                    table.insert(to_scan, neighbor)
+                end
+            end
+        elseif error then
+            print("Error scanning block at " .. pos.x .. "," .. y .. "," .. pos.z .. ": " .. error)
+        end
+        
+        -- Add a small delay to avoid overwhelming the server
+        os.sleep(0.05)
+    end
+
+    -- Scan adjacent blocks for veins
+    while #to_scan > 0 do
+        local current = table.remove(to_scan)
+        local x, y, z = unpack(current)
+        
+        -- Check if we've already scanned this block
+        local key = x .. "," .. y .. "," .. z
+        if scanned[key] then
+            goto continue
+        end
+        scanned[key] = true
+
+        local result, error = sendRequest("block_get", x, y, z)
+        if result and result.block_type then
+            local matched_ore = blockMatchesFilter(result.block_type, filter_list)
+            if matched_ore then
+                if not ScanData[matched_ore] then
+                    ScanData[matched_ore] = {}
+                end
+                table.insert(ScanData[matched_ore], {x, y, z})
+                
+                -- Add neighboring blocks to the scan list
+                for _, neighbor in ipairs(getNeighbors(x, y, z)) do
+                    table.insert(to_scan, neighbor)
+                end
+            end
+        elseif error then
+            print("Error scanning block at " .. x .. "," .. y .. "," .. z .. ": " .. error)
+        end
+        
+        -- Add a small delay to avoid overwhelming the server
+        os.sleep(0.05)
+        
+        ::continue::
+    end
+
+    return ScanData
 end
 
 return blockAPI
