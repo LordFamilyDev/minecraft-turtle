@@ -252,18 +252,16 @@ function blockAPI.chunkScan(filterList)
     local function scanPoint(px, py, pz)
         local result, error = sendRequest("block_get", px, py, pz)
         if result and result.block_type then
-            for _, ore in ipairs(filterList) do
-                if result.block_type:find(ore) then
-                    table.insert(oresFound, {px, py, pz, result.block_type})
-                    -- Check neighbors
-                    addToScan(px+1, py, pz)
-                    addToScan(px-1, py, pz)
-                    addToScan(px, py+1, pz)
-                    addToScan(px, py-1, pz)
-                    addToScan(px, py, pz+1)
-                    addToScan(px, py, pz-1)
-                    break
-                end
+            local matchedOre = blockMatchesFilter(result.block_type, filterList)
+            if matchedOre then
+                table.insert(oresFound, {px, py, pz, result.block_type})
+                -- Check neighbors
+                addToScan(px+1, py, pz)
+                addToScan(px-1, py, pz)
+                addToScan(px, py+1, pz)
+                addToScan(px, py-1, pz)
+                addToScan(px, py, pz+1)
+                addToScan(px, py, pz-1)
             end
         elseif error then
             print("Error scanning block at " .. px .. "," .. py .. "," .. pz .. ": " .. error)
