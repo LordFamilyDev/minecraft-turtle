@@ -50,15 +50,15 @@ end
 
 -- Function to get block information
 local function getBlockInfo(x, y, z)
-    log("Attempting to get block info at %d, %d, %d", x, y, z)
+    -- log("Attempting to get block info at %d, %d, %d", x, y, z)
     local result = commands.getBlockInfo(x, y, z)
-    log("getBlockInfo raw result: %s", textutils.serialize(result))
+    -- log("getBlockInfo raw result: %s", textutils.serialize(result))
     
     if type(result) == "table" and result.name then
-        log("Successfully retrieved block info: %s", textutils.serialize(result))
+        -- log("Successfully retrieved block info: %s", textutils.serialize(result))
         return result
     else
-        log("Failed to get valid block info")
+        -- log("Failed to get valid block info")
         return nil, "Invalid or no block at specified coordinates"
     end
 end
@@ -90,9 +90,9 @@ local function setBlockProperties(x, y, z, properties)
         blockInfo.name, stateString
     )
     
-    log("Executing command: %s", command)
+    -- log("Executing command: %s", command)
     local success, result = commands.exec(command)
-    log("setblock result: success=%s, result=%s", tostring(success), textutils.serialize(result))
+    -- log("setblock result: success=%s, result=%s", tostring(success), textutils.serialize(result))
     return success, result
 end
 
@@ -113,24 +113,24 @@ function api.block_get(sender, x, y, z)
         local errorResponse = textutils.serializeJSON({
             error = "Unable to get block information: " .. tostring(error)
         })
-        log("Sending error response: %s", errorResponse)
+        -- log("Sending error response: %s", errorResponse)
         return errorResponse
     end
 end
 
 function api.block_set(sender, x, y, z, properties)
-    log("Received block_set request from %d for %d, %d, %d, properties=%s", sender, x, y, z, textutils.serialize(properties))
+    -- log("Received block_set request from %d for %d, %d, %d, properties=%s", sender, x, y, z, textutils.serialize(properties))
     local success, result = setBlockProperties(x, y, z, properties)
     local response = textutils.serializeJSON({
         success = success,
         result = result
     })
-    log("Sending response: %s", response)
+    -- log("Sending response: %s", response)
     return response
 end
 
 function api.get_surrounding_blocks(sender, x, y, z)
-    log("Received get_surrounding_blocks request from %d for %d, %d, %d", sender, x, y, z)
+    -- log("Received get_surrounding_blocks request from %d for %d, %d, %d", sender, x, y, z)
     local blocks = {}
     local directions = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}}  -- N, E, S, W
     for i, dir in ipairs(directions) do
@@ -146,7 +146,7 @@ function api.get_surrounding_blocks(sender, x, y, z)
         end
     end
     local response = textutils.serializeJSON({blocks = blocks})
-    log("Sending response: %s", response)
+    -- log("Sending response: %s", response)
     return response
 end
 
@@ -156,14 +156,14 @@ local function handleMessages()
         local sender, message, msgProtocol = rednet.receive()
         if sender and message then
             if msgProtocol == discovery_protocol and message == "DISCOVER" then
-                log("Received discovery request from %d", sender)
+                -- log("Received discovery request from %d", sender)
                 rednet.send(sender, "ACKNOWLEDGE", discovery_protocol)
             elseif msgProtocol == protocol and type(message) == "table" and message.action and api[message.action] then
-                log("Received API request from %d: %s", sender, textutils.serialize(message))
+                -- log("Received API request from %d: %s", sender, textutils.serialize(message))
                 local response = api[message.action](sender, table.unpack(message.params or {}))
                 rednet.send(sender, response, protocol)
             else
-                log("Received invalid request from %d: %s", sender, textutils.serialize(message))
+                -- log("Received invalid request from %d: %s", sender, textutils.serialize(message))
                 rednet.send(sender, textutils.serializeJSON({error = "Invalid request"}), protocol)
             end
         end
@@ -171,6 +171,6 @@ local function handleMessages()
 end
 
 -- Start the server
-log("Block API Server started on computer %d", host_id)
-log("Use protocol: %s", protocol)
+-- log("Block API Server started on computer %d", host_id)
+-- log("Use protocol: %s", protocol)
 handleMessages()
