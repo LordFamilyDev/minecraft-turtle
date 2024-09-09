@@ -25,10 +25,5 @@ print("Wrapper started for program: " .. program)
 
 while true do
     local result = runProgram()
-    if result == true then
-        print("Program exited normally. Restarting in 5 seconds...")
-    else
-        print("Program crashed or exited abnormally. Restarting in 5 seconds...")
-    end
-    os.sleep(5)
+    os.sleep()
 end
