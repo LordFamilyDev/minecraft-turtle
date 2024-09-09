@@ -1,0 +1,719 @@
+name = owncloud
+  type = meta
+	category = owncloud
+	dependencies = jakobdev/owncloudpluginfile jakobdev/owncloudplugingps jakobdev/owncloudcore jakobdev/owncloudmanual
+	version = 1.0.0
+	size = 0
+end
+
+name = simplestripmine
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/SimpleStripmine.lua
+   filename = SimpleStripmine.lua
+  category = turtle
+  dependencies = none
+  target = /usr/bin
+  version = 1.0.0
+  size = 1032
+end
+
+name = numbers
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/numbers.lua
+   filename = Numbers
+  category = fun
+  dependencies = none
+  target = /usr/bin
+  version = 1.0.0
+  size = 588
+end
+
+name = mynaptic
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Mynaptic.lua
+   filename = Mynaptic
+  category = packman mynaptic
+  dependencies = jakobdev/jakobapi jakobdev/clipboard
+  target = /usr/bin
+  version = 12.2
+  size = 52028
+  description = A GUI for Packman
+end
+
+
+name = man
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/man.lua
+   filename = man
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 2.0.0
+  size = 296
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/man.txt
+   filename = man
+end
+
+name = echo
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/echo.lua
+   filename = usr/bin/echo
+  category = shell
+  dependencies = none
+  target = /
+  setup = rom/programs/http/wget https://gitlab.com/JakobDev/Computercraft/raw/master/Help/echo.txt /usr/help/echo
+  cleanup = rom/programs/delete /usr/help/echo
+  version = 1.0.0
+  size = 110
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/echo.txt
+   filename = echo
+end
+
+name = htmlparser
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/API/htmlparser.lua
+   filename = htmlparser
+  category = apis
+  dependencies = none
+  target = /usr/apis
+  version = 1.0.0
+  size = 9753
+end
+
+name = find
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/find.lua
+   filename = find
+  category = shell
+  dependencies = jakobdev/jakobapi
+  target = /usr/bin
+  version = 1.2
+  size = 225
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/find.txt
+   filename = find
+end
+
+name = size
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/size.lua
+   filename = size
+  category = shell
+  dependencies = jakobdev/jakobapi
+  target = /usr/bin
+  version = 3.1
+  size = 713
+  description = Show the size of a file or a folder
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/size.txt
+   filename = size
+end
+
+name = owncloudfile
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Owncloud/Client/OwncloudFile.lua
+   filename = OwncloudFile
+  category = owncloud
+  dependencies = none
+  target = /usr/bin
+  version = 1.0.1
+  size = 2383
+end
+
+name = owncloudcore
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Owncloud/Cloud/owncloud.lua
+   filename = owncloud
+  category = owncloud
+  dependencies = none
+  target = /owncloud
+  version = 1.2.0
+  size = 1625
+end
+
+name = owncloudmanual
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Owncloud/Cloud/manual.txt
+   filename = owncloud
+  category = owncloud
+  dependencies = none
+  target = /usr/help
+  version = 1.1.0
+  size = 1068
+end
+
+name = owncloudplugins
+  type = meta
+	category = owncloud
+	dependencies = jakobdev/owncloudpluginfile jakobdev/owncloudplugingps
+	version = 1.0.0
+	size = 0
+end
+
+name = owncloudpluginfile
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Owncloud/Cloud/plugins/file.lua
+   filename = file
+  category = owncloud
+  dependencies = none
+  target = /owncloud/plugins
+  version = 1.0.1
+  size = 690
+end
+
+name = owncloudplugingps
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Owncloud/Cloud/plugins/gps.lua
+   filename = gps
+  category = owncloud
+  dependencies = none
+  target = /owncloud/plugins
+  version = 1.0.0
+  size = 708
+end
+
+name = webrun
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/webrun.lua
+   filename = usr/bin/webrun
+  category = shell
+  dependencies = none
+  target = /
+  setup = rom/programs/http/wget https://gitlab.com/JakobDev/Computercraft/raw/master/Help/webrun.txt /usr/help/webrun
+  cleanup = rom/programs/delete /usr/help/webrun
+  version = 1.0.0
+  size = 575
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/webrun.txt
+   filename = webrun
+end
+
+name = wc
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/wc.lua
+   filename = wc
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.2
+  size = 954
+  help = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/wc.txt
+   filename = wc
+end
+
+name = rednetspy
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/rednetspy.lua
+   filename = rednetspy
+  category = rednet
+  dependencies = none
+  target = /usr/bin
+  version = 1.0.0
+  size = 368
+end
+
+name = settingsmanager
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/settingsmanager.lua
+   filename = Settingsmanager
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.0.0
+  size = 2114
+end
+
+name = sleep
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/sleep.lua
+   filename = sleep
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 206
+end
+
+name = pwd
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/pwd.lua
+   filename = pwd
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 24
+end
+
+name = which
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/which.lua
+   filename = whois
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 222
+end
+
+name = shellutils
+  type = meta
+	category = shell
+	dependencies = jakobdev/touch jakobdev/which jakobdev/pwd jakobdev/sleep jakobdev/monclear jakobdev/wc jakobdev/find jakobdev/echo jakobdev/cowsay jakobdev/lsper jakobdev/size superaxander/cat jakobdev/basename jakobdev/dirname
+	version = 1.1
+	size = 0
+end
+
+name = jakobapi
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/API/jakobapi.lua
+   filename = jakobapi
+  category = api
+  dependencies = none
+  target = /usr/apis
+  version = 3.3
+  size = 3353
+end
+
+name = monclear
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/monclear.lua
+   filename = monclear
+  category = utility
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 179
+end
+
+name = cowsay
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/cowsay.lua
+   filename = cowsay
+  category = fun
+  dependencies = none
+  target = /usr/bin
+  version = 1.1
+  size = 11566
+end
+
+name = fortune
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/fortune.lua
+   filename = fortune
+  category = fun
+  dependencies = jakobdev/fortune-cookie
+  target = /usr/bin
+  version = 1.0
+  size = 685
+end
+
+name = fortune-cookie
+  type = raw
+   url = https://raw.githubusercontent.com/Wilma456/FortuneCookies/master/en/cookie
+   filename = cookie
+  category = fortune
+  dependencies = none
+  target = /usr/share/fortune
+  version = 1.0
+  size = 245093
+end
+
+name = cron
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/cron.lua
+   filename = cron
+  category = tools
+  dependencies = jakobdev/jakobapi
+  target = /usr/bin
+  version = 1.2
+  size = 2079
+end
+
+name = lsper
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/lsper.lua
+   filename = lsper
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 128
+end
+
+name = wsh
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/wsh.lua
+   filename = wsh
+  category = shell
+  dependencies = jakobdev/jakobapi jakobdev/clipboard
+  target = /usr/bin
+  version = 2.3
+  size = 16846
+end
+
+name = faketime
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/faketime.lua
+   filename = faketime
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.2
+  size = 474
+end
+
+name = fakeday
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/fakeday.lua
+   filename = fakeday
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.1
+  size = 376
+end
+
+name = fakeid
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/fakeid.lua
+   filename = fakeid
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 191
+end
+
+name = clipboard
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/API/clipboard.lua
+   filename = clipboard
+  category = api
+  dependencies = none
+  target = /usr/apis
+  version = 1.1
+  size = 732
+end
+
+name = readpaste
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/readpaste.lua
+   filename = readpaste
+  category = tools
+  dependencies = jakobdev/clipboard
+  target = /usr/bin
+  version = 1.1
+  size = 870
+end
+
+name = filecopy
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/filecopy.lua
+   filename = filecopy
+  category = tools
+  dependencies = jakobdev/clipboard
+  target = /usr/bin
+  version = 1.0
+  size = 411
+end
+
+name = mineshark
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/Mineshark.lua
+   filename = Mineshark
+  category = tools
+  dependencies = jakobdev/jakobapi jakobdev/clipboard
+  target = /usr/bin
+  version = 1.1
+  size = 5369
+end
+
+name = mynaptic-plugindev
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/Mynaptic.ghv
+   filename = Mynaptic
+  category = mynaptic
+  dependencies = none
+  target = /etc/ghv
+  version = 1.0
+  size = 4217
+end
+
+name = bitapi
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/API/bitapi.lua
+   filename = bitapi
+  category = api
+  dependencies = none
+  target = /usr/apis
+  version = 1.0
+  size = 385
+end
+
+name = mynaptic-pluginexample
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/Mynaptic-Pluginexample.lua
+   filename = pluginexample
+  category = mynaptic
+  dependencies = jakobdev/mynaptic
+  target = /usr/share/mynaptic/plugins
+  version = 1.0
+  size = 722
+end
+
+name = ping
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/ping.lua
+   filename = ping
+  category = utility
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 461
+end
+
+name = chatkeyboard
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Command/chatkeyboard.lua
+   filename = chatkeyboard
+  category = command
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 3410
+  description = Use the Chat as Keyboard
+end
+
+name = uptime
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/uptime.lua
+   filename = uptime.lua
+  category = utility
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 339
+  description = Shows, how long your computer run
+end
+
+name = imagecon
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Tools/imagecon.lua
+   filename = imagecon.lua
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 1096
+  description = Convert a .nfp image to lua code
+end
+
+name = screentool
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Tools/screentool.lua
+   filename = screentool
+  category = tools
+  dependencies = none
+  target = /usr/bin
+  version = 1.1
+  size = 14733
+  description = Make Screenshots
+end
+
+name = textpaint
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Programs/textpaint.lua
+   filename = textpaint.lua
+  category = programs
+  dependencies = none
+  target = /usr/bin
+  version = 2.0
+  size = 9809
+  description = A paint Program for .nft Files
+end
+
+name = minepack
+  type = raw
+   url = https://gitlab.com/JakobDev/Minepack/raw/master/minepack.lua
+   filename = minepack.lua
+  category = minepack
+  dependencies = jakobdev/minepackapi
+  target = /usr/bin
+  version = 2.0
+  size = 9211
+  description = A Package Manager
+end
+
+name = minepackapi
+  type = raw
+   url = https://gitlab.com/JakobDev/Minepack/raw/master/minepackapi.lua
+   filename = minepackapi
+  category = minepack
+  dependencies = none
+  target = /usr/apis
+  version = 2.0
+  size = 31635
+  description = The API for Minepack
+end
+
+name = packshell
+  type = raw
+   url = https://gitlab.com/JakobDev/Minepack/raw/master/packshell.lua
+   filename = packshell.lua
+  category = minepack
+  dependencies = none
+  target = /startup
+  version = 2.0
+  size = 1687
+  setup = packshell.lua
+  description = Easy-Shell for Minepack
+end
+
+name = packshell-old
+  type = raw
+   url = https://gitlab.com/JakobDev/Minepack/raw/master/packshell.lua
+   filename = startup
+  category = minepack
+  dependencies = none
+  target = /
+  version = 2.0
+  size = 1687
+  setup = startup
+  description = Packshell for CraftOS 1.7 and older
+end
+
+name = basename
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/basename.lua
+   filename = basename
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 125
+  description = Extract the filename from a path
+end
+
+name = dirname
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/dirname.lua
+   filename = dirname
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 128
+  description = Extract the directory from a path
+end
+
+name = virtualos
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Programs/virtualos.lua
+   filename = virtualos.lua
+  category = programs
+  dependencies = none
+  target = /usr/bin
+  version = 4.2
+  size = 12096
+  description = Run CraftOS in a virtual Machine
+end
+
+name = virtualos-manager
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Programs/virtualos-manager.lua
+   filename = virtualos-manager.lua
+  category = programs
+  dependencies = jakobdev/virtualos
+  target = /usr/bin
+  version = 3.0
+  size = 15251
+  description = A GUI for VirtualOS
+end
+
+name = touch
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Shell/touch.lua
+   filename = touch.lua
+  category = shell
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 302
+  description = touch for Computercraft
+end
+
+name = charmap
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Programs/charmap.lua
+   filename = charmap.lua
+  category = programs
+  dependencies = none
+  target = /usr/bin
+  version = 1.0
+  size = 796
+  description = Show all aviable Chars in CC
+end
+
+name = mynaptic-minepackextra
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/mynaptic-minepackextra.lua
+   filename = minepackextra.lua
+  category = mynaptic
+  dependencies = jakobdev/mynaptic
+  target = /usr/share/mynaptic/plugins
+  version = 1.1
+  size = 6962
+  description = A Plugin for Mynaptic, which adds some Functions for Minepack.
+end
+
+name = cmatrix
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Other/cmatrix.lua
+   filename = cmatrix.lua
+  category = utils
+  dependencies = none
+  target = /usr/bin
+  version = 1.1
+  size = 4411
+  description = A Matrix like screensaver
+end
+
+name = tarlib
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Modules/tarlib.lua
+   filename = tarlib.lua
+  category = lib
+  dependencies = none
+  target = /usr/modules/jakobdev
+  version = 2.0
+  size = 10205
+  description = A library for reading and writing tar files
+end
+
+name = tarlib-doc
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Help/tarlib.ghv
+   filename = tarlib
+  category = doc
+  dependencies = none
+  target = /etc/ghv
+  version = 2.0
+  size = 1295
+  description = The documentation for tarlib. View it with ghv
+end
+
+name = jtar
+  type = raw
+   url = https://gitlab.com/JakobDev/Computercraft/raw/master/Tools/jtar.lua
+   filename = jtar.lua
+  category = tools
+  dependencies = jakobdev/tarlib
+  target = /usr/bin
+  version = 1.1
+  size = 1922
+  description = A simple program for reading and writing tar files
+end
