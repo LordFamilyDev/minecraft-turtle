@@ -218,7 +218,7 @@ function blockAPI.chunkScan(filter_string)
 
     local scannedPoints = {}
     local oresToCheck = {}
-    local oresFound = {}
+    local ScanData = {}  -- Changed from oresFound to ScanData to match groundPenetratingRadar
 
     local function isInChunk(px, py, pz)
         return px >= chunkStartX and px <= chunkEndX and
@@ -257,9 +257,12 @@ function blockAPI.chunkScan(filter_string)
     local function scanPoint(px, py, pz)
         local result, error = sendRequest("block_get", px, py, pz)
         if result and result.block_type then
-            local matchedOre = blockMatchesFilter(result.block_type, filterList)
-            if matchedOre then
-                table.insert(oresFound, {px, py, pz, result.block_type})
+            local matched_ore = blockMatchesFilter(result.block_type, filter_list)
+            if matched_ore then
+                if not ScanData[matched_ore] then
+                    ScanData[matched_ore] = {}
+                end
+                table.insert(ScanData[matched_ore], {px, py, pz})
                 -- Check neighbors
                 addToScan(px+1, py, pz)
                 addToScan(px-1, py, pz)
@@ -281,12 +284,16 @@ function blockAPI.chunkScan(filter_string)
         totalScanned = totalScanned + 1
 
         if totalScanned % 100 == 0 or #oresToCheck == 0 then
+            local totalOresFound = 0
+            for _, oreList in pairs(ScanData) do
+                totalOresFound = totalOresFound + #oreList
+            end
             print(string.format("%d / %d scanned, %d ores found", 
-                totalScanned, totalToScan, #oresFound))
+                totalScanned, totalToScan, totalOresFound))
         end
     end
 
-    return oresFound
+    return ScanData
 end
 
 -- Helper function to get neighboring blocks
