@@ -1,0 +1,20 @@
+name = glucose
+    type = raw
+        url = https://raw.githubusercontent.com/MrObsidy/CC-Glucose/master/glucose
+        filename = glucose
+    category = api
+    target = /lib/glucose
+    version = 1.1.0.0
+    size = 8678
+end
+
+name = bilirubin
+    type = github
+        author = mrobsidy
+        repository = CC-Bilirubin
+        branch = master
+    category = api
+    target = /lib/bilirubin
+    version = 1.0.0.0
+    size = 0
+end
