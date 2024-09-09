@@ -192,6 +192,13 @@ local function blockMatchesFilter(block_type, filter_list)
     return nil
 end
 
+local function normalDistribution(mean, stdDev)
+    local u1 = math.random()
+    local u2 = math.random()
+    local z0 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+    return mean + stdDev * z0
+end
+
 function blockAPI.chunkScan(filterList)
     local x, y, z = gps.locate()
     if not x then
