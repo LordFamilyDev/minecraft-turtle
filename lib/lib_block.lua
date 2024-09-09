@@ -192,22 +192,6 @@ local function blockMatchesFilter(block_type, filter_list)
     return nil
 end
 
--- Helper function to get neighboring blocks
-local function getNeighbors(x, y, z)
-    return {
-        {x-1, y, z}, {x+1, y, z},
-        {x, y-1, z}, {x, y+1, z},
-        {x, y, z-1}, {x, y, z+1}
-    }
-end
-
-local function normalDistribution(mean, stdDev)
-    local u1 = math.random()
-    local u2 = math.random()
-    local z0 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
-    return mean + stdDev * z0
-end
-
 function blockAPI.chunkScan(filterList)
     local x, y, z = gps.locate()
     if not x then
@@ -235,11 +219,13 @@ function blockAPI.chunkScan(filterList)
         if not scannedPoints[key] and isInChunk(px, py, pz) then
             scannedPoints[key] = true
             table.insert(oresToCheck, {px, py, pz})
+            return true
         end
+        return false
     end
 
     -- Random sampling
-    for i = 1, 4000 do
+    while #oresToCheck < 4000 do
         local py
         if math.random() < 0.75 then
             py = math.floor(normalDistribution(-59, 3.5))
@@ -253,10 +239,6 @@ function blockAPI.chunkScan(filterList)
         local pz = math.random(chunkStartZ, chunkEndZ)
 
         addToScan(px, py, pz)
-
-        if i % 100 == 0 then
-            print(string.format("%d / 4000 scanned, %d ores found", i, #oresFound))
-        end
     end
 
     -- Scan points
@@ -281,18 +263,29 @@ function blockAPI.chunkScan(filterList)
         end
     end
 
+    local totalScanned = 0
     local totalToScan = #oresToCheck
     while #oresToCheck > 0 do
         local point = table.remove(oresToCheck, 1)
         scanPoint(unpack(point))
+        totalScanned = totalScanned + 1
 
-        if #oresToCheck % 100 == 0 or #oresToCheck == 0 then
-            print(string.format("Tracing Veins %d / %d scanned, %d ores found", 
-                totalToScan - #oresToCheck, totalToScan, #oresFound))
+        if totalScanned % 100 == 0 or #oresToCheck == 0 then
+            print(string.format("%d / %d scanned, %d ores found", 
+                totalScanned, totalToScan, #oresFound))
         end
     end
 
     return oresFound
+end
+
+-- Helper function to get neighboring blocks
+local function getNeighbors(x, y, z)
+    return {
+        {x-1, y, z}, {x+1, y, z},
+        {x, y-1, z}, {x, y+1, z},
+        {x, y, z-1}, {x, y, z+1}
+    }
 end
 
 function blockAPI.groundPenetratingRadar(filter_string)
