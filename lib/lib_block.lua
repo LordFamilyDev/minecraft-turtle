@@ -151,6 +151,37 @@ function blockAPI.blockSetDown(properties)
     return blockAPI.blockSet(properties, "down")
 end
 
+function blockAPI.getTurtlePositionAndFacing()
+    local x, y, z = gps.locate()
+    if not x then
+        return nil, "Unable to get GPS coordinates"
+    end
+
+    local result, error = sendRequest("block_get", x, y, z)
+    if not result then
+        return nil, "Unable to get turtle information: " .. tostring(error)
+    end
+
+    if result.error then
+        return nil, result.error
+    end
+
+    local facing
+    if result.block_state and result.block_state.facing then
+        if result.block_state.facing == "north" then facing = 0
+        elseif result.block_state.facing == "east" then facing = 1
+        elseif result.block_state.facing == "south" then facing = 2
+        elseif result.block_state.facing == "west" then facing = 3
+        else
+            return nil, "Unknown facing direction: " .. result.block_state.facing
+        end
+    else
+        return nil, "Unable to determine facing from block state"
+    end
+
+    return {x = x, y = y, z = z, facing = facing}
+end
+
 -- Helper function to check if a block matches the filter
 local function blockMatchesFilter(block_type, filter_list)
     for ore in pairs(filter_list) do
