@@ -146,8 +146,14 @@ table.insert(macro_functions, {"m", function(c)
             b = move.goBackwards,
             u = move.goUp,
             d = move.goDown,
-            l = function() return move.goLeft(true, true) end,
-            r = function() return move.goRight(true, true) end
+            l = function() return move.goLeft(false, true) end,
+            r = function() return move.goRight(false, true) end,
+            F = function() return move.goForward(true) end,
+            B = function() return move.goBackwards(true) end,
+            U = function() return move.goUp(true) end,
+            D = function() return move.goDown(true) end,
+            L = function() return move.goLeft(true, true) end,
+            R = function() return move.goRight(true, true) end
         }
     else
         actions = {

@@ -1,18 +1,21 @@
-## Tunnel bulding macro, simple 3x3 tunnel out of
-## whatever is in slot 0, needs a bucket in slot 1
--m s0
-## right col
-mrmfpFpDtrpFmupFtlpFmupFpUtrpFtl
-S1mbPfPfmdPfPfmdPfPf
-## center column
-s0mlmfpFpDmupFmupFpU
-##S1mbPfPfmdPfPfmdPfPf
-mbmdmd
-## left col
-s0mlmfpDpFtlpFmupFtrpFmupFpUtlpFtr
-S1mbPfPfmdPfPfmdPfPf
-##return for next step
+## TUnnel BUlDing macRo, simple 3x3 tUnnel oUt oF
+## whateveR is in slot 0, neeDs a BUcket in slot 1
+-m J1s0
+## Right col
+mRmFpFpDtrpFmUpFtlpFmUpFpUtrpFtl
+S1mBPfPfmdPfPfmdPfPf
+## centeR colUmn
+s0mLmFpFpDmUpFmUpFpU
+##S1mBPfPfmdPfPfmdPfPf
+mBmdmd
+## leFt col
+s0mLmFpDpFtlpFmUpFtrpFmUpFpUtlpFtr
+S1mBPfPfmdPfPfmdPfPf
+##RetURn FoR next step
 mumu
 mbmbmbmbmbmbmbmbmb
 mdmd
-mfmfmfmfmfmfmfmfmfmrmf
+mfmfmfmfmfmfmfmrmfmfmfj1
+mumrtltlmfmfmfs2pf
+tltlmfmfmfmlmd
+-j 10 
