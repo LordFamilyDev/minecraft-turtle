@@ -69,31 +69,26 @@ local function getTurtlePositionAndFacing()
         return nil, "Unable to get GPS coordinates"
     end
 
-    local result, error = sendRequest("get_surrounding_blocks", x, y, z)
+    local result, error = sendRequest("block_get", x, y, z)
     if not result then
-        return nil, "Unable to get surrounding blocks: " .. tostring(error)
+        return nil, "Unable to get turtle information: " .. tostring(error)
     end
 
-    local blocks = result.blocks
-    local facing
+    if result.error then
+        return nil, result.error
+    end
 
-    -- Determine facing based on the blocks around the turtle
-    if turtle.detect() then
-        if blocks[1] then facing = 2      -- Facing south
-        elseif blocks[2] then facing = 3  -- Facing west
-        elseif blocks[3] then facing = 0  -- Facing north
-        elseif blocks[4] then facing = 1  -- Facing east
+    local facing
+    if result.block_state and result.block_state.facing then
+        if result.block_state.facing == "north" then facing = 0
+        elseif result.block_state.facing == "east" then facing = 1
+        elseif result.block_state.facing == "south" then facing = 2
+        elseif result.block_state.facing == "west" then facing = 3
+        else
+            return nil, "Unknown facing direction: " .. result.block_state.facing
         end
     else
-        if not blocks[1] then facing = 0      -- Facing north
-        elseif not blocks[2] then facing = 1  -- Facing east
-        elseif not blocks[3] then facing = 2  -- Facing south
-        elseif not blocks[4] then facing = 3  -- Facing west
-        end
-    end
-
-    if not facing then
-        return nil, "Unable to determine facing"
+        return nil, "Unable to determine facing from block state"
     end
 
     return {x = x, y = y, z = z, facing = facing}
