@@ -199,10 +199,15 @@ local function normalDistribution(mean, stdDev)
     return mean + stdDev * z0
 end
 
-function blockAPI.chunkScan(filterList)
+function blockAPI.chunkScan(filter_string)
     local x, y, z = gps.locate()
     if not x then
         return nil, "Unable to get GPS coordinates"
+    end
+
+    local filter_list = {}
+    for ore in filter_string:gmatch("%w+") do
+        filter_list[ore:lower()] = true
     end
 
     -- Determine chunk boundaries
