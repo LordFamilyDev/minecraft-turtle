@@ -212,9 +212,11 @@ local function returnHome(homeX, homeY, homeZ)
     return moveTo(homeX, homeY, homeZ)
 end
 
--- Function to dump unwanted items
+-- Improved function to dump unwanted items and de-duplicate stacks
 local function dumpUnwantedItems()
-    print("Dumping unwanted items...")
+    print("Dumping unwanted items and optimizing inventory...")
+    
+    -- First, dump unwanted items
     for slot = 1, 16 do
         local item = turtle.getItemDetail(slot)
         if item then
@@ -227,8 +229,29 @@ local function dumpUnwantedItems()
             end
         end
     end
+    
+    -- Then, de-duplicate and consolidate stacks
+    local inventory = {}
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            if not inventory[item.name] then
+                inventory[item.name] = {slot = slot, count = item.count}
+            else
+                -- Move items to consolidate
+                turtle.select(slot)
+                local moved = turtle.transferTo(inventory[item.name].slot)
+                inventory[item.name].count = inventory[item.name].count + moved
+                if turtle.getItemCount(slot) > 0 then
+                    -- If the first slot is full, start a new stack
+                    inventory[item.name] = {slot = slot, count = turtle.getItemCount(slot)}
+                end
+            end
+        end
+    end
+    
     turtle.select(1)
-    print("Dump complete.")
+    print("Inventory optimization complete.")
 end
 
 -- Function to mine an ore
@@ -258,7 +281,7 @@ local function main()
     -- Scan for ores
     local ores = scanForOres()
 
-    -- wait for user input to start mining
+    -- Wait for user input to start mining
     print("Press any key to start mining...")
     os.pullEvent("key")
 
