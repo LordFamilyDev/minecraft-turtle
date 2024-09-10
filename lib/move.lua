@@ -457,15 +457,6 @@ end
 
 
 function lib.goTo(x,z,depth, xd, zd)
-    --[[
-    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
-    print(string.format("      at:%d:%d:%d ; %d:%d",
-                                _G.relativePosition.xPos,
-                                _G.relativePosition.zPos,
-                                _G.relativePosition.depth,
-                                _G.relativePosition.xDir,
-                                _G.relativePosition.zDir ))
-                                ]]
     
     --Fix depth first in case dug into bedrock (usually up means freedom)
     while _G.relativePosition.depth < depth do 

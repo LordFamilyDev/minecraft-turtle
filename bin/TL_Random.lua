@@ -86,7 +86,7 @@ end
 
 function paraboloid(x, z)
     --35 stable but stubby feet
-    local tempY = 37 - 0.112 * (math.pow(x,2) + math.pow(z,2))
+    local tempY = 30 - 0.112 * (math.pow(x,2) + math.pow(z,2))
     return tempY
 end
 
@@ -171,7 +171,50 @@ function findClosestPointCoordinateDescent(x0, z0, y0, f, initialStep, tolerance
     return bestOverallDistance, bestX, bestZ
 end
 
-function placeDownWithWraparound()
+function placeDownWithRefill(slot)
+    -- Select the slot to place from
+    turtle.select(slot)
+
+    -- Check how many items are in the selected slot
+    local itemDetail = turtle.getItemDetail(slot)
+    
+    if not itemDetail then
+        print("No item in selected slot.")
+        return false
+    end
+
+    -- If there's only one item left, search for more in subsequent slots
+    if turtle.getItemCount(slot) == 1 then
+        local found = false
+        for i = slot + 1, 16 do
+            local detail = turtle.getItemDetail(i)
+            if detail and detail.name == itemDetail.name then
+                -- Transfer items from the subsequent slot to the original slot
+                turtle.select(i)
+                turtle.transferTo(slot)
+                found = true
+                break
+            end
+        end
+
+        -- If no additional items were found, return false
+        if not found then
+            print("Unable to refill material.")
+            return false
+        end
+    end
+
+    -- Try to place the item
+    turtle.select(slot)
+    if not turtle.placeDown() then
+        print("Failed to place item.")
+        return false
+    end
+
+    return true
+end
+
+function placeDownWithWraparound(blockName)
     local startSlot = turtle.getSelectedSlot()  -- Get the current selected slot
     local currentSlot = startSlot
     turtle.digDown()
@@ -232,10 +275,6 @@ end
 function plot3D_v2(rad, height)
     lib_move.setTether(64)
     lib_move.setHome()
-    
-    local blocksPlaced = 0
-    local lastRefill = 0
-    local refillLevel = 750
 
     -- Iterate through height layers
     for h = 1, height + 1 do
@@ -251,15 +290,6 @@ function plot3D_v2(rad, height)
             end
         end
 
-        if blocksPlaced + #blocksToPlace >= lastRefill + refillLevel then
-            lib_move.goTo(0, 0, h)
-
-            print("refill mats")
-            io.read()
-            lastRefill = blocksPlaced
-        end
-        blocksPlaced = blocksPlaced + #blocksToPlace
-
         blocksToPlace = nearest_neighbor_sort(blocksToPlace)
 
         -- Go to each block and place it
@@ -267,7 +297,19 @@ function plot3D_v2(rad, height)
             local x, y, z = coords[1], coords[2], coords[3]
             lib_move.goTo(x, z, y)
 
-            placeDownWithWraparound()
+            --torch sand support
+            turtle.down()
+            placeDownWithRefill(2)
+            turtle.up()
+
+            local placeResult = placeDownWithRefill(1)
+            if not placeResult then
+                lib_move.goTo(0, 0, h)
+                lib_move.goTo(0, 0, 0)
+                print("refill mats")
+                io.read()
+                lib_move.goTo(0,0,h)
+            end
         end
         
         -- Move up after finishing the current layer
