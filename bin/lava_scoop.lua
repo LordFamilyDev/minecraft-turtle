@@ -4,7 +4,7 @@ local lib_debug = require("/lib/lib_debug")
 local function hasBucket()
     for slot = 1, 16 do
         local item = turtle.getItemDetail(slot)
-        if item and item.name == "minecraft:bucket" then
+        if item and (item.name == "minecraft:bucket" or item.name == "minecraft:lava_bucket") then
             return true
         end
     end
@@ -145,13 +145,40 @@ local function findLavaAndScoop(iterations)
     end
 end
 
+function launch() 
+    while not hasBucket() do
+        print("Give me a bucket...")
+        sleep(2)
+    end
+    move.refuel()
+    move.goForward()
+    move.goForward()
+    move.goDown()
+    move.setHome()
+    if not iterations then
+        iterations = 1
+    end
+    findLavaAndScoop(iterations)
+    move.goUp()
+    move.goUp()
+    move.goBackwards()
+    move.goBackwards()
+end
+
 -- Run the main function
 
 -- Capture arguments passed to the script
 local args = {...}
 
-local iterations = tonumber(args[1])
-if iterations == nil then
+for i=1,#args,2 do
+    if args[i] == "--launch" then 
+        launch()
+    elseif args[i] == "-i" then
+        iterations = tonumber(args[i+1])
+    end
+end
+
+if not iterations then
     iterations = 1
 end
 
