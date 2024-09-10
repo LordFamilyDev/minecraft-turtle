@@ -318,7 +318,7 @@ function lib.turnRight()
     _G.relativePosition.xDir, _G.relativePosition.zDir = lib.getDirRight(_G.relativePosition.xDir, _G.relativePosition.zDir)
 end
 
-function lib.faceDir(x, z)
+function lib.turnTo(x, z)
     local turns = lib.getTurnCount(_G.relativePosition.xDir, _G.relativePosition.zDir, x, z)    
     if turns == 0 then
         return true
@@ -539,9 +539,7 @@ function lib.goTo(x,z,depth, xd, zd)
         end        
     end
     
-    while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
-        lib.turnLeft()
-    end
+    lib.turnTo(zd,zd)
 end
 
 
@@ -675,7 +673,7 @@ function lib.step(xD, zD, dD, digFlag)
         error("Out of Fuel")
     end
     local err = false
-    if lib.faceDir(xD, zD) then
+    if lib.turnTo(xD, zD) then
         err = lib.goForward(digFlag)
     elseif dD == 1 then
         err = lib.goUp(digFlag)
