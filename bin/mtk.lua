@@ -192,7 +192,10 @@ table.insert(macro_functions, {"d", function(c)
     local actions = {
         f = turtle.dig,
         u = turtle.digUp,
-        d = turtle.digDown
+        d = turtle.digDown,
+        F = turtle.dig,
+        U = turtle.digUp,
+        D = turtle.digDown
     }
     return actions[c] and actions[c]() or false
 end})

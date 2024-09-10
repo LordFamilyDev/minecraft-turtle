@@ -1,8 +1,11 @@
 itemTypes = require("/lib/item_types")
+utils = require("/lib/utils")
 
 storageLib = {}
 
 local localChest = ""
+
+
 
 function storageLib.setLocalChest( chestStr )
     localChest = chestStr
