@@ -1,0 +1,31 @@
+name = sha256
+	type = raw
+		url = https://raw.githubusercontent.com/Bencor29/cc-packages/master/sha256
+		filename = sha256
+	category = utility api
+	dependencies = none
+	target = /usr/apis
+	version = 1.0.0
+	size = 1
+end
+
+name = secure-nsh
+	type = raw
+		url = https://raw.githubusercontent.com/Bencor29/cc-packages/master/secure-nsh
+		filename = secure-nsh
+	setup = secure-nsh install
+	category = security nsh rednet
+	dependencies = bencor29/sha256
+	version = 1.0.1
+	size = 1
+end
+
+name = secure-nsh-login
+	type = raw
+		url = https://raw.githubusercontent.com/Bencor29/cc-packages/master/secure-nsh-login
+		filename = secure-nsh-login
+	category = utility
+	dependencies = bencor29/secure-nsh
+	version = 1.0.0
+	size = 1
+end
