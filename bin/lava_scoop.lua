@@ -178,4 +178,8 @@ for i=1,#args,2 do
     end
 end
 
+if not iterations then
+    iterations = 1
+end
+
 findLavaAndScoop(iterations)
