@@ -14,8 +14,8 @@ local dumpItems = {
     "minecraft:tuff"
 }
 
--- Global variable to keep track of facing direction
-local currentFacing
+-- Global variables to keep track of position and facing
+local currentX, currentY, currentZ, currentFacing
 
 -- Function to print error messages
 local function errorMsg(message)
@@ -74,11 +74,11 @@ local function manhattanDistance(x1, y1, z1, x2, y2, z2)
 end
 
 -- Function to find the nearest ore
-local function findNearestOre(ores, currentX, currentY, currentZ)
+local function findNearestOre(ores, x, y, z)
     local nearestOre = nil
     local minDistance = math.huge
     for _, ore in ipairs(ores) do
-        local distance = manhattanDistance(currentX, currentY, currentZ, ore.x, ore.y, ore.z)
+        local distance = manhattanDistance(x, y, z, ore.x, ore.y, ore.z)
         if distance < minDistance then
             minDistance = distance
             nearestOre = ore
@@ -87,35 +87,63 @@ local function findNearestOre(ores, currentX, currentY, currentZ)
     return nearestOre, minDistance
 end
 
--- New movement functions
+-- New movement functions that update position
 local function moveUp()
     while turtle.detectUp() do
+        local success, data = turtle.inspectUp()
+        if success and data.name == "minecraft:bedrock" then
+            return false
+        end
         if not turtle.digUp() then
             print("Cannot dig up")
             return false
         end
     end
-    return turtle.up()
+    if turtle.up() then
+        currentY = currentY + 1
+        return true
+    end
+    return false
 end
 
 local function moveDown()
     while turtle.detectDown() do
+        local success, data = turtle.inspectDown()
+        if success and data.name == "minecraft:bedrock" then
+            return false
+        end
         if not turtle.digDown() then
             print("Cannot dig down")
             return false
         end
     end
-    return turtle.down()
+    if turtle.down() then
+        currentY = currentY - 1
+        return true
+    end
+    return false
 end
 
 local function moveForward()
     while turtle.detect() do
+        local success, data = turtle.inspect()
+        if success and data.name == "minecraft:bedrock" then
+            return false
+        end
         if not turtle.dig() then
             print("Cannot dig forward")
             return false
         end
     end
-    return turtle.forward()
+    if turtle.forward() then
+        if currentFacing == 0 then currentZ = currentZ - 1
+        elseif currentFacing == 1 then currentX = currentX + 1
+        elseif currentFacing == 2 then currentZ = currentZ + 1
+        elseif currentFacing == 3 then currentX = currentX - 1
+        end
+        return true
+    end
+    return false
 end
 
 -- Function to turn the turtle right
@@ -139,75 +167,49 @@ end
 
 -- Function to move to a specific position
 local function moveTo(targetX, targetY, targetZ)
-    local currentX, currentY, currentZ, _ = getPositionAndFacing()
-    if not currentX then return false end
-    
+    local function tryMove(moveFunc, condition)
+        local attempts = 0
+        while condition() and attempts < 5 do
+            if not moveFunc() then
+                attempts = attempts + 1
+                if attempts == 5 then
+                    return false
+                end
+                -- Try to move up if blocked
+                for i = 1, 5 do
+                    if not moveUp() then break end
+                end
+            end
+        end
+        return true
+    end
+
     -- Move in X direction
-    while currentX ~= targetX do
-        if currentX < targetX then
-            turnTo(1)  -- Face east
-            if not moveForward() then return false end
-        else
-            turnTo(3)  -- Face west
-            if not moveForward() then return false end
-        end
-        currentX, currentY, currentZ, _ = getPositionAndFacing()
-        if not currentX then return false end
-    end
-    
+    if not tryMove(
+        function() turnTo(currentX < targetX and 1 or 3) return moveForward() end,
+        function() return currentX ~= targetX end
+    ) then return false end
+
     -- Move in Z direction
-    while currentZ ~= targetZ do
-        if currentZ < targetZ then
-            turnTo(2)  -- Face south
-            if not moveForward() then return false end
-        else
-            turnTo(0)  -- Face north
-            if not moveForward() then return false end
-        end
-        currentX, currentY, currentZ, _ = getPositionAndFacing()
-        if not currentX then return false end
-    end
-    
+    if not tryMove(
+        function() turnTo(currentZ < targetZ and 2 or 0) return moveForward() end,
+        function() return currentZ ~= targetZ end
+    ) then return false end
+
     -- Move in Y direction
     while currentY < targetY do
         if not moveUp() then return false end
-        currentX, currentY, currentZ, _ = getPositionAndFacing()
-        if not currentX then return false end
     end
     while currentY > targetY do
         if not moveDown() then return false end
-        currentX, currentY, currentZ, _ = getPositionAndFacing()
-        if not currentX then return false end
     end
-    
+
     return true
 end
 
 -- Function to return home
 local function returnHome(homeX, homeY, homeZ)
-    local currentX, currentY, currentZ, _ = getPositionAndFacing()
-    if not currentX then return false end
-    
-    -- Move in X and Z directions first
-    if not moveTo(homeX, currentY, homeZ) then
-        return false
-    end
-    
-    -- Then adjust Y (height)
-    currentX, currentY, currentZ, _ = getPositionAndFacing()
-    if not currentX then return false end
-    while currentY < homeY do
-        if not moveUp() then return false end
-        _, currentY, _, _ = getPositionAndFacing()
-        if not currentY then return false end
-    end
-    while currentY > homeY do
-        if not moveDown() then return false end
-        _, currentY, _, _ = getPositionAndFacing()
-        if not currentY then return false end
-    end
-    
-    return true
+    return moveTo(homeX, homeY, homeZ)
 end
 
 -- Function to dump unwanted items
@@ -244,28 +246,20 @@ end
 
 -- Main function
 local function main()
-    -- Record starting position and initialize facing
+    -- Get starting position and initialize facing
     local homeX, homeY, homeZ, homeFacing = getPositionAndFacing()
     if not homeX then
         errorMsg("Could not get starting position. Aborting.")
         return
     end
-    currentFacing = homeFacing
-    print("Starting position: " .. homeX .. "," .. homeY .. "," .. homeZ .. ", facing: " .. homeFacing)
+    currentX, currentY, currentZ, currentFacing = homeX, homeY, homeZ, homeFacing
+    print("Starting position: " .. currentX .. "," .. currentY .. "," .. currentZ .. ", facing: " .. currentFacing)
 
     -- Scan for ores
     local ores = scanForOres()
-    -- wait for user input before mining
-    print("Press any key to start mining...")
-    os.pullEvent("key")
 
     -- Mine ores
     while #ores > 0 do
-        local currentX, currentY, currentZ, _ = getPositionAndFacing()
-        if not currentX then
-            errorMsg("Lost position during mining. Attempting to return home.")
-            break
-        end
         local nearestOre, distance = findNearestOre(ores, currentX, currentY, currentZ)
         
         if nearestOre then
@@ -304,12 +298,7 @@ local function main()
         print("Returned to starting position successfully.")
     else
         errorMsg("Failed to return to exact starting position.")
-        local finalX, finalY, finalZ, finalFacing = getPositionAndFacing()
-        if finalX then
-            print("Final position: " .. finalX .. "," .. finalY .. "," .. finalZ .. ", facing: " .. finalFacing)
-        else
-            print("Unable to determine final position.")
-        end
+        print("Final position: " .. currentX .. "," .. currentY .. "," .. currentZ .. ", facing: " .. currentFacing)
     end
 
     print("Mining operation complete.")
