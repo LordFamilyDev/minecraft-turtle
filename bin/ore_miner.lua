@@ -258,6 +258,10 @@ local function main()
     -- Scan for ores
     local ores = scanForOres()
 
+    -- wait for user input to start mining
+    print("Press any key to start mining...")
+    os.pullEvent("key")
+
     -- Mine ores
     while #ores > 0 do
         local nearestOre, distance = findNearestOre(ores, currentX, currentY, currentZ)
