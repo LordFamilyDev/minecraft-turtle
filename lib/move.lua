@@ -457,6 +457,7 @@ end
 
 
 function lib.goTo(x,z,depth, xd, zd)
+    --[[
     print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
     print(string.format("      at:%d:%d:%d ; %d:%d",
                                 _G.relativePosition.xPos,
@@ -464,6 +465,7 @@ function lib.goTo(x,z,depth, xd, zd)
                                 _G.relativePosition.depth,
                                 _G.relativePosition.xDir,
                                 _G.relativePosition.zDir ))
+                                ]]
     
     --Fix depth first in case dug into bedrock (usually up means freedom)
     while _G.relativePosition.depth < depth do 
@@ -509,8 +511,11 @@ function lib.goTo(x,z,depth, xd, zd)
         end        
     end
     
-    while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
-        lib.turnLeft()
+    --allows directionality after move to be ignored if no directional goal stated
+    if (not (xd == nil and zd == nil)) then
+        while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
+            lib.turnLeft()
+        end
     end
 end
 
@@ -874,6 +879,7 @@ function lib.spiralOut(radius, stepFunction)
     local side = 1
     local steps = 1
     local x0, z0, d0 = lib.getPos()
+    local xd0, zd0 = lib.getDir()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
     while steps <= radius * 2 do
@@ -885,8 +891,7 @@ function lib.spiralOut(radius, stepFunction)
 
             x = x + xd
             z = z + zd
-            print("Pathing to: "..x..","..z..","..d)
-            lib.pathTo(x, z, d, true)
+            lib.goTo(x, z, d)
         end
         
         xd, zd = lib.getDirLeft(xd, zd)
@@ -899,7 +904,7 @@ function lib.spiralOut(radius, stepFunction)
     end
 
     --return to start position
-    lib.pathTo(x0, z0, d0, true)
+    lib.goTo(x0, z0, d0, xd0, zd0)
 end
 
 lib.moveMemory = ""

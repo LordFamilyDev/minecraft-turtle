@@ -111,7 +111,11 @@ function returnToSurface(depth)
     lib_debug.print_debug("depth: " .. depth)
 end
 
-function stripMineMacro(distX, distY, maxDepth)
+function stripMineMacro(distX, distY, maxDepth, span)
+
+    if span == nil then
+        span = 1
+    end
 
     if distX > 30 then
         distX = 30
@@ -135,12 +139,14 @@ function stripMineMacro(distX, distY, maxDepth)
 
     for y = 1, distY do
         for x = 1, distX do
+            local openSpaceFlag = true
 
-            local success, depth = spinMineDown(maxDepth)
-            returnToSurface(depth)
-
-            local openSpaceFlag = lib_mining.hasEmptySlot()
-            dropUnwantedItems()
+            if span == 1 or (y%span == 1 and x%span == 1) then
+                local success, depth = spinMineDown(maxDepth)
+                returnToSurface(depth)
+                openSpaceFlag = lib_mining.hasEmptySlot()
+                dropUnwantedItems()
+            end
 
             if x == distX then
                 break
@@ -195,20 +201,21 @@ print("Fuel level: " .. fuelBefore)
 local arg1 = tonumber(args[1])
 local arg2 = tonumber(args[2])
 local arg3 = tonumber(args[3])
+local arg4 = tonumber(args[4])
 
 --TODO: check bucket in inventory
 --TODO: check if chest to left
 --give warning prints if these are not met
 
 -- Check if all arguments were provided and are valid integers
-if arg1 and arg2 and arg3 then
-    local fuelEstimate = arg1 * arg2 * 2 * arg3
-    local timeEstimate = (arg1 * arg2 * arg3) / 22
+if arg1 and arg2 and arg3 and arg4 then
+    local fuelEstimate = (arg1 * arg2 * 2 * arg3) / math.pow(arg4,2)
+    local timeEstimate = ((arg1 * arg2 * arg3) / 22 ) / math.pow(arg4,2)
     print("Rough fuel use estimate: " .. fuelEstimate)
     print("Rough time estimate (minutes): " .. timeEstimate)
-    stripMineMacro(arg1, arg2, arg3)
+    stripMineMacro(arg1, arg2, arg3, arg4)
     print("actual fuel usage: " .. (fuelBefore - turtle.getFuelLevel()))
     --lib_move.moveMacro("FRFRFRFR")
 else
-    print("Please provide arguments: x, y, maxDepth, where x and y are approximately 1/3 of target mining distance in each direction")
+    print("Please provide arguments: x, y, maxDepth, span, where x and y are approximately 1/2 of target mining distance in each direction")
 end
