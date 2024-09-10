@@ -486,8 +486,10 @@ function lib.goDown(dig)
 end
 
 
-function lib.goTo(x,z,depth, xd, zd) 
-    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
+function lib.goTo(x,z,d, xd, zd) 
+    if not xd then xd = 0 end
+    if not zd then zd = 0 end
+    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,d,xd,zd))
     print(string.format("      at:%d:%d:%d ; %d:%d",
                                 _G.relativePosition.xPos,
                                 _G.relativePosition.zPos,
@@ -495,48 +497,27 @@ function lib.goTo(x,z,depth, xd, zd)
                                 _G.relativePosition.xDir,
                                 _G.relativePosition.zDir ))
     
+    local xD, zD, dD = lib.getDirTo(x, z, d)
+
     --Fix depth first in case dug into bedrock (usually up means freedom)
-    while _G.relativePosition.depth < depth do 
+    while _G.relativePosition.depth < d do 
         lib.goUp(true)
     end
-    while _G.relativePosition.depth > depth do
+    while _G.relativePosition.depth > d do
         lib.goDown(true)
     end
 
-    if _G.relativePosition.xPos > x then
-        while _G.relativePosition.xDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos > x do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.xPos < x then
-        while _G.relativePosition.xDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos < x do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+
+    lib.turnTo(xD,0)
+    while _G.relativePosition.xPos > x do
+        lib.goForward(true)
+        sleep(0.5)
     end
 
-    if _G.relativePosition.zPos > z then
-        while _G.relativePosition.zDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos > z do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.zPos < z then
-        while _G.relativePosition.zDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos < z do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+    lib.turnTo(0,zD)
+    while _G.relativePosition.zPos > z do
+        lib.goForward(true)
+        sleep(0.5)
     end
     
     lib.turnTo(zd,zd)
