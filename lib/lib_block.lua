@@ -192,6 +192,110 @@ local function blockMatchesFilter(block_type, filter_list)
     return nil
 end
 
+local function normalDistribution(mean, stdDev)
+    local u1 = math.random()
+    local u2 = math.random()
+    local z0 = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+    return mean + stdDev * z0
+end
+
+function blockAPI.chunkScan(filter_string)
+    local x, y, z = gps.locate()
+    if not x then
+        return nil, "Unable to get GPS coordinates"
+    end
+
+    local filter_list = {}
+    for ore in filter_string:gmatch("%w+") do
+        filter_list[ore:lower()] = true
+    end
+
+    -- Determine chunk boundaries
+    local chunkStartX = math.floor(x / 16) * 16
+    local chunkStartZ = math.floor(z / 16) * 16
+    local chunkEndX = chunkStartX + 15
+    local chunkEndZ = chunkStartZ + 15
+
+    local scannedPoints = {}
+    local oresToCheck = {}
+    local ScanData = {}  -- Changed from oresFound to ScanData to match groundPenetratingRadar
+
+    local function isInChunk(px, py, pz)
+        return px >= chunkStartX and px <= chunkEndX and
+               pz >= chunkStartZ and pz <= chunkEndZ and
+               py >= -62 and py <= y - 1
+    end
+
+    local function addToScan(px, py, pz)
+        local key = px .. "," .. py .. "," .. pz
+        if not scannedPoints[key] and isInChunk(px, py, pz) then
+            scannedPoints[key] = true
+            table.insert(oresToCheck, {px, py, pz})
+            return true
+        end
+        return false
+    end
+
+    -- Random sampling
+    while #oresToCheck < 4000 do
+        local py
+        if math.random() < 0.75 then
+            py = math.floor(normalDistribution(-59, 3.5))
+            py = math.max(-59, math.min(-45, py))
+        else
+            py = math.floor(normalDistribution(14, 3.5))
+            py = math.max(8, math.min(22, py))
+        end
+
+        local px = math.random(chunkStartX, chunkEndX)
+        local pz = math.random(chunkStartZ, chunkEndZ)
+
+        addToScan(px, py, pz)
+    end
+
+    -- Scan points
+    local function scanPoint(px, py, pz)
+        local result, error = sendRequest("block_get", px, py, pz)
+        if result and result.block_type then
+            local matched_ore = blockMatchesFilter(result.block_type, filter_list)
+            if matched_ore then
+                if not ScanData[matched_ore] then
+                    ScanData[matched_ore] = {}
+                end
+                table.insert(ScanData[matched_ore], {px, py, pz})
+                -- Check neighbors
+                addToScan(px+1, py, pz)
+                addToScan(px-1, py, pz)
+                addToScan(px, py+1, pz)
+                addToScan(px, py-1, pz)
+                addToScan(px, py, pz+1)
+                addToScan(px, py, pz-1)
+            end
+        elseif error then
+            print("Error scanning block at " .. px .. "," .. py .. "," .. pz .. ": " .. error)
+        end
+    end
+
+    local totalScanned = 0
+    local totalToScan = #oresToCheck
+    while #oresToCheck > 0 do
+        local point = table.remove(oresToCheck, 1)
+        scanPoint(unpack(point))
+        totalScanned = totalScanned + 1
+
+        if totalScanned % 100 == 0 or #oresToCheck == 0 then
+            local totalOresFound = 0
+            for _, oreList in pairs(ScanData) do
+                totalOresFound = totalOresFound + #oreList
+            end
+            print(string.format("%d / %d scanned, %d ores found", 
+                totalScanned, totalToScan, totalOresFound))
+        end
+    end
+
+    return ScanData
+end
+
 -- Helper function to get neighboring blocks
 local function getNeighbors(x, y, z)
     return {
