@@ -644,7 +644,7 @@ function lib.getLowestScore(scores)
         end
         debug = debug .. scores[i][SCORE_INDEX] .. ","
     end
-    print(debug)
+    lib_debug.print_debug(debug)
     if debugFlag then io.read() end
     return lowest, index, lowest[SCORE_INDEX] == OBSTACLE, sum
 end
@@ -679,6 +679,7 @@ end
 lib.aggressiveness = OBSTACLE
 
 function lib.pathTo(x, z, d, digFlag, dPrefStr)
+    print("Pathing To:",x,z,d)
     local path = {}
     local obstacles = {}
     local visited = {}
