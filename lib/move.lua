@@ -458,6 +458,7 @@ end
 
 function lib.goTo(x,z,depth, xd, zd)
     
+    
     --Fix depth first in case dug into bedrock (usually up means freedom)
     while _G.relativePosition.depth < depth do 
         lib.goUp(true)

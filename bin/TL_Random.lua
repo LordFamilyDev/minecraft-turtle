@@ -2,6 +2,7 @@ local lib_mining = require("/lib/lib_mining")
 local lib_itemTypes = require("/lib/item_types")
 local lib_move = require("/lib/move")
 local lib_farming = require("/lib/farming")
+local Boolean3D = require("/lib/Boolean_3D")
 
 function toFile(string)
     local file = fs.open("debugFile", "w")
@@ -82,6 +83,28 @@ function isTargetBlock(blockInfo, targetBlockNames)
         end
     end
     return false
+end
+
+FunctionObject = {}
+FunctionObject.__index = FunctionObject
+
+function FunctionObject:new(parameterArray)
+    local obj = {}  -- Create a new table for the object
+    setmetatable(obj, FunctionObject)  -- Set the class as the object's metatable
+    
+    -- Set the properties
+    obj.params = parameterArray
+    return obj
+end
+
+function FunctionObject:paraboloid(x,z)
+    -- y = a + b*x^2 + c*z^2
+    if not self.params or #self.params < 3 then
+        print("bad functional parameters")
+        return -1
+    end
+
+    return (self.params[1] + self.params[2] * math.pow(x,2) + self.params[3] * math.pow(z,2))
 end
 
 function paraboloid(x, z)
@@ -254,11 +277,22 @@ function plotStepFunction(f, proximity)
     end
 end
 
+function digUpDown()
+    turtle.digUp()
+    turtle.digDown()
+end
+
 function clear3D(rad,height)
-    for h = 1, height + 1 do
-        lib_move.spiralOut(rad)
+    lib_move.setTether(64)
+    lib_move.setHome()
+    lib_move.goUp(true)
+    for h = 1, (1 + (height / 3)) do
+        lib_move.spiralOut(rad,digUpDown)
+        lib_move.goUp(true)
+        lib_move.goUp(true)
         lib_move.goUp(true)
     end
+    lib_move.goTo(0, 0, 0)
 end
 
 function plot3D(rad,height)
@@ -272,7 +306,7 @@ function plot3D(rad,height)
     lib_move.pathTo(0,0,0,false)
 end
 
-function plot3D_v2(rad, height)
+function plot3D_v2(rad, height, mathFunc)
     lib_move.setTether(64)
     lib_move.setHome()
 
@@ -283,7 +317,8 @@ function plot3D_v2(rad, height)
         -- Compute all blocks to place at height 'h'
         for x = -rad, rad do
             for z = -rad, rad do
-                if checkPointIn(x,z,h, paraboloid,0.55) then
+                --sqrt(2)/2 pass rad
+                if checkPointIn(x, z, h, mathFunc, 0.71) then
                     -- Add coordinates to the list of blocks to place
                     table.insert(blocksToPlace, {x, h, z})
                 end
@@ -298,9 +333,9 @@ function plot3D_v2(rad, height)
             lib_move.goTo(x, z, y)
 
             --torch sand support
-            turtle.down()
-            placeDownWithRefill(2)
-            turtle.up()
+            --turtle.down()
+            --placeDownWithRefill(2)
+            --turtle.up()
 
             local placeResult = placeDownWithRefill(1)
             if not placeResult then
@@ -317,7 +352,46 @@ function plot3D_v2(rad, height)
     end
 
     -- Return to home (0, 0, 0) after completing the entire structure
-    lib_move.pathTo(0, 0, 0, false)
+    --lib_move.pathTo(0, 0, 0, false)
+end
+
+function plot3D_v3(grid)
+    lib_move.setTether(64)
+    lib_move.setHome()
+
+    -- Iterate through height layers
+    for h = 1, grid.y_size + 1 do
+        local blocksToPlace = grid:getXZSlice_points(h,true)
+
+        blocksToPlace = nearest_neighbor_sort(blocksToPlace)
+
+        -- Go to each block and place it
+        for _, coords in ipairs(blocksToPlace) do
+            local x, y, z = coords[1], coords[2], coords[3]
+            lib_move.goTo(x, z, y)
+
+            --torch sand support
+            --turtle.down()
+            --placeDownWithRefill(2)
+            --turtle.up()
+
+            local placeResult = placeDownWithRefill(coords[4])
+            if not placeResult then
+                --todo:this needs to use pathto for more complex shapes
+                --lib_move.goTo(0, 0, h)
+                --lib_move.goTo(0, 0, 0)
+                print("refill mats")
+                io.read()
+                --lib_move.goTo(0,0,h)
+            end
+        end
+        
+        -- Move up after finishing the current layer
+        lib_move.goUp(true)
+    end
+
+    -- Return to home (0, 0, 0) after completing the entire structure
+    --lib_move.pathTo(0, 0, 0, false)
 end
 
 -- Capture arguments passed to the script
@@ -414,9 +488,48 @@ if arg1 then
 
         lib_move.goHome()
     elseif arg1 == 9 then
-        plot3D_v2(13,40)
+        --cut radius, and solve at target height to form
+        local paraboloid_1 = FunctionObject:new({1, 0.5, 0.5})
+        plot3D_v2(5,25,function(x, z) return paraboloid_1:paraboloid(x, z) end)
     elseif arg1 == 10 then
-        clear3D(13,45)
+        clear3D(6,15)
+    elseif arg1 == 11 then
+        local grid = Boolean3D:new(9,15,9)
+        local paraboloid = Boolean3D.createParaboloid(0, 0.5, 0.5, -5, 1, -5)
+        grid:customFunction(paraboloid, 1, 0, "add")
+        grid:thinShell()
+        --grid:debugPrint()
+        plot3D_v3(grid)
+    elseif arg1 == 12 then
+        local grid = Boolean3D:new(9,15,9)
+        
+        --Boolean3D:addRectangularPrism(center_x, center_y, center_z, x_len, y_len, z_len, insideVal, outsideVal, operation)
+        grid:addRectangularPrism(5,8,5,7,7,7,1,3,"overwrite")
+        --Boolean3D:sphere(center_x, center_y, center_z, radius, insideVal, outsideVal, operation)
+        grid:sphere(5,8,5,4,1,0,"add")
+
+        grid:replaceValue(2,0)
+        grid:replaceValue(3,0)
+        grid:replaceValue(4,0)
+        --grid:thinShell()
+        --grid:debugPrint()
+        plot3D_v3(grid)
+    elseif arg1 == 13 then
+        local grid = Boolean3D:new(23,23,23)
+        
+        --Boolean3D:addRectangularPrism(center_x, center_y, center_z, x_len, y_len, z_len, insideVal, outsideVal, operation)
+        grid:addRectangularPrism(10,10,10,17,17,17,1,0,"overwrite")
+        --Boolean3D:sphere(center_x, center_y, center_z, radius, insideVal, outsideVal, operation)
+        grid:sphere(10,10,10,11,1,0,"subtract")
+
+        grid:sphere(10,10,10,7,2,0,"add")
+
+        grid:replaceValue(3,2)
+        grid:thinShell()
+        --grid:debugPrint()
+        grid:countUniqueValues()
+        io.read()
+        plot3D_v3(grid)
     end
     
 else
