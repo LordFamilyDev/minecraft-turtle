@@ -874,11 +874,17 @@ function lib.spiralOut(radius, stepFunction)
     local xd0, zd0 = lib.getDir()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
+
+    local stepFunctionFlag = false
+
     while steps <= radius * 2 do
         for i = 1, steps do
 
             if type(stepFunction) == "function" then
-                stepFunction()
+                local tempFlag = stepFunction()
+                if tempFlag then
+                    stepFunctionFlag = true
+                end
             end
 
             x = x + xd
@@ -897,6 +903,9 @@ function lib.spiralOut(radius, stepFunction)
 
     --return to start position
     lib.goTo(x0, z0, d0, xd0, zd0)
+
+    --basically this just returns if the step function did anything on this spiral
+    return stepFunctionFlag
 end
 
 lib.moveMemory = ""

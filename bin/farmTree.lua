@@ -2,6 +2,7 @@ m = require("/lib/move")
 f = require("/lib/farming")
 local itemTypes = require("/lib/item_types")
 local lib_debug = require("/lib/lib_debug")
+local lib_inv_mgmt = require("/lib/lib_inv_mgmt")
 
 
 function oakFarm()
@@ -125,6 +126,80 @@ function megaSpruce()
     end
 end
 
+--slots: crimson fungus, crimson nylium, bonemeal, charcoal
+function mushroomTree()
+    m.setTether(64)
+    m.setHome()
+    m.addBlacklist(itemTypes.noMine)
+    while true do
+        sleep(1)
+
+        --place shroom down
+        turtle.digDown()
+        if not lib_inv_mgmt.selectWithRefill(1) then
+            return
+        end
+        
+        if not turtle.placeDown() then
+            turtle.down()
+            if not lib_inv_mgmt.selectWithRefill(2) then
+                turtle.up()
+                return
+            end
+            turtle.digDown()
+            turtle.placeDown()
+            turtle.up()
+            goto continue
+        end
+        
+        while not turtle.inspectUp() do
+            if not lib_inv_mgmt.selectWithRefill(3) then
+                return
+            end
+            turtle.placeDown()
+        end
+
+        turtle.digDown()
+        
+        m.goUp(true)
+        for h = 1, 8 do
+            if not lib_inv_mgmt.selectWithRefill(4) then
+                return
+            end
+            if turtle.getFuelLevel() < 1000 then
+                turtle.refuel()
+            end
+
+            local didSomething = m.spiralOut(3,digUpDown)
+            if not didSomething then
+                break
+            end
+            m.goUp(true)
+            m.goUp(true)
+            m.goUp(true)
+        end
+        m.goTo(0, 0, 0)
+        lib_inv_mgmt.depositItems_Front(9)
+
+        ::continue::
+    end
+    m.goTo(0, 0, 0)
+end
+
+function digUpDown()
+    local result = false
+
+    if m.canDig("up") and turtle.digUp() then
+        result = true
+    end
+    
+    if m.canDig("down") and turtle.digDown() then
+        result = true
+    end
+
+    return result
+end
+
 -- Capture arguments passed to the script
 local args = {...}
 
@@ -136,6 +211,8 @@ if arg1 then
         oakFarm()
     elseif arg1 == 2 then
         megaSpruce()
+    elseif arg1 == 3 then
+        mushroomTree()
     end
 else
     tree = f.waitForTree()

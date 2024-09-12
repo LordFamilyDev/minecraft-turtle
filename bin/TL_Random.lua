@@ -492,7 +492,7 @@ if arg1 then
         local paraboloid_1 = FunctionObject:new({1, 0.5, 0.5})
         plot3D_v2(5,25,function(x, z) return paraboloid_1:paraboloid(x, z) end)
     elseif arg1 == 10 then
-        clear3D(6,15)
+        clear3D(tonumber(args[2]),tonumber(args[3]))
     elseif arg1 == 11 then
         local grid = Boolean3D:new(9,15,9)
         local paraboloid = Boolean3D.createParaboloid(0, 0.5, 0.5, -5, 1, -5)
