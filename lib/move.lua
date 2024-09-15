@@ -1,7 +1,7 @@
 itemTypes = require("/lib/item_types")
 lib_debug = require("/lib/lib_debug")
 
-local debugFlag = true
+local debugFlag = false 
 
 lib_debug.set_verbose(debugFlag)
 
