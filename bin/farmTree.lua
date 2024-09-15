@@ -186,16 +186,16 @@ function mushroomTree()
     m.goTo(0, 0, 0)
 end
 
-function wheatFarm()
+function wheatFarm(radius)
     while true do
-        sleep(60)
+        sleep(1200) --wheat grows fully on average in one day (20 minutes)
         if f.isFullyGrownWheatBelow() then
             local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
             if not transferResult then
                 print("storage full")
                 return
             end
-            local didSomething = m.spiralOut(2,harvestWheat)
+            local didSomething = m.spiralOut(radius,harvestWheat)
 
         end
     end
@@ -203,9 +203,11 @@ function wheatFarm()
 end
 
 function harvestWheat()
-    turtle.digDown()
-    lib_inv_mgmt.selectWithRefill(5)
-    turtle.placeDown()
+    if f.isFullyGrownWheatBelow() then
+        turtle.digDown()
+        lib_inv_mgmt.selectWithRefill(1,5)
+        turtle.placeDown()
+    end
 end
 
 
@@ -237,7 +239,13 @@ if arg1 then
     elseif arg1 == 3 then
         mushroomTree()
     elseif arg1 == 4 then
-        wheatFarm()
+        local rad = tonumber(args[2])
+        if rad then
+            wheatFarm(rad)
+        else
+            print("enter radius as second argument")
+        end
+        
     end
 else
     tree = f.waitForTree()

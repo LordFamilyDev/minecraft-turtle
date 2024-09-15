@@ -95,18 +95,18 @@ function farm.isFullyGrownWheatBelow()
         if data.name == "minecraft:wheat" then
             -- Check the growth stage
             if data.state.age == 7 then
-                print("Wheat is fully grown.")
+                --print("Wheat is fully grown.")
                 return true
             else
-                print("Wheat is not fully grown. Growth stage: " .. data.state.age)
+                --print("Wheat is not fully grown. Growth stage: " .. data.state.age)
                 return false
             end
         else
-            print("No wheat detected below.")
+            --print("No wheat detected below.")
             return false
         end
     else
-        print("No block detected below.")
+        --print("No block detected below.")
         return false
     end
 end
