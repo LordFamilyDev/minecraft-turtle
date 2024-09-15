@@ -240,11 +240,17 @@ local function dumpUnwantedItems()
             else
                 -- Move items to consolidate
                 turtle.select(slot)
-                local moved = turtle.transferTo(inventory[item.name].slot)
-                inventory[item.name].count = inventory[item.name].count + moved
-                if turtle.getItemCount(slot) > 0 then
-                    -- If the first slot is full, start a new stack
-                    inventory[item.name] = {slot = slot, count = turtle.getItemCount(slot)}
+                local targetSlot = inventory[item.name].slot
+                local spaceInTarget = 64 - turtle.getItemCount(targetSlot)
+                if spaceInTarget > 0 then
+                    turtle.transferTo(targetSlot, spaceInTarget)
+                end
+                
+                -- Update inventory tracking
+                local remainingInSlot = turtle.getItemCount(slot)
+                if remainingInSlot > 0 then
+                    -- If items remain, update or create a new entry
+                    inventory[item.name] = {slot = slot, count = remainingInSlot}
                 end
             end
         end
