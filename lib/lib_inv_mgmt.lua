@@ -28,6 +28,7 @@ function lib.isValuableItem(itemName)
     return false
 end
 
+
 -- Function to dump non-valuable items
 function lib.dumpNonValuableItems()
     for slot = 1, 16 do
@@ -73,6 +74,53 @@ function lib.depositItems_Front(startIndex)
     end
 end
 
+function lib.transferInventory(startIndex, direction, blockNames, dropFlag)
+    -- Validate the startIndex
+    if startIndex < 1 or startIndex > 16 then
+        error("Invalid startIndex. It should be between 1 and 16.")
+    end
+    
+    -- Validate the direction
+    local validDirections = {up = true, down = true, front = true}
+    if not validDirections[direction] then
+        error("Invalid direction. It should be 'up', 'down', or 'front'.")
+    end
+    
+    local transferSuccess = true
+    
+    -- Transfer specified blocks to the chest
+    for i = startIndex, 16 do
+        local item = turtle.getItemDetail(i)
+        if item then
+            for _, blockName in ipairs(blockNames) do
+                if item.name == blockName then
+                    turtle.select(i)
+                    local dropFunction = direction == "up" and turtle.dropUp or
+                                         direction == "down" and turtle.dropDown or
+                                         turtle.drop
+                    if not dropFunction() then
+                        transferSuccess = false
+                    end
+                    break
+                end
+            end
+        end
+    end
+    
+    -- Drop remaining items if dropFlag is true
+    if dropFlag then
+        for i = startIndex, 16 do
+            local item = turtle.getItemDetail(i)
+            if item then
+                turtle.select(i)
+                turtle.drop()
+            end
+        end
+    end
+    
+    return transferSuccess
+end
+
 function lib.selectItem(itemToFind)
     for slot = 1, 16 do
         local item = turtle.getItemDetail(slot)
@@ -97,7 +145,11 @@ function lib.selectItemFromList(list)
     return false
 end
 
-function lib.selectWithRefill(slot)
+function lib.selectWithRefill(slot, startingSlot)
+    if startingSlot == nil then
+        startingSlot = 1
+    end
+
     -- Select the slot to place from
     turtle.select(slot)
 
@@ -112,7 +164,7 @@ function lib.selectWithRefill(slot)
     -- If there's only one item left, search for more in subsequent slots
     if turtle.getItemCount(slot) == 1 then
         local found = false
-        for i = slot + 1, 16 do
+        for i = startingSlot + 1, 16 do
             local detail = turtle.getItemDetail(i)
             if detail and detail.name == itemDetail.name then
                 -- Transfer items from the subsequent slot to the original slot

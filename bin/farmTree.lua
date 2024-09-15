@@ -186,6 +186,29 @@ function mushroomTree()
     m.goTo(0, 0, 0)
 end
 
+function wheatFarm()
+    while true do
+        sleep(60)
+        if f.isFullyGrownWheatBelow() then
+            local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
+            if not transferResult then
+                print("storage full")
+                return
+            end
+            local didSomething = m.spiralOut(2,harvestWheat)
+
+        end
+    end
+    
+end
+
+function harvestWheat()
+    turtle.digDown()
+    lib_inv_mgmt.selectWithRefill(5)
+    turtle.placeDown()
+end
+
+
 function digUpDown()
     local result = false
 
@@ -213,6 +236,8 @@ if arg1 then
         megaSpruce()
     elseif arg1 == 3 then
         mushroomTree()
+    elseif arg1 == 4 then
+        wheatFarm()
     end
 else
     tree = f.waitForTree()

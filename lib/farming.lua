@@ -87,6 +87,30 @@ function farm.dumpOther()
     end
 end
 
+function farm.isFullyGrownWheatBelow()
+    local success, data = turtle.inspectDown()
+
+    if success then
+        -- Check if the block is wheat
+        if data.name == "minecraft:wheat" then
+            -- Check the growth stage
+            if data.state.age == 7 then
+                print("Wheat is fully grown.")
+                return true
+            else
+                print("Wheat is not fully grown. Growth stage: " .. data.state.age)
+                return false
+            end
+        else
+            print("No wheat detected below.")
+            return false
+        end
+    else
+        print("No block detected below.")
+        return false
+    end
+end
+
 
 
 

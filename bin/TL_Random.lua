@@ -482,7 +482,7 @@ if arg1 then
         end
 
         lib_move.setHome()
-        lib_move.setTether(64,true)
+        lib_move.setTether(128,true)
 
         lib_move.floodFill(blocks,true, bucketUp)
 
@@ -515,14 +515,14 @@ if arg1 then
         --grid:debugPrint()
         plot3D_v3(grid)
     elseif arg1 == 13 then
-        local grid = Boolean3D:new(23,23,23)
-        
+        local grid = Boolean3D:new(25,25,25)
+        print("cube sphere")
         --Boolean3D:addRectangularPrism(center_x, center_y, center_z, x_len, y_len, z_len, insideVal, outsideVal, operation)
-        grid:addRectangularPrism(10,10,10,17,17,17,1,0,"overwrite")
+        grid:addRectangularPrism(12,12,12,21,21,21,1,0,"overwrite")
         --Boolean3D:sphere(center_x, center_y, center_z, radius, insideVal, outsideVal, operation)
-        grid:sphere(10,10,10,11,1,0,"subtract")
+        grid:sphere(12,12,12,13,1,0,"subtract")
 
-        grid:sphere(10,10,10,7,2,0,"add")
+        grid:sphere(12,12,12,9,2,0,"add")
 
         grid:replaceValue(3,2)
         grid:thinShell()
