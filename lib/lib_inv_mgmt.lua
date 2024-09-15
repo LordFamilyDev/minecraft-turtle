@@ -113,7 +113,7 @@ function lib.transferInventory(startIndex, direction, blockNames, dropFlag)
             local item = turtle.getItemDetail(i)
             if item then
                 turtle.select(i)
-                turtle.drop()
+                turtle.dropDown()
             end
         end
     end

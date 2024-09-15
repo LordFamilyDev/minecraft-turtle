@@ -162,7 +162,7 @@ function mushroomTree()
         turtle.digDown()
         
         m.goUp(true)
-        for h = 1, 8 do
+        for h = 1, 9 do
             if not lib_inv_mgmt.selectWithRefill(4) then
                 return
             end
@@ -179,7 +179,13 @@ function mushroomTree()
             m.goUp(true)
         end
         m.goTo(0, 0, 0)
-        lib_inv_mgmt.depositItems_Front(9)
+        m.turnRight()
+        m.turnRight()
+        lib_inv_mgmt.transferInventory(9, "front", {"minecraft:nether_wart_block"}, false)
+        m.turnRight()
+        m.turnRight()
+        lib_inv_mgmt.transferInventory(9, "front", {"minecraft:shroomlight","minecraft:crimson_stem"}, true)
+        --{"minecraft:nether_wart_block","minecraft:crimson_stem","minecraft:shroomlight"}
 
         ::continue::
     end
@@ -188,7 +194,7 @@ end
 
 function wheatFarm(radius)
     while true do
-        sleep(1200) --wheat grows fully on average in one day (20 minutes)
+        sleep(600) --wheat grows fully on average in one day (20 minutes)
         if f.isFullyGrownWheatBelow() then
             local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
             if not transferResult then
