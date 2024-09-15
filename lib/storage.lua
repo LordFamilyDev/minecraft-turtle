@@ -58,8 +58,8 @@ function storageLib.findEmptyChest()
             local chest = peripheral.wrap(chests[i])
             local size = chest.size()
             local list = chest.list()
-            if(#list < #size) then
-                return chest
+            if(#list < size) then
+                return chests[i]
             end
         end
     end
@@ -169,7 +169,8 @@ function storageLib.pushItem(item, count)
     end 
 
     for i = 1, #list do
-        chest, slot = storageLib.findEmptySlot()
+        chest = storageLib.findEmptyChest()
+        -- slot = storageLib.findEmptySlot()
         if chest ~= nil then
             c = peripheral.wrap(chest)
             local x = c.pullItems(source, list[i], count)
@@ -206,7 +207,9 @@ function storageLib.getItems(item,count,destSlot)
             for _,s in ipairs(slots) do
                 local c = peripheral.wrap(chest)
                 local x = c.pushItems(dest,s,destSlot)
-                found = found + x
+                if x ~= nil then
+                    found = found + x
+                end
                 if found >= count then 
                     goto continue
                 end
