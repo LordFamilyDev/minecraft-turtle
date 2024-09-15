@@ -24,10 +24,10 @@ end
 
 local function install(program, ...)
     local lines = readStartup()
-    local argStr = table.concat({...}, ", ")
+    local argStr = table.concat({...}, " ")
     if #{...} > 0  then
         print("Found lines in argstr"..#{...})
-        lines[#lines + 1] = string.format('shell.run("/bin/%s", %s)', program, argStr)
+        lines[#lines + 1] = string.format('shell.run("/bin/%s %s")', program, argStr)
     else
         lines[#lines + 1] = string.format('shell.run("/bin/%s")', program)
     end

@@ -29,6 +29,7 @@ function utils.readConfig(filename)
     
     local success, result = pcall(textutils.unserializeJSON, content)
     if success then
+        print("Got: ",content)
         return result
     else
         print("Error reading config file: " .. result)
