@@ -1,7 +1,7 @@
 local sPath = shell.path()
 sPath = sPath .. ":/bin:/usr/bin"
 shell.setPath(sPath)
-os.run({}, "/httpupdate.lua")
+shell.run("/update.lua")
 
 if peripheral.find("modem") then
     shell.run("/bin/util/wrapper", "/usr/bin/vncd")
