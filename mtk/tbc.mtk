@@ -1,0 +1,24 @@
+#Top left
+mtk -m s0mRpFpU  -l 100
+#Top Center
+mtk -m s0mFpUtltr  -l 100
+#Top right
+mtk -m s0mLpFpU  -l 100
+#left
+mtk -m s0mRpFpF  -l 100
+#right
+mtk -m s0mLpFpF  -l 100
+#Bottom left
+mtk -m s0mRpFpD -l 100
+#Bottom Center
+mtk -m s0mFdupDtltr -l 100
+#Bottom right -l 100
+mtk -m s0mLpFpD -l 100
+
+#buckets
+mtk -m S0PFPFmdPFPFmdPFPFmumumf
+
+-l 100
+
+#3x3 sand 
+mtk -m S0pfpfpfmRpFpFpFmRpFpFpFmdmdmFmLmLmumu

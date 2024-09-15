@@ -28,6 +28,7 @@ function farm.mineTree()
     local blockUp, info = turtle.inspectUp()
     while itemTypes.isTreeUp() do
         move.goUp(true)
+        print(move.getPos())
         sleep(0.1)
     end
 end

@@ -1,6 +1,9 @@
 itemTypes = require("/lib/item_types")
 lib_debug = require("/lib/lib_debug")
-lib_debug.set_verbose(false)
+
+local debugFlag = false
+
+lib_debug.set_verbose(debugFlag)
 
 local lib = {}
 
@@ -86,28 +89,35 @@ end
 function lib.getTurnCount(xC, zC, xT, zT)
     local turns = 0
     local x, z = xC, zC
+    if xT == 0 and zT == 0 then
+        return -1
+    end
     while x ~= xT or z ~= zT do
         x, z = lib.getDirRight(x, z)
         turns = turns + 1
+        if turns > 3 then
+            return -1
+        end
     end
     return turns
-end
-
-function lib.faceDir(x, z)
-    local turns = lib.getTurnCount(_G.relativePosition.xDir, _G.relativePosition.zDir, x, z)    
-    if turns == 1 then
-        turnRight()
-    elseif turns == 2 then
-        turnRight()
-        turnRight()
-    elseif turns == 3 then
-        turnLeft()
-    end
 end
 
 function lib.getPos()
     return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
 end
+
+function lib.getDirTo(x,z,d)
+    local xn, zn, dn = lib.getPos()
+    local xd = x - xn
+    local zd = z - zn
+    local dd = d - dn
+    if xd == 0 then xd = 0 elseif xd > 0 then xd = 1 else xd = -1 end
+    if zd == 0 then zd = 0 elseif zd > 0 then zd = 1 else zd = -1 end
+    if dd == 0 then dd = 0 elseif dd > 0 then dd = 1 else dd = -1 end
+    lib_debug.print_debug("To:",x,z,d,"From",xn,zn,dn,"dir:",xd,zd,dd)
+    return xd,zd,dd
+end
+
 
 function lib.getdepth()
     return _G.relativePosition.depth
@@ -308,6 +318,26 @@ function lib.turnRight()
     _G.relativePosition.xDir, _G.relativePosition.zDir = lib.getDirRight(_G.relativePosition.xDir, _G.relativePosition.zDir)
 end
 
+function lib.turnTo(x, z)
+    local turns = lib.getTurnCount(_G.relativePosition.xDir, _G.relativePosition.zDir, x, z)    
+    if turns == 0 then
+        return true
+    elseif turns == 1 then
+        lib.turnRight()
+    elseif turns == 2 then
+        lib.turnRight()
+        lib.turnRight()
+    elseif turns == 3 then
+        lib.turnLeft()
+    else
+        return false
+    end
+    
+    return true
+
+end
+
+
 function lib.goForward(dig)
     if lib.overTether() then
         print("Past My Tether.")
@@ -456,8 +486,10 @@ function lib.goDown(dig)
 end
 
 
-function lib.goTo(x,z,depth, xd, zd)
-    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,depth,xd,zd))
+function lib.goTo(x,z,d, xd, zd) 
+    if not xd then xd = 0 end
+    if not zd then zd = 0 end
+    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,d,xd,zd))
     print(string.format("      at:%d:%d:%d ; %d:%d",
                                 _G.relativePosition.xPos,
                                 _G.relativePosition.zPos,
@@ -465,53 +497,30 @@ function lib.goTo(x,z,depth, xd, zd)
                                 _G.relativePosition.xDir,
                                 _G.relativePosition.zDir ))
     
+    local xD, zD, dD = lib.getDirTo(x, z, d)
+
     --Fix depth first in case dug into bedrock (usually up means freedom)
-    while _G.relativePosition.depth < depth do 
+    while _G.relativePosition.depth < d do 
         lib.goUp(true)
     end
-    while _G.relativePosition.depth > depth do
+    while _G.relativePosition.depth > d do
         lib.goDown(true)
     end
 
-    if _G.relativePosition.xPos > x then
-        while _G.relativePosition.xDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos > x do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.xPos < x then
-        while _G.relativePosition.xDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos < x do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+
+    lib.turnTo(xD,0)
+    while _G.relativePosition.xPos > x do
+        lib.goForward(true)
+        sleep(0.5)
     end
 
-    if _G.relativePosition.zPos > z then
-        while _G.relativePosition.zDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos > z do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.zPos < z then
-        while _G.relativePosition.zDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos < z do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+    lib.turnTo(0,zD)
+    while _G.relativePosition.zPos > z do
+        lib.goForward(true)
+        sleep(0.5)
     end
     
-    while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
-        lib.turnLeft()
-    end
+    lib.turnTo(zd,zd)
 end
 
 
@@ -565,10 +574,15 @@ local allDirectionsLIN = {
         {-1,0,0} --back
     }
 
-local BIG_NUMBER = 1000000
+local VISITED = 1000000
+local OBSTACLE = VISITED * 2
 -- Helper function to calculate Manhattan distance
 function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
     return ( math.abs((x1 - x2)) + math.abs((z1 - z2)) + math.abs((d1 - d2)) )
+end
+
+function lib.squaredDistance(x1, z1, d1, x2, z2, d2)
+    return ( math.sqrt( math.pow(x1 - x2,2) + math.pow(z1 - z2,2) + math.pow(d1 + d2,2)  ))
 end
 
 function lib.getIndex(x, z, d)
@@ -589,6 +603,8 @@ function lib.isInTable(tbl, item)
     return false
 end
 
+
+local SCORE_INDEX = 4
 function lib.getNeighborScores(currentPos, goal, obstacles, visited, allDirections)
     local neighborScores = {}
     local x, z, d = unpack(currentPos)
@@ -597,45 +613,49 @@ function lib.getNeighborScores(currentPos, goal, obstacles, visited, allDirectio
         local xD, zD, dD = unpack(allDirections[i]) 
         local xN, zN, dN = x + xD, z + zD, d + dD
         local index = lib.getIndex(xN, zN, dN)
-        score = BIG_NUMBER
+        score = OBSTACLE
         if obstacles[index] ~= nil then
-            score = BIG_NUMBER
+            score = OBSTACLE
         elseif visited[index] ~= nil then
-            score = BIG_NUMBER
+            -- score = VISITED + lib.manhattanDistance(xN, zN, dN, xT, zT, dT)
+            score = visited[index]
         else
-            score = lib.manhattanDistance(xN, zN, dN, xT, zT, dT)
+            score = lib.squaredDistance(xN, zN, dN, xT, zT, dT)
         end
-        table.insert(neighborScores, {xN, zN, dN, xD, zD, dD, score})
+        table.insert(neighborScores, {xN, zN, dN, score})
+        lib_debug.print_debug("Index:",index, "score:",score)
     end
     return neighborScores
 end
 
 function lib.getLowestScore(scores)
     local lowest = scores[1]
+    local debug = "Scores: "
+    local sum = lowest[SCORE_INDEX]
+    debug = debug .. sum .. ","
     local index = 1
     for i = 2, #scores do
-        if scores[i][7] < lowest[7] then
+        if scores[i][SCORE_INDEX] < lowest[SCORE_INDEX] then
             index = i
             lowest = scores[i]
         end
+        if scores[i][SCORE_INDEX] ~= OBSTACLE then
+            sum = sum + scores[i][SCORE_INDEX]
+        end
+        debug = debug .. scores[i][SCORE_INDEX] .. ","
     end
-    return lowest, index, lowest[7] == BIG_NUMBER
+    lib_debug.print_debug(debug)
+    if debugFlag then io.read() end
+    return lowest, index, lowest[SCORE_INDEX] == OBSTACLE, sum
 end
-
 
 function lib.step(xD, zD, dD, digFlag)
     if turtle.getFuelLevel() == 0 then
         error("Out of Fuel")
     end
     local err = false
-    if xD == 1 then
+    if lib.turnTo(xD, zD) then
         err = lib.goForward(digFlag)
-    elseif xD == -1 then
-        err = lib.goBackwards(digFlag)
-    elseif zD == 1 then
-        err = lib.goRight(digFlag, true)
-    elseif zD == -1 then
-        err = lib.goLeft(digFlag, true)
     elseif dD == 1 then
         err = lib.goUp(digFlag)
     elseif dD == -1 then
@@ -645,10 +665,21 @@ function lib.step(xD, zD, dD, digFlag)
     return err
 end
 
+function lib.stepTo(xT, zT, d, digFlag)
+    if turtle.getFuelLevel() == 0 then
+        error("Out of Fuel")
+    end
+    local xD, zD, dD = lib.getDirTo(xT,zT,d)
+    lib_debug.print_debug("Going To:",xT,zT,d, "Direction",xD,zD,dD)
+
+    return lib.step(xD,zD,dD, digFlag)
+end
+
 -- Finds path to xzd coordinates based on relative position
-lib.aggressiveness = 3
+lib.aggressiveness = OBSTACLE
 
 function lib.pathTo(x, z, d, digFlag, dPrefStr)
+    print("Pathing To:",x,z,d)
     local path = {}
     local obstacles = {}
     local visited = {}
@@ -656,7 +687,7 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
     local goal = {x, z, d}
     local current = start
     local pathIndex = 1
-    local localMinScore = BIG_NUMBER
+    local localMinScore = OBSTACLE
 
     local dirPref = allDirectionsFU
     if dPrefStr ~= nil then
@@ -677,27 +708,25 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
 
     local currentIndex = lib.getIndex(current[1],current[2],current[3])
     local goalIndex = lib.getIndex(goal[1],goal[2],goal[3])
-    visited[currentIndex] = true
+    visited[currentIndex] = lib.squaredDistance(current[1],current[2],current[3],goal[1],goal[2],goal[3])
     while not (currentIndex == goalIndex) do
-        -- read()
-        
         local neighborScores = lib.getNeighborScores(current, goal, obstacles, visited, dirPref)
-
-        -- for i = 1, #neighborScores do
-        --     print("N:",unpack(neighborScores[i]))
-        -- end 
-        -- read()
         lib_debug.print_debug("current:" .. currentIndex .. "goal:" .. goalIndex)
 
         while #neighborScores > 0 do
-            local n, scoreIndex, deadend = lib.getLowestScore(neighborScores)
+            local n, scoreIndex, deadend, hiScore = lib.getLowestScore(neighborScores)
             lib_debug.print_debug("next:",unpack(n),scoreIndex,deadend)
-            if n[7] < localMinScore then
-                localMinScore = n[7] 
+            if n[SCORE_INDEX] < localMinScore then
+                localMinScore = n[SCORE_INDEX] 
             end
-
-            if n[7] > (localMinScore + lib.aggressiveness) then
-                print("!!!BHailing. No path found!!!")
+            
+            
+            if n[SCORE_INDEX] > OBSTACLE then
+                print("!!!Bailing. No path found!!!")
+                return false
+            end 
+            if n[SCORE_INDEX] > (localMinScore + lib.aggressiveness) then
+                print("!!!Bailing. No path found!!!")
                 return false
             end 
                         
@@ -710,10 +739,10 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
                     obstacles[currentIndex] = true
                     n = path[1]
                     table.remove(path, 1)
-                    local xN, zN, dN, xD, zD, dD, s = unpack(n)
+                    local xN, zN, dN, s = unpack(n)
                     
                     -- no need to chech other neighbor scores
-                    if lib.step(xD, zD, dD, true) then -- if we are backtracking...dig through shit in our way
+                    if lib.stepTo(xN, zN, dN, true) then -- if we are backtracking...dig through shit in our way
                         current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
                         break
                     else
@@ -723,18 +752,23 @@ function lib.pathTo(x, z, d, digFlag, dPrefStr)
                 end
             end
 
-            local xN, zN, dN, xD, zD, dD, s = unpack(n)
+            local xN, zN, dN, s = unpack(n)
             local nextIndex = lib.getIndex(xN, zN, dN)
             lib_debug.print_debug("trying:" .. nextIndex .. "Score" .. s )
                 
-            if lib.step(xD, zD, dD, digFlag) then
+            if lib.stepTo(xN, zN, dN, digFlag) then
                 -- if sucess add to path and find the next step
-                xP, zP, dP = lib.invert(xD, zD, dD)
-                table.insert(path, 1, {current[1],current[2],current[3],xP,zP,dP,0} )
+                table.insert(path, 1, {current[1],current[2],current[3],0} )
+                if visited[currentIndex] == nil then
+                    visited[currentIndex] = hiScore
+                else
+                    visited[currentIndex] = visited[currentIndex] + s
+                end
                 current = {_G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth}
                 currentIndex = lib.getIndex(current[1],current[2],current[3])
-                visited[currentIndex] = true
-                break
+
+                break  --go to next step
+
             else
                 --make sure we havent been given the impossible
                 if nextIndex == goalIndex then
