@@ -66,6 +66,7 @@ function storageLib.findEmptyChest()
 end
 
 function storageLib.findEmptySlot(chest)
+    local chest = peripheral.wrap(chests[i])
     list = chest.list()
     for i=1,chest.size() do
         if list[i] == nil then
