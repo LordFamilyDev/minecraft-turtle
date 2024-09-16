@@ -147,7 +147,7 @@ end
 
 function lib.selectWithRefill(slot, startingSlot)
     if startingSlot == nil then
-        startingSlot = 1
+        startingSlot = slot
     end
 
     -- Select the slot to place from

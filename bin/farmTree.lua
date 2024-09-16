@@ -195,15 +195,12 @@ end
 function wheatFarm(radius)
     while true do
         sleep(600) --wheat grows fully on average in one day (20 minutes)
-        if f.isFullyGrownWheatBelow() then
-            local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
-            if not transferResult then
-                print("storage full")
-                return
-            end
-            local didSomething = m.spiralOut(radius,harvestWheat)
-
+        local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
+        if not transferResult then
+            print("storage full")
+            return
         end
+        local didSomething = m.spiralOut(radius,harvestWheat)
     end
     
 end
