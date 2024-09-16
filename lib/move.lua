@@ -512,7 +512,7 @@ function lib.goTo(x,z,d, xd, zd)
         sleep(0.5)
     end
     
-    lib.turnTo(zd,zd)
+    lib.turnTo(xd,zd)
 end
 
 
