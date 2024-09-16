@@ -24,6 +24,147 @@ function Boolean3D:new(x_size, y_size, z_size)
     return obj
 end
 
+-- Save the grid to a file
+function Boolean3D:saveToFile(filename)
+    local file = fs.open(filename, "w")
+    if not file then
+        error("Could not open file for writing")
+    end
+    
+    file.write(textutils.serialize({
+        grid = self.grid,
+        x_size = self.x_size,
+        y_size = self.y_size,
+        z_size = self.z_size
+    }))
+    
+    file.close()
+end
+
+-- Load the grid from a file
+function Boolean3D:loadFromFile(filename)
+    local file = fs.open(filename, "r")
+    if not file then
+        error("Could not open file for reading")
+    end
+    
+    local data = textutils.unserialize(file.readAll())
+    file.close()
+    
+    if not data or not data.grid or not data.x_size or not data.y_size or not data.z_size then
+        error("Invalid file format")
+    end
+    
+    self.grid = data.grid
+    self.x_size = data.x_size
+    self.y_size = data.y_size
+    self.z_size = data.z_size
+end
+
+-- Consume the world and create a grid
+function Boolean3D:consume_world(x_len, y_len, z_len, stopBlockNames)
+    local move = require("/lib/move")
+    local item_types = require("/lib/item_types")
+    
+    self.x_size = x_len
+    self.y_size = y_len
+    self.z_size = z_len
+    
+    -- Set the current position as home
+    move.setHome()
+    
+    -- Initialize the grid
+    self.grid = {}
+    for x = 1, x_len do
+        self.grid[x] = {}
+        for y = 1, y_len do
+            self.grid[x][y] = {}
+            for z = 1, z_len do
+                self.grid[x][y][z] = 0
+            end
+        end
+    end
+    
+    -- Table to store block counts
+    local blockCounts = {}
+    
+    -- Function to get or create block index
+    local function getBlockIndex(blockName)
+        for i, block in ipairs(blockCounts) do
+            if block.name == blockName then
+                block.count = block.count + 1
+                return i
+            end
+        end
+        table.insert(blockCounts, {name = blockName, count = 1})
+        return #blockCounts
+    end
+    
+    -- Function to check if a block should be ignored
+    local function shouldIgnoreBlock(blockName)
+        return blockName == "minecraft:lava" or blockName == "minecraft:water" or
+               blockName == "minecraft:flowing_lava" or blockName == "minecraft:flowing_water"
+    end
+    
+    -- Main scanning loop
+    for y = 1, y_len do
+        local xDirection = 1  -- 1 for forward, -1 for backward
+        for z = 1, z_len do
+            for x = 1, x_len do
+                -- Check the block in front
+                local success, data = turtle.inspect()
+                if success and not shouldIgnoreBlock(data.name) then
+                    if stopBlockNames and item_types.isItemInList(data.name, stopBlockNames) then
+                        print("Stop block encountered: " .. data.name)
+                        return
+                    else
+                        local blockIndex = getBlockIndex(data.name)
+                        if xDirection == 1 then
+                            self.grid[x][1 + y_len - y][z] = blockIndex
+                        else
+                            self.grid[1 + x_len - x][1 + y_len - y][z] = blockIndex
+                        end
+                    end
+                end
+                
+                -- Move to the next position in X direction
+                move.goForward(true)
+            end
+            
+            -- Move to the next Z position
+            if z < z_len then
+                if xDirection == 1 then
+                    move.goForward(true)
+                    move.turnRight()
+                    move.goForward(true)
+                    move.turnRight()
+                else
+                    move.goForward(true)
+                    move.turnLeft()
+                    move.goForward(true)
+                    move.turnLeft()
+                end
+                xDirection = -xDirection  -- Reverse X direction for the next row
+            end
+        end
+        
+        -- Move down to the next layer
+        if y < y_len then
+            move.goTo(0, 0, move.getdepth(), 1, 0)  -- Return to start of layer, facing positive X
+            move.goDown(true)
+        end
+    end
+    
+    -- Return to the starting position
+    move.goTo(0, 0, move.getdepth(), 1, 0)
+    
+    -- Print block counts
+    print("Block counts:")
+    for i, block in ipairs(blockCounts) do
+        print(i .. ". " .. block.name .. ": " .. block.count)
+    end
+end
+
 --operations are "add", "subtract", "overwrite".  The specified operation is applied to how inside and outside values are applied to the grid
 -- Helper function to apply operations
 local function applyOperation(currentVal, newVal, operation)

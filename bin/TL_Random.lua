@@ -202,8 +202,8 @@ function placeDownWithRefill(slot)
     local itemDetail = turtle.getItemDetail(slot)
     
     if not itemDetail then
-        print("No item in selected slot.")
-        return false
+        print("No item in selected slot, printing air")
+        return true
     end
 
     -- If there's only one item left, search for more in subsequent slots
@@ -222,7 +222,9 @@ function placeDownWithRefill(slot)
 
         -- If no additional items were found, return false
         if not found then
-            print("Unable to refill material.")
+            print(slot .. " unable to refill material: " .. turtle.getItemDetail(slot).name)
+            turtle.select(slot)
+            turtle.placeDown()
             return false
         end
     end
@@ -355,13 +357,17 @@ function plot3D_v2(rad, height, mathFunc)
     --lib_move.pathTo(0, 0, 0, false)
 end
 
-function plot3D_v3(grid)
+function plot3D_v3(grid, centeredFlag)
+    if centeredFlag == nil then
+        centeredFlag = false
+    end
+
     lib_move.setTether(64)
     lib_move.setHome()
 
     -- Iterate through height layers
     for h = 1, grid.y_size + 1 do
-        local blocksToPlace = grid:getXZSlice_points(h,true)
+        local blocksToPlace = grid:getXZSlice_points(h,centeredFlag)
 
         blocksToPlace = nearest_neighbor_sort(blocksToPlace)
 
@@ -499,7 +505,7 @@ if arg1 then
         grid:customFunction(paraboloid, 1, 0, "add")
         grid:thinShell()
         --grid:debugPrint()
-        plot3D_v3(grid)
+        plot3D_v3(grid,true)
     elseif arg1 == 12 then
         local grid = Boolean3D:new(9,15,9)
         
@@ -513,7 +519,7 @@ if arg1 then
         grid:replaceValue(4,0)
         --grid:thinShell()
         --grid:debugPrint()
-        plot3D_v3(grid)
+        plot3D_v3(grid,true)
     elseif arg1 == 13 then
         local grid = Boolean3D:new(25,25,25)
         print("cube sphere")
@@ -529,7 +535,22 @@ if arg1 then
         --grid:debugPrint()
         grid:countUniqueValues()
         io.read()
-        plot3D_v3(grid)
+        plot3D_v3(grid,true)
+
+    elseif arg1 == 14 then
+        print("consume demo")
+        local grid = Boolean3D:new(1,1,1)
+
+        --consume object
+        grid:consume_world(tonumber(args[2]), tonumber(args[4]), tonumber(args[3]))
+        --io.read()
+        --grid:debugPrint()
+        print("continue?")
+        io.read()
+
+        lib_move.goLeft(true,true)
+        
+        plot3D_v3(grid,false)
     end
     
 else
