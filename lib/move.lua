@@ -33,7 +33,16 @@ end
 
 
 function lib.getDirRight(x, z)
-    return -z, x
+    --return -z, x
+    if x == 1 then
+        return 0, 1
+    elseif x == -1 then
+        return 0, -1
+    elseif z == 1 then
+        return -1, 0
+    elseif z == -1 then
+        return 1, 0
+    end
 end
 
 function lib.getDirLeft(x, z)
@@ -458,7 +467,6 @@ end
 
 function lib.goTo(x,z,depth, xd, zd)
     
-    
     --Fix depth first in case dug into bedrock (usually up means freedom)
     while _G.relativePosition.depth < depth do 
         lib.goUp(true)
@@ -502,9 +510,9 @@ function lib.goTo(x,z,depth, xd, zd)
             sleep(0.5)
         end        
     end
-    
+
     --allows directionality after move to be ignored if no directional goal stated
-    if (not (xd == nil and zd == nil)) then
+    if not (xd == nil and zd == nil) then
         while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
             lib.turnLeft()
         end
