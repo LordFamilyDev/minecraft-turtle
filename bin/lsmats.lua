@@ -1,0 +1,1 @@
+shell.run("storageTool --list " .. table.concat({...}, " "))
