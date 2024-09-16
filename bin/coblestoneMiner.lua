@@ -1,5 +1,15 @@
 itemTypes = require("/lib/item_types")
 
+dir = true
+while dir do
+    turtle.turnRight()
+    x, info = turtle.inspect()
+    if x and itemTypes.isItemInList(info.name, {"stone"}) then 
+        dir = false 
+    end
+    sleep(0.1)
+end
+
 while true do
     ::continue::
     x, info = turtle.inspect()
