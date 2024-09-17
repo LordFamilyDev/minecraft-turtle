@@ -549,6 +549,7 @@ if arg1 then
         io.read()
 
         lib_move.goLeft(true,true)
+        lib_move.goBackwards(true)
         
         plot3D_v3(grid,false)
     end

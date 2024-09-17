@@ -107,17 +107,17 @@ function Boolean3D:consume_world(x_len, y_len, z_len, stopBlockNames)
     end
     
     -- Main scanning loop
-    for y = 1, y_len do
+    for y = 1, y_len + 1 do
         local xDirection = 1  -- 1 for forward, -1 for backward
         for z = 1, z_len do
             for x = 1, x_len do
-                -- Check the block in front
-                local success, data = turtle.inspect()
+                -- Check the block beneath
+                local success, data = turtle.inspectDown()
                 if success and not shouldIgnoreBlock(data.name) then
                     if stopBlockNames and item_types.isItemInList(data.name, stopBlockNames) then
                         print("Stop block encountered: " .. data.name)
                         return
-                    else
+                    elseif y < y_len+1 then
                         local blockIndex = getBlockIndex(data.name)
                         if xDirection == 1 then
                             self.grid[x][1 + y_len - y][z] = blockIndex
@@ -126,20 +126,20 @@ function Boolean3D:consume_world(x_len, y_len, z_len, stopBlockNames)
                         end
                     end
                 end
-                
+
                 -- Move to the next position in X direction
-                move.goForward(true)
+                if x < x_len then
+                    move.goForward(true)
+                end
             end
             
             -- Move to the next Z position
             if z < z_len then
                 if xDirection == 1 then
-                    move.goForward(true)
                     move.turnRight()
                     move.goForward(true)
                     move.turnRight()
                 else
-                    move.goForward(true)
                     move.turnLeft()
                     move.goForward(true)
                     move.turnLeft()
@@ -149,7 +149,7 @@ function Boolean3D:consume_world(x_len, y_len, z_len, stopBlockNames)
         end
         
         -- Move down to the next layer
-        if y < y_len then
+        if y < y_len + 1 then
             move.goTo(0, 0, move.getdepth(), 1, 0)  -- Return to start of layer, facing positive X
             move.goDown(true)
         end
