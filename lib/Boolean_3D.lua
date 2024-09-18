@@ -163,6 +163,7 @@ function Boolean3D:consume_world(x_len, y_len, z_len, stopBlockNames)
     for i, block in ipairs(blockCounts) do
         print(i .. ". " .. block.name .. ": " .. block.count)
     end
+    return #blockCounts
 end
 
 --operations are "add", "subtract", "overwrite".  The specified operation is applied to how inside and outside values are applied to the grid

@@ -194,7 +194,11 @@ function findClosestPointCoordinateDescent(x0, z0, y0, f, initialStep, tolerance
     return bestOverallDistance, bestX, bestZ
 end
 
-function placeDownWithRefill(slot)
+function placeDownWithRefill(slot, palateCount)
+    if palateCount == nil then
+        palateCount = slot
+    end
+
     -- Select the slot to place from
     turtle.select(slot)
 
@@ -209,7 +213,7 @@ function placeDownWithRefill(slot)
     -- If there's only one item left, search for more in subsequent slots
     if turtle.getItemCount(slot) == 1 then
         local found = false
-        for i = slot + 1, 16 do
+        for i = palateCount + 1, 16 do
             local detail = turtle.getItemDetail(i)
             if detail and detail.name == itemDetail.name then
                 -- Transfer items from the subsequent slot to the original slot
@@ -357,9 +361,13 @@ function plot3D_v2(rad, height, mathFunc)
     --lib_move.pathTo(0, 0, 0, false)
 end
 
-function plot3D_v3(grid, centeredFlag)
+function plot3D_v3(grid, centeredFlag, palateCount)
     if centeredFlag == nil then
         centeredFlag = false
+    end
+
+    if palateCount == nil then
+        palateCount = 1
     end
 
     lib_move.setTether(64)
@@ -381,7 +389,7 @@ function plot3D_v3(grid, centeredFlag)
             --placeDownWithRefill(2)
             --turtle.up()
 
-            local placeResult = placeDownWithRefill(coords[4])
+            local placeResult = placeDownWithRefill(coords[4], palateCount)
             if not placeResult then
                 --todo:this needs to use pathto for more complex shapes
                 --lib_move.goTo(0, 0, h)
@@ -542,16 +550,16 @@ if arg1 then
         local grid = Boolean3D:new(1,1,1)
 
         --consume object
-        grid:consume_world(tonumber(args[2]), tonumber(args[4]), tonumber(args[3]))
+        local typeCount = grid:consume_world(tonumber(args[2]), tonumber(args[4]), tonumber(args[3]))
         --io.read()
-        --grid:debugPrint()
+        print("palate Count: " .. typeCount)
         print("continue?")
         io.read()
 
         lib_move.goLeft(true,true)
         lib_move.goBackwards(true)
         
-        plot3D_v3(grid,false)
+        plot3D_v3(grid,false, typeCount)
     end
     
 else
