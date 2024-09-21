@@ -383,4 +383,14 @@ function blockAPI.groundPenetratingRadar(filter_string)
     return ScanData
 end
 
+-- Get block information for any coordinates
+function blockAPI._block_get(px, py, pz)
+    local result, error = sendRequest("block_get", px, py, pz)
+    if result then
+        return result
+    else
+        return nil, error
+    end
+end
+
 return blockAPI
