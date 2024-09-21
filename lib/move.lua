@@ -1,7 +1,7 @@
 itemTypes = require("/lib/item_types")
 lib_debug = require("/lib/lib_debug")
 
-local debugFlag = false
+local debugFlag = false 
 
 lib_debug.set_verbose(debugFlag)
 
@@ -82,6 +82,14 @@ function lib.getTether()
     return lib.tether
 end
 
+function lib.getPos()
+    return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
+end
+
+function lib.getdepth()
+    return _G.relativePosition.depth
+end
+
 function lib.getDir()
     return _G.relativePosition.xDir, _G.relativePosition.zDir
 end
@@ -89,9 +97,6 @@ end
 function lib.getTurnCount(xC, zC, xT, zT)
     local turns = 0
     local x, z = xC, zC
-    if xT == 0 and zT == 0 then
-        return -1
-    end
     while x ~= xT or z ~= zT do
         x, z = lib.getDirRight(x, z)
         turns = turns + 1
@@ -100,10 +105,6 @@ function lib.getTurnCount(xC, zC, xT, zT)
         end
     end
     return turns
-end
-
-function lib.getPos()
-    return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
 end
 
 function lib.getDirTo(x,z,d)
@@ -116,11 +117,6 @@ function lib.getDirTo(x,z,d)
     if dd == 0 then dd = 0 elseif dd > 0 then dd = 1 else dd = -1 end
     lib_debug.print_debug("To:",x,z,d,"From",xn,zn,dn,"dir:",xd,zd,dd)
     return xd,zd,dd
-end
-
-
-function lib.getdepth()
-    return _G.relativePosition.depth
 end
 
 function lib.addWhitelist(whiteListItem)
@@ -288,7 +284,6 @@ function lib.refuel()
     return false
 end
 
-
 function lib.dumpTrash()
     for slot = 1, 16 do
         turtle.select(slot)
@@ -304,9 +299,6 @@ function lib.dumpTrash()
     end
     turtle.select(1)
 end
-
-
-
 
 function lib.turnLeft()
     turtle.turnLeft()
@@ -520,7 +512,7 @@ function lib.goTo(x,z,d, xd, zd)
         sleep(0.5)
     end
     
-    lib.turnTo(zd,zd)
+    lib.turnTo(xd,zd)
 end
 
 
@@ -582,7 +574,7 @@ function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
 end
 
 function lib.squaredDistance(x1, z1, d1, x2, z2, d2)
-    return ( math.sqrt( math.pow(x1 - x2,2) + math.pow(z1 - z2,2) + math.pow(d1 + d2,2)  ))
+    return ( math.sqrt( math.pow(x1 - x2,2) + math.pow(z1 - z2,2) + math.pow(d1 - d2,2)  ))
 end
 
 function lib.getIndex(x, z, d)
@@ -634,6 +626,7 @@ function lib.getLowestScore(scores)
     local sum = lowest[SCORE_INDEX]
     debug = debug .. sum .. ","
     local index = 1
+    lib_debug.print_debug("Got Scores: ",#scores)
     for i = 2, #scores do
         if scores[i][SCORE_INDEX] < lowest[SCORE_INDEX] then
             index = i
@@ -642,9 +635,10 @@ function lib.getLowestScore(scores)
         if scores[i][SCORE_INDEX] ~= OBSTACLE then
             sum = sum + scores[i][SCORE_INDEX]
         end
-        debug = debug .. scores[i][SCORE_INDEX] .. ","
+        debug = debug .. i .. ":" .. scores[i][SCORE_INDEX] .. ","
+        --lib_debug.print_debug(i, scores[i][SCORE_INDEX])
     end
-    lib_debug.print_debug(debug)
+    --lib_debug.print_debug(debug)
     if debugFlag then io.read() end
     return lowest, index, lowest[SCORE_INDEX] == OBSTACLE, sum
 end

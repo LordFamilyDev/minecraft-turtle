@@ -8,7 +8,7 @@ for i = 1, #args do
     elseif args[i] == "--put" then
         storageLib.pushItem(args[i+1])
     elseif args[i] == "--list" then
-        storageLib.printInventorySummary()
+        storageLib.printInventorySummary(args[i+1])
     elseif args[i] == "--setLocal" then
         storageLib.setLocalChest(args[i+1])
     end
