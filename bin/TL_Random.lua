@@ -3,6 +3,7 @@ local lib_itemTypes = require("/lib/item_types")
 local lib_move = require("/lib/move")
 local lib_farming = require("/lib/farming")
 local Boolean3D = require("/lib/Boolean_3D")
+local storageLib = require("/lib/storage")
 
 function toFile(string)
     local file = fs.open("debugFile", "w")
@@ -560,6 +561,17 @@ if arg1 then
         lib_move.goBackwards(true)
         
         plot3D_v3(grid,false, typeCount)
+    elseif arg1 == 15 then
+        while true do
+            sleep(5)
+            local craftResult = storageLib.craftWithPattern({1,2,1,2,2,2,1,2,1}, {"minecraft:prismarine_shard","minecraft:prismarine_crystals"},"up")
+            storageLib.trash("minecraft:ink_sac", "down")
+            storageLib.trash("minecraft:cod", "down")
+            if craftResult then
+                storageLib.trash("minecraft:prismarine_shard", "down")
+            end
+            
+        end
     end
     
 else
