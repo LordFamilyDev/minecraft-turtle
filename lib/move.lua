@@ -497,48 +497,20 @@ function lib.goTo(x,z,depth, xd, zd)
         lib.goDown(true)
     end
 
-    if _G.relativePosition.xPos > x then
-        while _G.relativePosition.xDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos > x do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.xPos < x then
-        while _G.relativePosition.xDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.xPos < x do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+
+    lib.turnTo(xD,0)
+    while _G.relativePosition.xPos > x do
+        lib.goForward(true)
+        sleep(0.5)
     end
 
-    if _G.relativePosition.zPos > z then
-        while _G.relativePosition.zDir ~= -1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos > z do
-            lib.goForward(true)
-            sleep(0.5)
-        end
-    elseif _G.relativePosition.zPos < z then
-        while _G.relativePosition.zDir ~= 1 do
-            lib.turnLeft()
-        end
-        while _G.relativePosition.zPos < z do
-            lib.goForward(true)
-            sleep(0.5)
-        end        
+    lib.turnTo(0,zD)
+    while _G.relativePosition.zPos > z do
+        lib.goForward(true)
+        sleep(0.5)
     end
-
-    --allows directionality after move to be ignored if no directional goal stated
-    if not (xd == nil and zd == nil) then
-        while _G.relativePosition.zDir ~= zd or _G.relativePosition.xDir ~= xd do
-            lib.turnLeft()
-        end
-    end
+    
+    lib.turnTo(xd,zd)
 end
 
 
