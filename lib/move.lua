@@ -36,7 +36,16 @@ end
 
 
 function lib.getDirRight(x, z)
-    return -z, x
+    --return -z, x
+    if x == 1 then
+        return 0, 1
+    elseif x == -1 then
+        return 0, -1
+    elseif z == 1 then
+        return -1, 0
+    elseif z == -1 then
+        return 1, 0
+    end
 end
 
 function lib.getDirLeft(x, z)
@@ -478,24 +487,13 @@ function lib.goDown(dig)
 end
 
 
-function lib.goTo(x,z,d, xd, zd) 
-    if not xd then xd = 0 end
-    if not zd then zd = 0 end
-    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,d,xd,zd))
-    print(string.format("      at:%d:%d:%d ; %d:%d",
-                                _G.relativePosition.xPos,
-                                _G.relativePosition.zPos,
-                                _G.relativePosition.depth,
-                                _G.relativePosition.xDir,
-                                _G.relativePosition.zDir ))
+function lib.goTo(x,z,depth, xd, zd)
     
-    local xD, zD, dD = lib.getDirTo(x, z, d)
-
     --Fix depth first in case dug into bedrock (usually up means freedom)
-    while _G.relativePosition.depth < d do 
+    while _G.relativePosition.depth < depth do 
         lib.goUp(true)
     end
-    while _G.relativePosition.depth > d do
+    while _G.relativePosition.depth > depth do
         lib.goDown(true)
     end
 
@@ -902,19 +900,25 @@ function lib.spiralOut(radius, stepFunction)
     local side = 1
     local steps = 1
     local x0, z0, d0 = lib.getPos()
+    local xd0, zd0 = lib.getDir()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
+
+    local stepFunctionFlag = false
+
     while steps <= radius * 2 do
         for i = 1, steps do
 
             if type(stepFunction) == "function" then
-                stepFunction()
+                local tempFlag = stepFunction()
+                if tempFlag then
+                    stepFunctionFlag = true
+                end
             end
 
             x = x + xd
             z = z + zd
-            print("Pathing to: "..x..","..z..","..d)
-            lib.pathTo(x, z, d, true)
+            lib.goTo(x, z, d)
         end
         
         xd, zd = lib.getDirLeft(xd, zd)
@@ -927,7 +931,10 @@ function lib.spiralOut(radius, stepFunction)
     end
 
     --return to start position
-    lib.pathTo(x0, z0, d0, true)
+    lib.goTo(x0, z0, d0, xd0, zd0)
+
+    --basically this just returns if the step function did anything on this spiral
+    return stepFunctionFlag
 end
 
 lib.moveMemory = ""
