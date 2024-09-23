@@ -1,4 +1,82 @@
--- print.lua (Highly optimized version with efficient path planning)
+-- print.lua
+
+local blockAPI = require("/lib/lib_block")
+local lib_inv = require("/lib/lib_inv")
+
+-- Modem management
+local wirelessModem, wiredModem
+
+local function findModems()
+    local peripherals = peripheral.getNames()
+    for _, name in ipairs(peripherals) do
+        local type = peripheral.getType(name)
+        if type == "modem" then
+            if peripheral.call(name, "isWireless") then
+                wirelessModem = peripheral.wrap(name)
+                print("Found wireless modem: " .. name)
+            else
+                wiredModem = peripheral.wrap(name)
+                print("Found wired modem: " .. name)
+            end
+        end
+    end
+    if not wirelessModem then print("No wireless modem found") end
+    if not wiredModem then print("No wired modem found") end
+end
+
+local function openWirelessModem()
+    if wirelessModem then
+        rednet.close()
+        rednet.open(peripheral.getName(wirelessModem))
+        print("Opened wireless modem")
+    else
+        error("No wireless modem found")
+    end
+end
+
+local function openWiredModem()
+    if wiredModem then
+        rednet.close()
+        rednet.open(peripheral.getName(wiredModem))
+        print("Opened wired modem")
+    else
+        error("No wired modem found")
+    end
+end
+
+-- Wrapper functions for lib_inv operations
+local function invGet(itemName, count)
+    openWiredModem()
+    print("Attempting to get " .. count .. " of " .. itemName)
+    local success, result = pcall(lib_inv.get, itemName, count)
+    openWirelessModem()
+    if not success then
+        print("Error in invGet for " .. itemName .. ": " .. tostring(result))
+    else
+        print("Successfully got " .. itemName)
+    end
+    return success
+end
+
+local function invPut(itemName, count)
+    openWiredModem()
+    print("Attempting to put " .. count .. " of " .. itemName)
+    local success, result = pcall(lib_inv.put, itemName, count)
+    openWirelessModem()
+    if not success then
+        print("Error in invPut for " .. itemName .. ": " .. tostring(result))
+    else
+        print("Successfully put " .. itemName)
+    end
+    return success
+end
+
+-- Wrapper function for blockAPI operations
+local function blockAPIOperation(operation, ...)
+    openWirelessModem()
+    local result = operation(...)
+    return result
+end
 
 -- Function to read JSON file
 local function readJSON(path)
@@ -12,10 +90,11 @@ end
 -- Turtle state
 local position = {x = -1, y = 0, z = -1}  -- Start at -1, 0, -1
 local direction = 0 -- 0: +x, 90: +z, 180: -x, 270: -z
+local initialDirection = 0 -- Store the initial direction of the turtle
 
 -- PrintObject constructor
-local function PrintObject(x, y, z, blockType)
-    return {x = x, y = y, z = z, blockType = blockType}
+local function PrintObject(x, y, z, blockType, properties)
+    return {x = x, y = y, z = z, blockType = blockType, properties = properties}
 end
 
 -- Movement functions
@@ -107,6 +186,7 @@ end
 
 -- Function to return turtle to refill position
 local function goToRefillPosition()
+    print("Returning to refill position")
     -- Move to x = -1, z = -1 first
     turnToDirection(180) -- Face -x direction
     while position.x > -1 do moveForward() end
@@ -118,67 +198,223 @@ local function goToRefillPosition()
     
     -- Finally, face the original direction (+x)
     turnToDirection(0)
+    print("At refill position")
 end
 
--- Function to refill from chest
-local function refillFromChest()
-    goToRefillPosition()
-    print("Refilling from chest...")
+-- Function to adjust facing direction relative to initial turtle direction
+local function adjustFacingDirection(facing)
+    local facingMap = {north = 0, east = 90, south = 180, west = 270}
+    local reverseFacingMap = {[180] = "north", [270] = "east", [0] = "south", [90] = "west"}
+    
+    -- Convert facing to absolute angle
+    local absoluteFacing = facingMap[facing]
+    if not absoluteFacing then
+        return facing  -- Return original facing if it's not a cardinal direction
+    end
+    
+    -- Calculate the relative angle considering the initial direction
+    local relativeAngle = (absoluteFacing - initialDirection + 360) % 360
+    
+    -- Invert the relative angle
+    local invertedAngle = (360 - relativeAngle) % 360
+    
+    -- Convert back to cardinal direction
+    return reverseFacingMap[invertedAngle] or facing
+end
+
+-- Function to map block types to slot indices
+local blockTypeToSlot = {}
+local function mapBlockTypesToSlots()
+    blockTypeToSlot = {}  -- Reset the mapping
     for slot = 1, 16 do
-        if turtle.getItemCount(slot) == 0 then
-            turtle.select(slot)
-            turtle.suckDown()
+        local item = turtle.getItemDetail(slot)
+        if item then
+            if not blockTypeToSlot[item.name] then
+                blockTypeToSlot[item.name] = slot - 1  -- Convert to 0-based index
+            end
+            print("Mapped " .. item.name .. " to slot " .. (slot - 1))
         end
     end
-    print("Refill complete.")
 end
 
--- Inventory management functions
-local function findSameItem(sourceSlot)
-    local detail = turtle.getItemDetail(sourceSlot)
-    if not detail then return nil end
-
-    for i = 1, 16 do
-        if i ~= sourceSlot then
-            local slotDetail = turtle.getItemDetail(i)
-            if slotDetail and slotDetail.name == detail.name then
-                return i
+-- Function to count blocks in a layer
+local function countBlocksInLayer(structure, layer)
+    local blockCounts = {}
+    local totalBlocks = 0
+    
+    local layerData = structure.layerMap[layer + 1]
+    if layerData then
+        for x = 0, #layerData - 1 do
+            local column = layerData[x + 1]
+            for z = 0, #column - 1 do
+                local block = column:sub(z + 1, z + 1)
+                local blockInfo = structure.palette[block]
+                if blockInfo and blockInfo.name ~= "minecraft:air" then
+                    blockCounts[blockInfo.name] = (blockCounts[blockInfo.name] or 0) + 1
+                    totalBlocks = totalBlocks + 1
+                end
             end
+        end
+    end
+    
+    return blockCounts, totalBlocks
+end
+
+-- Function to fill inventory based on block percentages
+local function fillInventoryByPercentage(structure, layer, emptySlots)
+    local blockCounts, totalBlocks = countBlocksInLayer(structure, layer)
+    local sortedBlocks = {}
+    for blockName, count in pairs(blockCounts) do
+        table.insert(sortedBlocks, {name = blockName, count = count})
+    end
+    table.sort(sortedBlocks, function(a, b) return a.count > b.count end)
+    
+    local slotsToFill = emptySlots
+    for _, block in ipairs(sortedBlocks) do
+        if slotsToFill <= 0 then break end
+        local percentage = block.count / totalBlocks
+        local slotsForThisBlock = math.floor(percentage * emptySlots + 0.5)
+        if slotsForThisBlock > 0 then
+            local success = invGet(block.name, slotsForThisBlock * 64)
+            if success then
+                slotsToFill = slotsToFill - slotsForThisBlock
+            end
+        end
+    end
+end
+
+-- Initialize inventory at the start
+local function initializeInventory(structure)
+    print("Initializing inventory")
+    -- Transfer any items in turtle's inventory to remote chests
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            invPut(item.name, item.count)
+        end
+    end
+
+    -- Get unique block types from palette
+    local uniqueBlocks = {}
+    for _, blockInfo in pairs(structure.palette) do
+        if blockInfo.name ~= "minecraft:air" then
+            uniqueBlocks[blockInfo.name] = true
+        end
+    end
+
+    -- Get at least one stack of each unique block
+    local filledSlots = 0
+    for blockName in pairs(uniqueBlocks) do
+        print("Attempting to get " .. blockName)
+        if invGet(blockName, 64) then
+            filledSlots = filledSlots + 1
+        else
+            print("Failed to get " .. blockName .. ". Continuing with next block type.")
+        end
+        if filledSlots >= 16 then break end
+    end
+
+    -- Fill remaining slots based on percentages in the first layer
+    if filledSlots < 16 then
+        fillInventoryByPercentage(structure, 0, 16 - filledSlots)
+    end
+
+    -- Map block types to slots
+    mapBlockTypesToSlots()
+    print("Inventory initialization complete")
+end
+
+-- Function to refill inventory
+local function refillInventory(structure, currentLayer)
+    print("Refilling inventory for layer " .. currentLayer)
+    -- Clear current inventory
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item then
+            invPut(item.name, item.count)
+        end
+    end
+
+    -- Get unique block types from palette
+    local uniqueBlocks = {}
+    for _, blockInfo in pairs(structure.palette) do
+        if blockInfo.name ~= "minecraft:air" then
+            uniqueBlocks[blockInfo.name] = true
+        end
+    end
+
+    -- Get at least one stack of each unique block
+    local filledSlots = 0
+    for blockName in pairs(uniqueBlocks) do
+        print("Attempting to get " .. blockName)
+        if invGet(blockName, 64) then
+            filledSlots = filledSlots + 1
+        else
+            print("Failed to get " .. blockName .. ". Continuing with next block type.")
+        end
+        if filledSlots >= 16 then break end
+    end
+
+    -- Fill remaining slots based on percentages in the current layer
+    if filledSlots < 16 then
+        fillInventoryByPercentage(structure, currentLayer, 16 - filledSlots)
+    end
+
+    -- Remap block types to slots
+    mapBlockTypesToSlots()
+    print("Inventory refill complete")
+end
+
+-- Function to find a block type in inventory
+local function findBlockTypeInInventory(blockType)
+    for slot = 1, 16 do
+        local item = turtle.getItemDetail(slot)
+        if item and item.name == blockType then
+            return slot - 1  -- Convert to 0-based index
         end
     end
     return nil
 end
 
-local function replenishSlot(slot)
-    local currentCount = turtle.getItemCount(slot)
-    if currentCount > 1 then return true end
-
-    local sourceSlot = findSameItem(slot)
-    if not sourceSlot then
-        refillFromChest()
-        sourceSlot = findSameItem(slot)
-        if not sourceSlot then return false end
-    end
-
-    turtle.select(sourceSlot)
-    turtle.transferTo(slot, 64 - currentCount)
-    turtle.select(slot)
-    return true
-end
-
-local function selectSlot(index)
-    local slot = tonumber(index, 16) + 1 -- Convert hex to decimal and add 1
-    if slot and slot >= 1 and slot <= 16 then
-        turtle.select(slot)
-        if turtle.getItemCount() <= 1 then
-            if not replenishSlot(slot) then
-                print("Warning: Running low on items in slot " .. slot)
-                return false
+-- Function to select the correct slot for a block type
+local function selectSlotForBlockType(blockType, structure)
+    local slotIndex = blockTypeToSlot[blockType]
+    if slotIndex then
+        if turtle.getItemCount(slotIndex + 1) > 0 then
+            return turtle.select(slotIndex + 1)
+        else
+            -- Try to find the block type in other slots
+            local newSlotIndex = findBlockTypeInInventory(blockType)
+            if newSlotIndex then
+                blockTypeToSlot[blockType] = newSlotIndex  -- Update the mapping
+                print("Updated " .. blockType .. " mapping to slot " .. newSlotIndex)
+                return turtle.select(newSlotIndex + 1)
+            else
+                -- If we're out of this block type, refill inventory
+                print("Ran out of " .. blockType .. ". Refilling inventory...")
+                local currentY = position.y
+                goToRefillPosition()
+                refillInventory(structure, currentY)
+                moveToPrintObject({x = position.x, y = currentY, z = position.z})
+                return selectSlotForBlockType(blockType, structure)  -- Try again after refilling
             end
         end
-        return true
+    else
+        -- If the block type is not mapped, try to find it in inventory
+        local newSlotIndex = findBlockTypeInInventory(blockType)
+        if newSlotIndex then
+            blockTypeToSlot[blockType] = newSlotIndex  -- Update the mapping
+            print("Mapped " .. blockType .. " to slot " .. newSlotIndex)
+            return turtle.select(newSlotIndex + 1)
+        else
+            print("No slot found for block type: " .. blockType .. ". Refilling inventory...")
+            local currentY = position.y
+            goToRefillPosition()
+            refillInventory(structure, currentY)
+            moveToPrintObject({x = position.x, y = currentY, z = position.z})
+            return selectSlotForBlockType(blockType, structure)  -- Try again after refilling
+        end
     end
-    return false
 end
 
 -- Function to generate print objects for a layer
@@ -192,7 +428,10 @@ local function generatePrintObjects(structure, y)
         for z = 0, #column - 1 do
             local block = column:sub(z+1, z+1)
             if block ~= " " then
-                table.insert(printObjects, PrintObject(x, y, z, block))
+                local blockInfo = structure.palette[block]
+                if blockInfo and blockInfo.name ~= "minecraft:air" then
+                    table.insert(printObjects, PrintObject(x, y, z, blockInfo.name, blockInfo.properties))
+                end
             end
         end
     end
@@ -200,10 +439,34 @@ local function generatePrintObjects(structure, y)
 end
 
 -- Function to print a single object
-local function printObject(obj)
-    if selectSlot(obj.blockType) then
+local function printObject(obj, structure)
+    if obj.blockType == "minecraft:air" then
+        -- Skip air blocks
+        return true
+    end
+
+    if selectSlotForBlockType(obj.blockType, structure) then
         moveToPrintObject(obj)
-        return turtle.placeDown()
+        if turtle.placeDown() then
+            if obj.properties then
+                local adjustedProperties = {}
+                for k, v in pairs(obj.properties) do
+                    if k == "facing" then
+                        adjustedProperties[k] = adjustFacingDirection(v)
+                    else
+                        adjustedProperties[k] = v
+                    end
+                end
+
+                local success, error = blockAPIOperation(blockAPI.blockSetDown, adjustedProperties)
+                if not success then
+                    print("Failed to set block properties: " .. tostring(error))
+                end
+            end
+            return true
+        else
+            print("Failed to place block")
+        end
     end
     return false
 end
@@ -214,6 +477,18 @@ local function printStructure(structure)
 
     print("Structure height: " .. height)
 
+    -- Get initial turtle position and facing
+    local turtleInfo, error = blockAPIOperation(blockAPI.getTurtlePositionAndFacing)
+    if not turtleInfo then
+        print("Error getting turtle position and facing: " .. tostring(error))
+        return
+    end
+    initialDirection = turtleInfo.facing * 90  -- Convert to degrees
+    print("Initial direction: " .. initialDirection)
+
+    -- Initialize inventory
+    initializeInventory(structure)
+
     for y = 0, height - 1 do
         print("Printing layer " .. (y + 1))
         local printObjects = generatePrintObjects(structure, y)
@@ -222,10 +497,9 @@ local function printStructure(structure)
             local nearestIndex = findNearestPrintObject(printObjects)
             local obj = printObjects[nearestIndex]
             
-            while not printObject(obj) do
-                print("Refilling and retrying...")
-                refillFromChest()
-                moveToPrintObject(obj)
+            while not printObject(obj, structure) do
+                print("Failed to print object. Retrying...")
+                -- The selectSlotForBlockType function will handle refilling if necessary
             end
             
             table.remove(printObjects, nearestIndex)
@@ -243,6 +517,41 @@ if #args < 1 then
     return
 end
 
+findModems()  -- Initialize modem connections
+openWirelessModem()  -- Start with wireless modem for block API operations
+
 local jsonFile = args[1]
 local structure = readJSON(jsonFile)
+
+-- Print structure information
+print("Structure loaded:")
+print("Layers: " .. #structure.layerMap)
+print("Palette entries: " .. #structure.palette)
+
+-- Print palette information
+print("Palette:")
+for key, value in pairs(structure.palette) do
+    print(key .. ": " .. value.name)
+end
+
+-- Confirm start
+print("Press any key to start printing...")
+os.pullEvent("key")
+
+-- Start printing
 printStructure(structure)
+
+-- Cleanup
+print("Printing complete. Cleaning up...")
+openWirelessModem()  -- Ensure we're on wireless for any final operations
+
+-- Optional: Return any unused blocks to storage
+print("Returning unused blocks to storage...")
+for slot = 1, 16 do
+    local item = turtle.getItemDetail(slot)
+    if item then
+        invPut(item.name, item.count)
+    end
+end
+
+print("All operations complete. Turtle is ready for next task.")
