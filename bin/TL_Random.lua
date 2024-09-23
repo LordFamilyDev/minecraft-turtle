@@ -562,12 +562,15 @@ if arg1 then
         
         plot3D_v3(grid,false, typeCount)
     elseif arg1 == 15 then
+        local shardTrashCounter = 0
         while true do
-            sleep(5)
+            sleep(10)
+            shardTrashCounter = shardTrashCounter + 1
             local craftResult = storageLib.craftWithPattern({1,2,1,2,2,2,1,2,1}, {"minecraft:prismarine_shard","minecraft:prismarine_crystals"},"up")
             storageLib.trash("minecraft:ink_sac", "down")
             storageLib.trash("minecraft:cod", "down")
-            if craftResult then
+            if craftResult  or shardTrashCounter > 100 then
+                shardTrashCounter = 0
                 storageLib.trash("minecraft:prismarine_shard", "down")
             end
             
