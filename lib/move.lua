@@ -497,15 +497,26 @@ function lib.goTo(x,z,depth, xd, zd)
         lib.goDown(true)
     end
 
-
-    lib.turnTo(xD,0)
     while _G.relativePosition.xPos > x do
+        lib.turnTo(-1,0)
         lib.goForward(true)
         sleep(0.5)
     end
 
-    lib.turnTo(0,zD)
+    while _G.relativePosition.xPos < x do
+        lib.turnTo(1,0)
+        lib.goForward(true)
+        sleep(0.5)
+    end
+
     while _G.relativePosition.zPos > z do
+        lib.turnTo(0,-1)
+        lib.goForward(true)
+        sleep(0.5)
+    end
+
+    while _G.relativePosition.zPos < z do
+        lib.turnTo(0,1)
         lib.goForward(true)
         sleep(0.5)
     end
