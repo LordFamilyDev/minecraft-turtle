@@ -1,5 +1,6 @@
 m = require("/lib/move")
 f = require("/lib/farming")
+mtk = require("/bin/mtk")
 local itemTypes = require("/lib/item_types")
 local lib_debug = require("/lib/lib_debug")
 
@@ -56,8 +57,8 @@ end
 function megaSpruce()
     --turtle facing left sapling with chest under the turtle
     --turtle must be on south side of saplings (based on mega spruce spawn logic)
+    m.setHome()
     while true do
-        m.setHome()
         while not f.isTree() do
             lib_debug.print_debug("waiting for tree")
             sleep(30)
@@ -95,15 +96,14 @@ function megaSpruce()
         end
         m.goHome()
 
-        lib_debug.print_debug("Waiting for leaves to fall")
+        print("Waiting for leaves to fall")
         sleep(180) --wait for leaves to fall
 
         --sweep area
         m.goUp(false)
         m.goForward(false)
         f.sweepUp(5)
-        m.goBackwards(false)
-        m.goDown(false)
+        m.goHome()
 
         --plant saplings
         m.goUp(false)
@@ -123,6 +123,27 @@ function megaSpruce()
 
         f.dumpOther()
     end
+end
+
+function spruceFarm2()
+    m.setHome()
+    m.addWhitelist(itemTypes.treeBlocks)
+    while true do
+        while not f.isTree() do
+            lib_debug.print_debug("waiting for tree")
+            sleep(30)
+        end
+
+        m.goForward(true)
+        
+        local blockUp, info = turtle.inspectUp()
+        while itemTypes.isTreeUp() do
+
+            local blockUp, info = turtle.inspectUp()
+        end
+    
+
+    end 
 end
 
 -- Capture arguments passed to the script

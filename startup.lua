@@ -17,3 +17,7 @@ else
     -- run motd command
     shell.run("/rom/programs/motd.lua")
 end
+
+if fs.exists("/autorun.lua") then
+    shell.run("/autorun.lua")
+end

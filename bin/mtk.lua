@@ -335,7 +335,7 @@ table.insert(macro_functions, {"f", function(c)
 end})
 
 -- Refuel function
-table.insert(macro_functions, {"r", function(c)
+table.insert(macro_functions, {"R", function(c)
     debug_print("Refuel")
     if move and move.refuel then
         return move.refuel()

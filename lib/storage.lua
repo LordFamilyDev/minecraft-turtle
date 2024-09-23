@@ -76,13 +76,15 @@ function storageLib.findEmptySlot(chest)
 end
 
 
-function storageLib.findItemsInChest(chest, item)
+function storageLib.findItemsInChest(chest, item, exact)
     local slots = {}
     local list = chest.list()
     if not list then return {} end
     for slot, val in pairs(list) do
         if type(item) == "string" then
-            if val.name:find(item) then
+            if exact and val.name == item then
+                table.insert(slots,slot)
+            elseif not exact and val.name:find(item) then
                 table.insert(slots,slot)
             end
         elseif type(item) == "table" then
@@ -114,13 +116,13 @@ function storageLib.findItemsInTurtle(item)
 end
 
 
-function storageLib.findItemsInStash(item)
+function storageLib.findItemsInStash(item,exact)
     local list = {}
     local chests = storageLib.getChestList()
     for i=1,#chests do 
         if chests[i] ~= storageLib.localChest then
             local chest = peripheral.wrap(chests[i])
-            local slots = storageLib.findItemsInChest(chest,item)
+            local slots = storageLib.findItemsInChest(chest,item,exact)
             if #slots > 0 then
                 list[chests[i]] = slots
             end
@@ -132,13 +134,17 @@ end
 
 
 
-function storageLib.getLocationListLocal(item)
+function storageLib.getLocationListLocal(slots)
     local list = {}
     if type(item) == "number" then
         list = {item}
     elseif item == nil or (type(item) == "string" and item == "all") then
         if turtle then
-            list = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+            for i = 1, 16 do
+                if turtle.getItemCount(i) > 0 then
+                    table.insert(list, i)
+                end
+            end
         elseif storageLib.localChest then
             local chest = peripheral.wrap(storageLib.localChest)
             for i = 1, chest.size() do
@@ -146,17 +152,13 @@ function storageLib.getLocationListLocal(item)
             end
         end
     else 
-        if turtle then
-            list = storageLib.findItemsInTurtle(item)
-        elseif storageLib.localChest then
-                list = storageLib.findItemsInChest(peripheral.wrap(storageLib.localChest),item)
-        end
+        list = slots
     end
     return list
 end
 
-function storageLib.pushItem(item, count)
-    local list = storageLib.getLocationListLocal(item)
+function storageLib.pushItem(slots, count)
+    local list = storageLib.getLocationListLocal(slots)
     local source = nil
     if count == nil then
         count = 64
@@ -182,7 +184,7 @@ function storageLib.pushItem(item, count)
     end
 end
 
-function storageLib.getItems(item,count,destSlot)
+function storageLib.getItems(item,count,destSlot,exact)
     local dest = nil
     local itemList = {}
     if count == nil then
@@ -200,17 +202,18 @@ function storageLib.getItems(item,count,destSlot)
     local err = false
     for i=1,#itemList do
         ::continue::
-        local chests = storageLib.findItemsInStash(itemList[i])
+        local chests = storageLib.findItemsInStash(itemList[i],exact)
         local found = 0
         for chest, slots in pairs(chests) do
             print("Pulling from chest:"..chest)
             for _,s in ipairs(slots) do
                 local c = peripheral.wrap(chest)
-                local x = c.pushItems(dest,s,destSlot)
+                local x = c.pushItems(dest,s,count,destSlot)
                 if x ~= nil then
                     found = found + x
                 end
                 if found >= count then 
+                    i = i+1
                     goto continue
                 end
             end
@@ -261,12 +264,14 @@ function storageLib.getInventorySummary()
     return summary
 end
 
-function storageLib.printInventorySummary()
+function storageLib.printInventorySummary(filter)
     local summary = storageLib.getInventorySummary()
     if next(summary) then
         local lines = {"Inventory Summary (All Chests):"}
         for itemName, count in pairs(summary) do
-            table.insert(lines, string.format("  %s: %d", itemName, count))
+            if filter == nil or itemName:find(filter) then 
+                table.insert(lines, string.format("  %s: %d", itemName, count))
+            end
         end
         printWithPause(lines)
     else
