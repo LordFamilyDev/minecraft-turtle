@@ -1,6 +1,6 @@
 m = require("/lib/move")
 f = require("/lib/farming")
-mtk = require("/bin/mtk")
+--mtk = require("/bin/mtk") -- u cant include this like a lib as it calls mtk at startup
 local itemTypes = require("/lib/item_types")
 local lib_debug = require("/lib/lib_debug")
 local lib_inv_mgmt = require("/lib/lib_inv_mgmt")
