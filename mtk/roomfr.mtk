@@ -1,0 +1,9 @@
+# Digs a 3 block tall room 1 chunk big.
+# Room is dug forward and right ofd the miner
+-m J2
+J0mFduddj0
+trmFduddtr
+J1mFduddj1
+tlmFduddtl
+j2
+-j 15,15,8
