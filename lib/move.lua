@@ -497,6 +497,7 @@ function lib.goTo(x,z,depth, xd, zd)
         lib.goDown(true)
     end
 
+    local xD, zD, dD = lib.getDirTo(x, z, d)
 
     lib.turnTo(xD,0)
     while _G.relativePosition.xPos > x do
