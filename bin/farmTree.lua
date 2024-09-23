@@ -3,6 +3,7 @@ f = require("/lib/farming")
 mtk = require("/bin/mtk")
 local itemTypes = require("/lib/item_types")
 local lib_debug = require("/lib/lib_debug")
+local lib_inv_mgmt = require("/lib/lib_inv_mgmt")
 
 
 function oakFarm()
@@ -125,6 +126,7 @@ function megaSpruce()
     end
 end
 
+
 function spruceFarm2()
     m.setHome()
     m.addWhitelist(itemTypes.treeBlocks)
@@ -146,6 +148,108 @@ function spruceFarm2()
     end 
 end
 
+--slots: crimson fungus, crimson nylium, bonemeal, charcoal
+function mushroomTree()
+    m.setTether(64)
+    m.setHome()
+    m.addBlacklist(itemTypes.noMine)
+    while true do
+        sleep(1)
+
+        --place shroom down
+        turtle.digDown()
+        if not lib_inv_mgmt.selectWithRefill(1) then
+            return
+        end
+        
+        if not turtle.placeDown() then
+            turtle.down()
+            if not lib_inv_mgmt.selectWithRefill(2) then
+                turtle.up()
+                return
+            end
+            turtle.digDown()
+            turtle.placeDown()
+            turtle.up()
+            goto continue
+        end
+        
+        while not turtle.inspectUp() do
+            if not lib_inv_mgmt.selectWithRefill(3) then
+                return
+            end
+            turtle.placeDown()
+        end
+
+        turtle.digDown()
+        
+        m.goUp(true)
+        for h = 1, 9 do
+            if not lib_inv_mgmt.selectWithRefill(4) then
+                return
+            end
+            if turtle.getFuelLevel() < 1000 then
+                turtle.refuel()
+            end
+
+            local didSomething = m.spiralOut(3,digUpDown)
+            if not didSomething then
+                break
+            end
+            m.goUp(true)
+            m.goUp(true)
+            m.goUp(true)
+        end
+        m.goTo(0, 0, 0)
+        m.turnRight()
+        m.turnRight()
+        lib_inv_mgmt.transferInventory(9, "front", {"minecraft:nether_wart_block"}, false)
+        m.turnRight()
+        m.turnRight()
+        lib_inv_mgmt.transferInventory(9, "front", {"minecraft:shroomlight","minecraft:crimson_stem"}, true)
+        --{"minecraft:nether_wart_block","minecraft:crimson_stem","minecraft:shroomlight"}
+
+        ::continue::
+    end
+    m.goTo(0, 0, 0)
+end
+
+function wheatFarm(radius)
+    while true do
+        sleep(600) --wheat grows fully on average in one day (20 minutes)
+        local transferResult = lib_inv_mgmt.transferInventory(5, "up", {"minecraft:wheat"}, true)
+        if not transferResult then
+            print("storage full")
+            return
+        end
+        local didSomething = m.spiralOut(radius,harvestWheat)
+    end
+    
+end
+
+function harvestWheat()
+    if f.isFullyGrownWheatBelow() then
+        turtle.digDown()
+        lib_inv_mgmt.selectWithRefill(1,5)
+        turtle.placeDown()
+    end
+end
+
+
+function digUpDown()
+    local result = false
+
+    if m.canDig("up") and turtle.digUp() then
+        result = true
+    end
+    
+    if m.canDig("down") and turtle.digDown() then
+        result = true
+    end
+
+    return result
+end
+
 -- Capture arguments passed to the script
 local args = {...}
 
@@ -157,6 +261,16 @@ if arg1 then
         oakFarm()
     elseif arg1 == 2 then
         megaSpruce()
+    elseif arg1 == 3 then
+        mushroomTree()
+    elseif arg1 == 4 then
+        local rad = tonumber(args[2])
+        if rad then
+            wheatFarm(rad)
+        else
+            print("enter radius as second argument")
+        end
+        
     end
 else
     tree = f.waitForTree()
