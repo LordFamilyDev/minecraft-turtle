@@ -148,7 +148,7 @@ local function process_directory(base_url, dir_path, files)
                 updated_listing[file.name] = file
             end
         else
-            print("Skip file: " .. full_path)
+            -- print("Skip file: " .. full_path)
             updated_listing[file.name] = existing_listing[file.name]
         end
     end

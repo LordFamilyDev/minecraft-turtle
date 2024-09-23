@@ -1,7 +1,7 @@
 itemTypes = require("/lib/item_types")
 lib_debug = require("/lib/lib_debug")
 
-local debugFlag = false
+local debugFlag = false 
 
 lib_debug.set_verbose(debugFlag)
 
@@ -36,7 +36,16 @@ end
 
 
 function lib.getDirRight(x, z)
-    return -z, x
+    --return -z, x
+    if x == 1 then
+        return 0, 1
+    elseif x == -1 then
+        return 0, -1
+    elseif z == 1 then
+        return -1, 0
+    elseif z == -1 then
+        return 1, 0
+    end
 end
 
 function lib.getDirLeft(x, z)
@@ -82,6 +91,14 @@ function lib.getTether()
     return lib.tether
 end
 
+function lib.getPos()
+    return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
+end
+
+function lib.getdepth()
+    return _G.relativePosition.depth
+end
+
 function lib.getDir()
     return _G.relativePosition.xDir, _G.relativePosition.zDir
 end
@@ -89,9 +106,6 @@ end
 function lib.getTurnCount(xC, zC, xT, zT)
     local turns = 0
     local x, z = xC, zC
-    if xT == 0 and zT == 0 then
-        return -1
-    end
     while x ~= xT or z ~= zT do
         x, z = lib.getDirRight(x, z)
         turns = turns + 1
@@ -100,10 +114,6 @@ function lib.getTurnCount(xC, zC, xT, zT)
         end
     end
     return turns
-end
-
-function lib.getPos()
-    return _G.relativePosition.xPos, _G.relativePosition.zPos, _G.relativePosition.depth
 end
 
 function lib.getDirTo(x,z,d)
@@ -116,11 +126,6 @@ function lib.getDirTo(x,z,d)
     if dd == 0 then dd = 0 elseif dd > 0 then dd = 1 else dd = -1 end
     lib_debug.print_debug("To:",x,z,d,"From",xn,zn,dn,"dir:",xd,zd,dd)
     return xd,zd,dd
-end
-
-
-function lib.getdepth()
-    return _G.relativePosition.depth
 end
 
 function lib.addWhitelist(whiteListItem)
@@ -288,7 +293,6 @@ function lib.refuel()
     return false
 end
 
-
 function lib.dumpTrash()
     for slot = 1, 16 do
         turtle.select(slot)
@@ -304,9 +308,6 @@ function lib.dumpTrash()
     end
     turtle.select(1)
 end
-
-
-
 
 function lib.turnLeft()
     turtle.turnLeft()
@@ -486,24 +487,13 @@ function lib.goDown(dig)
 end
 
 
-function lib.goTo(x,z,d, xd, zd) 
-    if not xd then xd = 0 end
-    if not zd then zd = 0 end
-    print(string.format("Going to %d:%d:%d ; %d:%d",x,z,d,xd,zd))
-    print(string.format("      at:%d:%d:%d ; %d:%d",
-                                _G.relativePosition.xPos,
-                                _G.relativePosition.zPos,
-                                _G.relativePosition.depth,
-                                _G.relativePosition.xDir,
-                                _G.relativePosition.zDir ))
+function lib.goTo(x,z,depth, xd, zd)
     
-    local xD, zD, dD = lib.getDirTo(x, z, d)
-
     --Fix depth first in case dug into bedrock (usually up means freedom)
-    while _G.relativePosition.depth < d do 
+    while _G.relativePosition.depth < depth do 
         lib.goUp(true)
     end
-    while _G.relativePosition.depth > d do
+    while _G.relativePosition.depth > depth do
         lib.goDown(true)
     end
 
@@ -520,7 +510,7 @@ function lib.goTo(x,z,d, xd, zd)
         sleep(0.5)
     end
     
-    lib.turnTo(zd,zd)
+    lib.turnTo(xd,zd)
 end
 
 
@@ -582,7 +572,7 @@ function lib.manhattanDistance(x1, z1, d1, x2, z2, d2)
 end
 
 function lib.squaredDistance(x1, z1, d1, x2, z2, d2)
-    return ( math.sqrt( math.pow(x1 - x2,2) + math.pow(z1 - z2,2) + math.pow(d1 + d2,2)  ))
+    return ( math.sqrt( math.pow(x1 - x2,2) + math.pow(z1 - z2,2) + math.pow(d1 - d2,2)  ))
 end
 
 function lib.getIndex(x, z, d)
@@ -634,6 +624,7 @@ function lib.getLowestScore(scores)
     local sum = lowest[SCORE_INDEX]
     debug = debug .. sum .. ","
     local index = 1
+    lib_debug.print_debug("Got Scores: ",#scores)
     for i = 2, #scores do
         if scores[i][SCORE_INDEX] < lowest[SCORE_INDEX] then
             index = i
@@ -642,9 +633,10 @@ function lib.getLowestScore(scores)
         if scores[i][SCORE_INDEX] ~= OBSTACLE then
             sum = sum + scores[i][SCORE_INDEX]
         end
-        debug = debug .. scores[i][SCORE_INDEX] .. ","
+        debug = debug .. i .. ":" .. scores[i][SCORE_INDEX] .. ","
+        --lib_debug.print_debug(i, scores[i][SCORE_INDEX])
     end
-    lib_debug.print_debug(debug)
+    --lib_debug.print_debug(debug)
     if debugFlag then io.read() end
     return lowest, index, lowest[SCORE_INDEX] == OBSTACLE, sum
 end
@@ -908,19 +900,25 @@ function lib.spiralOut(radius, stepFunction)
     local side = 1
     local steps = 1
     local x0, z0, d0 = lib.getPos()
+    local xd0, zd0 = lib.getDir()
     local x, z, d = lib.getPos()
     local xd, zd = lib.getDir()
+
+    local stepFunctionFlag = false
+
     while steps <= radius * 2 do
         for i = 1, steps do
 
             if type(stepFunction) == "function" then
-                stepFunction()
+                local tempFlag = stepFunction()
+                if tempFlag then
+                    stepFunctionFlag = true
+                end
             end
 
             x = x + xd
             z = z + zd
-            print("Pathing to: "..x..","..z..","..d)
-            lib.pathTo(x, z, d, true)
+            lib.goTo(x, z, d)
         end
         
         xd, zd = lib.getDirLeft(xd, zd)
@@ -933,7 +931,10 @@ function lib.spiralOut(radius, stepFunction)
     end
 
     --return to start position
-    lib.pathTo(x0, z0, d0, true)
+    lib.goTo(x0, z0, d0, xd0, zd0)
+
+    --basically this just returns if the step function did anything on this spiral
+    return stepFunctionFlag
 end
 
 lib.moveMemory = ""

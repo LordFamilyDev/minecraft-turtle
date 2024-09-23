@@ -1,7 +1,7 @@
 local lib_debug = {}
 
 -- Global verbose flag
-lib_debug.verbose = false
+lib_debug.verbose = true
 
 -- Debug print function
 function lib_debug.print_debug(...)

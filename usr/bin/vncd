@@ -56,9 +56,19 @@ local packetConversion = {
 	EV = "event",
 }
 
+local sides = {
+	"right",
+	"left",
+	"bottom",
+	"top",
+	"back",
+	"front"
+}
+
 local function openModem()
 	local modemFound = false
-	for _, side in ipairs(rs.getSides()) do
+
+	for _, side in ipairs(sides) do
 		if peripheral.getType(side) == "modem" then
 			if not rednet.isOpen(side) then rednet.open(side) end
 			modemFound = true

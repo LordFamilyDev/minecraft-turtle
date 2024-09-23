@@ -1,11 +1,13 @@
 -- install.lua
 local args = {...}
+local AUTORUN = "/autorun.lua"
+
 
 local function readStartup()
-    if not fs.exists("/startup.lua") then
+    if not fs.exists(AUTORUN) then
         return {}
     end
-    local file = fs.open("/startup.lua", "r")
+    local file = fs.open(AUTORUN, "r")
     local lines = {}
     for line in file.readLine do
         lines[#lines + 1] = line
@@ -15,7 +17,7 @@ local function readStartup()
 end
 
 local function writeStartup(lines)
-    local file = fs.open("/startup.lua", "w")
+    local file = fs.open(AUTORUN, "w")
     for _, line in ipairs(lines) do
         file.writeLine(line)
     end
@@ -32,7 +34,7 @@ local function install(program, ...)
         lines[#lines + 1] = string.format('shell.run("/bin/%s")', program)
     end
     writeStartup(lines)
-    print(string.format("Installed %s to startup", program))
+    print(string.format("Installed %s to autorun", program))
 end
 
 local function remove(program)
@@ -46,9 +48,9 @@ local function remove(program)
     end
     if removed then
         writeStartup(lines)
-        print(string.format("Removed %s from startup", program))
+        print(string.format("Removed %s from autorun", program))
     else
-        print(string.format("%s was not in startup", program))
+        print(string.format("%s was not in autorun", program))
     end
 end
 

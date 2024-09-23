@@ -169,17 +169,22 @@ end
 
 -- Capture arguments passed to the script
 local args = {...}
+local iterations = 1
 
-for i=1,#args,2 do
-    if args[i] == "--launch" then 
-        launch()
-    elseif args[i] == "-i" then
-        iterations = tonumber(args[i+1])
+if #args == 1 then
+    iterations = tonumber(args[1])
+else
+    for i=1,#args,2 do
+        if args[i] == "--launch" then 
+            launch()
+        elseif args[i] == "-i" then
+            iterations = tonumber(args[i+1])
+        end
     end
 end
 
 if not iterations then
     iterations = 1
 end
-
+print("iterations: " .. iterations)
 findLavaAndScoop(iterations)

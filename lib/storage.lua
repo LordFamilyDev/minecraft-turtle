@@ -58,14 +58,15 @@ function storageLib.findEmptyChest()
             local chest = peripheral.wrap(chests[i])
             local size = chest.size()
             local list = chest.list()
-            if(#list < #size) then
-                return chest
+            if(#list < size) then
+                return chests[i]
             end
         end
     end
 end
 
 function storageLib.findEmptySlot(chest)
+    local chest = peripheral.wrap(chests[i])
     list = chest.list()
     for i=1,chest.size() do
         if list[i] == nil then
@@ -75,13 +76,15 @@ function storageLib.findEmptySlot(chest)
 end
 
 
-function storageLib.findItemsInChest(chest, item)
+function storageLib.findItemsInChest(chest, item, exact)
     local slots = {}
     local list = chest.list()
     if not list then return {} end
     for slot, val in pairs(list) do
         if type(item) == "string" then
-            if val.name:find(item) then
+            if exact and val.name == item then
+                table.insert(slots,slot)
+            elseif not exact and val.name:find(item) then
                 table.insert(slots,slot)
             end
         elseif type(item) == "table" then
@@ -113,13 +116,13 @@ function storageLib.findItemsInTurtle(item)
 end
 
 
-function storageLib.findItemsInStash(item)
+function storageLib.findItemsInStash(item,exact)
     local list = {}
     local chests = storageLib.getChestList()
     for i=1,#chests do 
         if chests[i] ~= storageLib.localChest then
             local chest = peripheral.wrap(chests[i])
-            local slots = storageLib.findItemsInChest(chest,item)
+            local slots = storageLib.findItemsInChest(chest,item,exact)
             if #slots > 0 then
                 list[chests[i]] = slots
             end
@@ -131,13 +134,17 @@ end
 
 
 
-function storageLib.getLocationListLocal(item)
+function storageLib.getLocationListLocal(slots)
     local list = {}
     if type(item) == "number" then
         list = {item}
     elseif item == nil or (type(item) == "string" and item == "all") then
         if turtle then
-            list = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+            for i = 1, 16 do
+                if turtle.getItemCount(i) > 0 then
+                    table.insert(list, i)
+                end
+            end
         elseif storageLib.localChest then
             local chest = peripheral.wrap(storageLib.localChest)
             for i = 1, chest.size() do
@@ -145,17 +152,13 @@ function storageLib.getLocationListLocal(item)
             end
         end
     else 
-        if turtle then
-            list = storageLib.findItemsInTurtle(item)
-        elseif storageLib.localChest then
-                list = storageLib.findItemsInChest(peripheral.wrap(storageLib.localChest),item)
-        end
+        list = slots
     end
     return list
 end
 
-function storageLib.pushItem(item, count)
-    local list = storageLib.getLocationListLocal(item)
+function storageLib.pushItem(slots, count)
+    local list = storageLib.getLocationListLocal(slots)
     local source = nil
     if count == nil then
         count = 64
@@ -168,7 +171,8 @@ function storageLib.pushItem(item, count)
     end 
 
     for i = 1, #list do
-        chest, slot = storageLib.findEmptySlot()
+        chest = storageLib.findEmptyChest()
+        -- slot = storageLib.findEmptySlot()
         if chest ~= nil then
             c = peripheral.wrap(chest)
             local x = c.pullItems(source, list[i], count)
@@ -180,43 +184,80 @@ function storageLib.pushItem(item, count)
     end
 end
 
-function storageLib.getItems(item,count,destSlot)
+function storageLib.getItems(item, count, destSlot, exact)
     local dest = nil
     local itemList = {}
+    local found = 0  -- Keep track of how many items we've found
+
+    -- Default count is 64 if not provided
     if count == nil then
         count = 64
     end
+
+    -- Determine if the destination is a turtle or local chest
     if turtle then
         dest = storageLib.getTurtleHandle()
     else
         dest = storageLib.localChest
-    end 
-    print("destination:",dest)
+    end
+    print("destination:", dest)
+
+    -- Ensure itemList is a table
     if type(item) == "string" then
         itemList = {item}
     end
+
     local err = false
-    for i=1,#itemList do
+
+    -- Check the destination slot to update the `found` count
+    local itemDetail = turtle.getItemDetail(destSlot)
+    if itemDetail and itemDetail.name == item then
+        -- Update found based on what's already in the destination slot
+        found = itemDetail.count
+        print("Slot " .. destSlot .. " already has " .. found .. " " .. item .. "(s)")
+        if found >= count then
+            print("Already have enough items in the slot.")
+            return true -- We already have enough items in the slot, no need to pull more
+        end
+    elseif itemDetail and itemDetail.name ~= item then
+        -- If the slot contains a different item, drop it
+        print("Slot " .. destSlot .. " contains " .. itemDetail.name .. ", dropping it.")
+        turtle.select(destSlot)
+        turtle.drop()  -- Drop the incorrect item
+    end
+
+    -- Search for items in chests to pull into the destination slot
+    for i = 1, #itemList do
         ::continue::
-        local chests = storageLib.findItemsInStash(itemList[i])
+        local chests = storageLib.findItemsInStash(itemList[i],exact)
         local found = 0
         for chest, slots in pairs(chests) do
-            print("Pulling from chest:"..chest)
-            for _,s in ipairs(slots) do
+            print("Pulling from chest: " .. chest)
+            for _, s in ipairs(slots) do
                 local c = peripheral.wrap(chest)
-                local x = c.pushItems(dest,s,destSlot)
-                found = found + x
-                if found >= count then 
-                    goto continue
+                -- Pull the remaining needed items
+                local toPull = count - found
+                local pulled = c.pushItems(dest, s, toPull, destSlot)
+                if pulled then
+                    found = found + pulled
+                end
+                if found >= count then
+                    --goto continue -- We've found enough items, skip to the next iteration
+                    break
                 end
             end
         end
+
+        -- If we don't have enough items after searching all chests, mark an error
         if found < count then
             err = true
         end
     end
+
+    -- Return success (true) or failure (false) based on whether we found enough items
     return not err
 end
+
 
 
 -- Helper function to print with pausing
@@ -257,12 +298,14 @@ function storageLib.getInventorySummary()
     return summary
 end
 
-function storageLib.printInventorySummary()
+function storageLib.printInventorySummary(filter)
     local summary = storageLib.getInventorySummary()
     if next(summary) then
         local lines = {"Inventory Summary (All Chests):"}
         for itemName, count in pairs(summary) do
-            table.insert(lines, string.format("  %s: %d", itemName, count))
+            if filter == nil or itemName:find(filter) then 
+                table.insert(lines, string.format("  %s: %d", itemName, count))
+            end
         end
         printWithPause(lines)
     else
@@ -304,5 +347,67 @@ function storageLib.printChestSummary(chestName)
     end
 end
 
+function storageLib.craftWithPattern(itemGrid, itemNames, outputDirection)
+
+    -- Step 1: Pull the required items for each crafting slot
+    for slot = 1, 9 do
+        local patternIndex = slot
+        patternIndex = patternIndex + math.floor((slot - 1) / 3)
+        local itemIndex = itemGrid[slot]
+        if itemIndex and itemIndex > 0 then
+            local blockName = itemNames[itemIndex]
+            local result = storageLib.getItems(blockName,64,patternIndex)
+            if not result then
+                print("waiting for more mats")
+                return false
+            end
+        end
+    end
+
+    -- Step 2: Craft the items (turtle's inventory should now match the 3x3 crafting grid)
+    if turtle.craft() then
+        print("Successfully crafted items.")
+    else
+        print("Crafting failed. Check if items are in the correct slots.")
+        return false
+    end
+
+    -- Step 3: Deposit the crafted items into the output chest using turtle.drop()
+    for slot = 1, 16 do
+        turtle.select(slot)
+        if turtle.getItemDetail(slot) then
+            -- Move the turtle to drop the items into the output chest
+            if outputDirection == "front" then
+                turtle.drop()
+            elseif outputDirection == "up" then
+                turtle.dropUp()
+            elseif outputDirection == "down" then
+                turtle.dropDown()
+            end
+        end
+    end
+
+    -- Reset turtle selection
+    turtle.select(1)
+    return true
+end
+
+function storageLib.trash(itemName, dropDirection)
+    local breakFlag = false
+    while true do
+        turtle.select(16)
+        if dropDirection == "front" then
+            turtle.drop()
+        elseif dropDirection == "up" then
+            turtle.dropUp()
+        elseif dropDirection == "down" then
+            turtle.dropDown()
+        end
+        if breakFlag then
+            break
+        end
+        breakFlag = not storageLib.getItems(itemName, 64, 16)
+    end
+end
 
 return storageLib
