@@ -564,7 +564,7 @@ if arg1 then
     elseif arg1 == 15 then
         local shardTrashCounter = 0
         while true do
-            sleep(10)
+            sleep(5)
             shardTrashCounter = shardTrashCounter + 1
             local craftResult = storageLib.craftWithPattern({1,2,1,2,2,2,1,2,1}, {"minecraft:prismarine_shard","minecraft:prismarine_crystals"},"up")
             storageLib.trash("minecraft:ink_sac", "down")
