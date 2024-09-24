@@ -2,19 +2,14 @@ local move = require("/lib/move")
 
 -- Check for wireless modem
 local function checkWirelessModem()
-    local modem = peripheral.find("modem")
-    if not modem then
-        print("Error: No modem found.")
-        return false
+    local sides = {"left", "right"}
+    for _, side in ipairs(sides) do
+        if peripheral.getType(side) == "modem" and peripheral.call(side, "isWireless") then
+            return true
+        end
     end
-    
-    modem = peripheral.wrap(peripheral.getName(modem))
-    if not modem.isWireless() then
-        print("Error: Found modem is not wireless.")
-        return false
-    end
-    
-    return true
+    print("Error: No modem found.")
+    return false
 end
 
 -- Get GPS coordinates
