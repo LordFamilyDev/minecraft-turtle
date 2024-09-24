@@ -14,6 +14,7 @@ if turtle then
     end
 end
 
+shell.run("/bin/gohome.lua")
 
 -- NOTE:  wrapper does not return
 if peripheral.find("modem") then
