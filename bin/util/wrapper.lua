@@ -26,4 +26,12 @@ print("Wrapper started for program: " .. program)
 while true do
     local result = runProgram()
     os.sleep()
+    -- Giving a turtle an achillies heel of a wooden pickaxe
+    if turtle then
+        x = turtle.getItemDetail(1)
+        if x and x.name == "minecraft:wooden_pickaxe" then
+            print("AAAHHH A wooden Pickaxe!!! STOPPNG!!")
+            return
+        end
+    end
 end
