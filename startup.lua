@@ -18,6 +18,6 @@ else
     shell.run("/rom/programs/motd.lua")
 end
 
-if fs.exists("/autorun.lua") then
-    shell.run("/autorun.lua")
+if fs.exists("/bin/autorun.lua") then
+    shell.run("/bin/autorun.lua")
 end
