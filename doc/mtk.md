@@ -69,6 +69,9 @@ end
 - Chests: `C[c]` (set), `c[c]` (go to)
 - Utility: `re` (refuel), `dt` (dump trash), `gh` (go home), `Gh` (set home), `q` (quit)
 - Jump and Return: `J[0-F]` (jump start), `j[0-F]` (jump), `r[0-F]` (return)
+- Eval: `e[t,f,0-F]` Eval last command, and ignore(jump) next command if not equal to arg.
+- Eval: `E[t,f,0-F]` Eval last command, and ignore(jump) next command if equal to arg.
+- Test: `t[0-F,a-z]` Checks the Item Type found on Inspection against inventory: `[0-F]` or item catergories `[a-z]`
 
 ### Test Mode
 
