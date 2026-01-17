@@ -136,14 +136,14 @@ lib.bedrock = {
 }
 
 lib.lists = {
-    "t" = lib.treeBlocks,
-    "s" = lib.saplingTypes,
-    "k" = lib.keyMinerals,
-    "v" = lib.valuableOres,
-    "u" = lib.unwantedItems,
-    "n" = lib.noMine,
-    "r" = lib.reward,
-    "b" = lib.bedrock
+    t = lib.treeBlocks,
+    s = lib.saplingTypes,
+    k = lib.keyMinerals,
+    v = lib.valuableOres,
+    u = lib.unwantedItems,
+    n = lib.noMine,
+    r = lib.reward,
+    b = lib.bedrock
 }
 
 function lib.isItemInList(blockName, list)
