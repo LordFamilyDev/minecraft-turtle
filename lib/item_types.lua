@@ -63,6 +63,7 @@ lib.keyMinerals = {
 lib.valuableOres = {
     -- Overworld ores
     "minecraft:iron_ore",
+    "minecraft:copper_ore",
     "minecraft:diamond_ore",
     "minecraft:coal_ore",
     "minecraft:redstone_ore",
@@ -71,6 +72,7 @@ lib.valuableOres = {
     "minecraft:lapis_ore",
     -- Deepslate variants
     "minecraft:deepslate_iron_ore",
+    "minecraft:deepslate_copper_ore",
     "minecraft:deepslate_diamond_ore",
     "minecraft:deepslate_coal_ore",
     "minecraft:deepslate_redstone_ore",
@@ -99,7 +101,9 @@ lib.valuableOres = {
 -- Global list of unwanted items
 lib.unwantedItems = {
     "minecraft:cobblestone",
-    --"minecraft:granite",
+    "minecraft:granite",
+    "minecraft:andesite",
+    "minecraft:diorite",
     "minecraft:cobbled_deepslate",
     "minecraft:netherrack",
     "minecraft:blackstone",
