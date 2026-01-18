@@ -104,6 +104,7 @@ lib.unwantedItems = {
     "minecraft:granite",
     "minecraft:andesite",
     "minecraft:diorite",
+    "minecraft:dirt",
     "minecraft:cobbled_deepslate",
     "minecraft:netherrack",
     "minecraft:blackstone",
