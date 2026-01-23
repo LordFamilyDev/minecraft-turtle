@@ -4,3 +4,6 @@
 # Ignore all files named _TODO.md
 **/_TODO.md
 .token
+
+# Auto truck config (user-specific paths)
+truck_path.json

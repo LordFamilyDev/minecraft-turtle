@@ -1,0 +1,108 @@
+{
+  "_comment": "Crafting recipes for make.lua. Grid slots: 1,2,3 / 5,6,7 / 9,10,11",
+  "recipes": {
+    "dried_kelp_block": {
+      "output": "minecraft:dried_kelp_block",
+      "outputCount": 1,
+      "ingredients": [
+        {"item": "dried_kelp", "count": 9}
+      ],
+      "grid": {
+        "1": "dried_kelp",
+        "2": "dried_kelp",
+        "3": "dried_kelp",
+        "5": "dried_kelp",
+        "6": "dried_kelp",
+        "7": "dried_kelp",
+        "9": "dried_kelp",
+        "10": "dried_kelp",
+        "11": "dried_kelp"
+      }
+    },
+    "hay_bale": {
+      "output": "minecraft:hay_bale",
+      "outputCount": 1,
+      "ingredients": [
+        {"item": "wheat", "count": 9}
+      ],
+      "grid": {
+        "1": "wheat",
+        "2": "wheat",
+        "3": "wheat",
+        "5": "wheat",
+        "6": "wheat",
+        "7": "wheat",
+        "9": "wheat",
+        "10": "wheat",
+        "11": "wheat"
+      }
+    },
+    "chest": {
+      "output": "minecraft:chest",
+      "outputCount": 1,
+      "ingredients": [
+        {"item": "planks", "count": 8}
+      ],
+      "grid": {
+        "1": "planks",
+        "2": "planks",
+        "3": "planks",
+        "5": "planks",
+        "7": "planks",
+        "9": "planks",
+        "10": "planks",
+        "11": "planks"
+      }
+    },
+    "furnace": {
+      "output": "minecraft:furnace",
+      "outputCount": 1,
+      "ingredients": [
+        {"item": "cobblestone", "count": 8}
+      ],
+      "grid": {
+        "1": "cobblestone",
+        "2": "cobblestone",
+        "3": "cobblestone",
+        "5": "cobblestone",
+        "7": "cobblestone",
+        "9": "cobblestone",
+        "10": "cobblestone",
+        "11": "cobblestone"
+      }
+    },
+    "torch": {
+      "output": "minecraft:torch",
+      "outputCount": 4,
+      "ingredients": [
+        {"item": "coal", "count": 1},
+        {"item": "stick", "count": 1}
+      ],
+      "grid": {
+        "1": "coal",
+        "5": "stick"
+      }
+    },
+    "stick": {
+      "output": "minecraft:stick",
+      "outputCount": 4,
+      "ingredients": [
+        {"item": "planks", "count": 2}
+      ],
+      "grid": {
+        "1": "planks",
+        "5": "planks"
+      }
+    },
+    "planks": {
+      "output": "minecraft:oak_planks",
+      "outputCount": 4,
+      "ingredients": [
+        {"item": "log", "count": 1}
+      ],
+      "grid": {
+        "1": "log"
+      }
+    }
+  }
+}
