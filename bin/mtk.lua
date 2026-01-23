@@ -34,6 +34,10 @@ mtk.quit_flag = false
 mtk.inventory_snapshot = {}
 mtk.lastSelected = 1
 
+mtk.lastReturnVal = nil
+mtk.lastInspection = nil
+mtk.lastInspectionData = nil
+
 mtk.loopMem = {}
 mtk.loopTargets = {}
 
@@ -276,8 +280,12 @@ table.insert(macro_functions, {"l", function(c)
     if actions[c] then
         local success, data = actions[c]()
         if success then
+            mtk.lastInspection = c
+            mtk.lastInspectionData = data
             cli_print(c:upper() .. ":", data.name)
         else
+            mtk.lastInspection = c
+            mtk.lastInspectionData = nil
             cli_print(c:upper() .. ": No block")
         end
     else
@@ -481,6 +489,99 @@ table.insert(macro_functions, {"r", function(c, macro, current_index)
     return return_index
 end})
 
+-- Eval function 'e' implements Jump Not Equal
+table.insert(macro_functions, {"e", function(c, macro, current_index)
+    debug_print("Eval: " .. c)
+    local compVal = nil
+    if c == "f" then
+        comVal = false
+    elseif c == "t" then
+        compVal = true
+    else
+        compVal = tonumber(c, 16)
+        if compVal < 0 or compVal > 15 then
+            compVal = nil
+        end
+    end
+
+    if compVal == nil then
+        return false, "Invalid eval argument: " .. c
+    end
+
+    if mtk.lastReturnVal ~= compVal then
+        -- Not equal, skip next macro
+        return current_index + 2
+    else
+        -- Equal, allow next macro to run
+        return true
+    end
+end})
+
+-- Eval function 'E' implements Jump Equal
+table.insert(macro_functions, {"E", function(c, macro, current_index)
+    debug_print("Eval: " .. c)
+    local compVal = nil
+    if c == "f" then
+        comVal = false
+    elseif c == "t" then
+        compVal = true
+    else
+        compVal = hex(c)
+        if compVal < 0 or compVal > 15 then
+            compVal = nil
+        end
+    end
+
+    if compVal == nil then
+        return false, "Invalid eval argument: " .. c
+    end
+
+    if mtk.lastReturnVal == compVal then
+        -- equal, skip next macro
+        return current_index + 2
+    else
+        -- Not equal, allow next macro to run
+        return true
+    end
+end})
+
+-- test function
+table.insert(macro_functions, {"t", function(c)
+    debug_print("Test function: " .. c)
+    if mtk.lastInspection == false then
+        return false
+    end
+    -- check if c is a lowercase letter
+    if c:match("%l") then
+        local list = item_types.lists[c]
+        if not list then
+            return false, "Item Type list not found: " .. c
+        end
+        if not mtk.lastInspectionData then
+            return false, "Last inspection data is nil"
+        end
+        if not itemTypes.isItemInList(mtk.lastInspectionData.name, list) then
+            return false
+        end
+
+    else
+        local invSlot = tonumber(c, 16) + 1
+        if not invSlot or invSlot < 1 or invSlot > 16 then
+            return false, "Invalid test argument: " .. c
+        end
+        turtle.select(invSlot)
+        local item = turtle.getItemDetail()
+        turtle.select(mtk.lastSelected)
+        if not item then
+            return false, "No item in selected slot"
+        end
+        if item.name ~= mtk.lastInspectionData.name then
+            return false, "Item name does not match last inspection data"
+        end
+    end
+    return true
+end})
+
 -- Quit function
 table.insert(macro_functions, {"q", function(c)
     debug_print("Quit")
@@ -512,9 +613,12 @@ function mtk.execute_macro(macro, loop_count)
             
             if func then
                 local result, error_message = func(sub_code, macro, index)
+                mtk.lastReturnVal = result
                 if error_message then
+                    mtk.lastReturnVal = nil
                     return false, string.format("Error at index %d: %s", index, error_message)
                 elseif type(result) == "number" then
+                    mtk.lastReturnVal = true
                     index = result
                 else
                     index = index + 2

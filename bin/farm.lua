@@ -100,9 +100,42 @@ local function farmArrows()
 end
 
 local function farmObsidian()
+    -- Check if we have a bucket
+    local slot = storage.findItemsInTurtle("bucket", 1)
+    if not slot then
+        print("No bucket found in storage. Cannot farm obsidian.")
+        return
+    end
+    turtle.select(slot[1])
+    turtle.transferTo(1)
+    turtle.select(1)
+    -- Find the Cauldron
     while true do
-        if turtle.detect() then
+        local found, data = turtle.inspect()
+        if found and data.name == "minecraft:cauldron" or data.name == "minecraft:lava_cauldron" then
+            break
+        end
+        move.turnLeft()
+        sleep(0.5)
+    end
+       
+    -- Start farming obsidian
+    while true do
+        local success, data = turtle.inspect()
+        if success and data.name == "minecraft:lava_cauldron" then
+            -- Collect lava
+            turtle.place()
+            move.turnLeft()
+            move.turnLeft()
+            turtle.place()
+            sleep(1)
+            -- Dig obsidian
             turtle.dig()
+            move.turnLeft()
+            move.turnLeft()
+        else
+            print("No lava cauldron found, waiting 5 seconds before retrying.")
+            sleep(5)
         end
         sleep(0.5)
     end

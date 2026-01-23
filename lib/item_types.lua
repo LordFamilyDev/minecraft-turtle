@@ -131,6 +131,21 @@ lib.reward = {
     "minecraft:activator_rail"
 }
 
+lib.bedrock = {
+    "minecraft:bedrock"
+}
+
+lib.lists = {
+    t = lib.treeBlocks,
+    s = lib.saplingTypes,
+    k = lib.keyMinerals,
+    v = lib.valuableOres,
+    u = lib.unwantedItems,
+    n = lib.noMine,
+    r = lib.reward,
+    b = lib.bedrock
+}
+
 function lib.isItemInList(blockName, list)
     for _, str in ipairs(list) do
         if blockName:find(str) then
