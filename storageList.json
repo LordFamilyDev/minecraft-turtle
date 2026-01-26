@@ -1,0 +1,10 @@
+{
+  "storage": [
+    {
+      "chestId": "chest_25",
+      "desc": "Example storage chest",
+      "source": true,
+      "mats": ["iron", "copper"]
+    }
+  ]
+}
