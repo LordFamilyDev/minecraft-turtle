@@ -362,26 +362,26 @@ local function run(config)
         debugLog("Loop:", tostring(config.loop), "Count:", tostring(config.loopCount))
     end
 
-    local tasks, err = loadConfig(config.configPath)
-    if not tasks then
-        print("Error: " .. err)
-        crashOnError("Failed to load config: " .. err)
-        return false
-    end
-
-    debugLog("Loaded", #tasks, "tasks")
-
-    if #tasks == 0 then
-        print("No tasks defined in config")
-        return true
-    end
-
-    print("Loaded " .. #tasks .. " tasks from " .. config.configPath)
-
     local iteration = 0
     local maxIterations = config.loopCount
 
     repeat
+        local tasks, err = loadConfig(config.configPath)
+        if not tasks then
+            print("Error: " .. err)
+            crashOnError("Failed to load config: " .. err)
+            return false
+        end
+
+        debugLog("Loaded", #tasks, "tasks")
+
+        if #tasks == 0 then
+            print("No tasks defined in config")
+            return true
+        end
+
+        print("Loaded " .. #tasks .. " tasks from " .. config.configPath)
+
         iteration = iteration + 1
 
         if config.loop then
