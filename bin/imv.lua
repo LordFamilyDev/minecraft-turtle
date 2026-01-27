@@ -145,6 +145,84 @@ local function debugLog(...)
     print(msg)
 end
 
+-- Load storage list from storageList.json in root directory
+-- Returns a table mapping chestId -> true for fast lookup, or empty table if file doesn't exist
+local function loadStorageList()
+    local storageChests = {}
+    local path = "/storageList.json"
+
+    -- Check if file exists
+    if not fs.exists(path) then
+        debugLog("storageList.json not found, no chests will be filtered")
+        return storageChests
+    end
+
+    -- Read and parse JSON
+    local file = fs.open(path, "r")
+    if not file then
+        debugLog("Failed to open storageList.json")
+        return storageChests
+    end
+
+    local content = file.readAll()
+    file.close()
+
+    -- Parse JSON
+    local ok, data = pcall(textutils.unserializeJSON, content)
+    if not ok or not data then
+        debugLog("Failed to parse storageList.json:", data)
+        return storageChests
+    end
+
+    -- Extract chestIds from storage array
+    if type(data) == "table" and type(data.storage) == "table" then
+        for _, entry in ipairs(data.storage) do
+            if type(entry) == "table" and entry.chestId then
+                storageChests[entry.chestId] = true
+                debugLog("Added storage chest to filter:", entry.chestId)
+            end
+        end
+    end
+
+    local count = 0
+    for _ in pairs(storageChests) do count = count + 1 end
+    debugLog("Loaded", count, "storage chests from storageList.json")
+    return storageChests
+end
+
+-- Check if a chest should be filtered based on storageList.json
+-- Uses fuzzy matching to handle different peripheral name formats
+local function isStorageChest(chestName, storageList)
+    if not next(storageList) then
+        return false  -- empty storage list, don't filter anything
+    end
+
+    local normalizedName = chestName:lower()
+
+    for chestId, _ in pairs(storageList) do
+        local normalizedId = chestId:lower()
+
+        -- Direct match
+        if normalizedName == normalizedId then
+            return true
+        end
+
+        -- Check if the peripheral name contains the chestId
+        if normalizedName:find(normalizedId, 1, true) then
+            return true
+        end
+
+        -- Check with underscores/colons removed (e.g., "chest_25" matches "chest25")
+        local simpleName = normalizedName:gsub("[_:]", "")
+        local simpleId = normalizedId:gsub("[_:]", "")
+        if simpleName:find(simpleId, 1, true) then
+            return true
+        end
+    end
+
+    return false
+end
+
 local function debugError(msg)
     debugLog("ERROR:", msg)
     if DEBUG then
@@ -512,6 +590,21 @@ function imv.move(srcPattern, dstPattern, opts)
 
     debugLog("  srcNames:", #srcNames, "srcAnyMode:", tostring(srcAnyMode))
     debugLog("  dstNames:", #dstNames, "dstAnyMode:", tostring(dstAnyMode))
+
+    -- Load storage list and filter destination chests if in "any" mode
+    if dstAnyMode then
+        local storageList = loadStorageList()
+        local filteredDst = {}
+        for _, dstName in ipairs(dstNames) do
+            if not isStorageChest(dstName, storageList) then
+                table.insert(filteredDst, dstName)
+            else
+                debugLog("  Filtered out storage chest:", dstName)
+            end
+        end
+        dstNames = filteredDst
+        debugLog("  After filtering:", #dstNames, "destination chests remain")
+    end
 
     if #srcNames == 0 then
         local err = "Could not find source location: " .. srcLoc

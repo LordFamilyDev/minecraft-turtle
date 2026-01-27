@@ -545,8 +545,8 @@ local allDirectionsFU = {
     }
 local allDirectionsFD = {
         {1,0,0}, --forward
-        {0,0,1}, --up
         {0,0,-1}, --down
+        {0,0,1}, --up
         {0,1,0}, --right
         {0,-1,0}, --left
         {-1,0,0} --back
@@ -560,8 +560,8 @@ local allDirectionsUDF = {
         {-1,0,0} --back
     }
 local allDirectionsDUF = {
-        {0,0,1}, --up
         {0,0,-1}, --down
+        {0,0,1}, --up
         {1,0,0}, --forward
         {0,1,0}, --right
         {0,-1,0}, --left

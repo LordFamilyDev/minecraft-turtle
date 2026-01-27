@@ -103,6 +103,38 @@
       "grid": {
         "1": "log"
       }
+    },
+    "rocket3": {
+      "output": "minecraft:firework_rocket",
+      "outputCount": 3,
+      "ingredients": [
+        {"item": "paper", "count": 1},
+        {"item": "gunpowder", "count": 3}
+      ],
+      "grid": {
+        "2": "paper",
+        "5": "gunpowder",
+        "6": "gunpowder",
+        "7": "gunpowder"
+      }
+    },
+    "iron_block": {
+      "output": "minecraft:iron_block",
+      "outputCount": 1,
+      "ingredients": [
+        {"item": "iron_ingot", "count": 9}
+      ],
+      "grid": {
+        "1": "iron_ingot",
+        "2": "iron_ingot",
+        "3": "iron_ingot",
+        "5": "iron_ingot",
+        "6": "iron_ingot",
+        "7": "iron_ingot",
+        "9": "iron_ingot",
+        "10": "iron_ingot",
+        "11": "iron_ingot"
+      }
     }
   }
 }
